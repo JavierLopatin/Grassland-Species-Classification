@@ -5,7 +5,7 @@ library(raster)
 library(rgdal)
 
 # set working direction
-home = "D:/Sp_Images/Site1"
+home = "F/Sp_Images/Site1/Raw"
 setwd(home)
 
 rasterNames <- rasterListNames(fileExtantion = ".dat", folder = "Raw")
@@ -84,89 +84,5 @@ for(i in 1:length(rasterlist)){
   writeRaster(band_list, filename=output, options="INTERLEAVE=BAND", overwrite=TRUE)
 }
 
-##############################
-#### Cut images to reduce space
-# create directory to stor BN images
-dir.create("CutRaw")
-
-## cut plot
-for(i in 1:length(rasterNames)){
-  rast <- rasterlist[[i]]
-  x11()
-  plotRGB(rast, 31,18,5, stretch="lin")
-  ext <- drawExtent()
-  r <- crop(rast, ext)
-  dev.off()
-  output = paste(home, "/CutRaw/", rasterNames[i], ".tif", sep="")
-  writeRaster(r, filename=output, options="INTERLEAVE=BAND", overwrite=TRUE)
- }
-
-##################################################################
-
-## Apply Brightness Normalization and save images 
-library(autopls)
-library(parallel)
-library(doParallel)
-
-home = "D:/Sp_Images/Site3"
-
-setwd(home)
-
-# create directory to stor BN images
-dir.create("BN")
-
-rasterNames <- rasterListNames(fileExtantion = ".tif", folder = "CutRaw")
-rasterlist <- rasterList(fileExtantion = ".tif", folder = "CutRaw")
-
-# initialize parallel processing
-cl <- makeCluster(detectCores())
-registerDoParallel(cl)
-
-for (i in 1:length(rasterlist)){
-  ras = rasterlist[[i]]
-  ras2 <- prepro(ras, method = 'bn')
-  names(ras2) <- AISAbandnames
-  out = paste(home, "/BN/", rasterNames[i], "_BN.tif", sep = "")
-  writeRaster(ras2, filename=out, options="INTERLEAVE=BAND", overwrite=TRUE)
-}
-# stop parallel process
-stopCluster(cl)
 
 
-########################################################
-### GLCM
-
-library(raster)
-library(rgdal)
-library(glcm)
-
-# set working direction
-home = "D:/Sp_Images/Site3/CutRaw"
-setwd(home)
-
-bandName = paste("MNF_", seq(1,10,1), sep="")
-
-rasterNames <- rasterListNames(fileExtantion = ".tif", folder = ".")
-rasterlist <- rasterList(fileExtantion = ".tif", folder = ".", rasterNames = bandName)
-
-# create directory to stor GLCM images
-dir.create("GLCM")
-
-# initialize parallel processing
-cl <- makeCluster(detectCores())
-registerDoParallel(cl)
-
-# run GLCM
-for (i in 1:length(rasterlist)){
-  rast <- rasterlist[[i]]
-  rasterName = rasterNames[[i]]
-  out <- stack()
-  for (j in 1:length(rast@layers)){
-    text <- GLCM(rast[[j]])
-    output <- addLayer(out, text)
-  }
-  out = paste( file.path(home, "GLCM"), "/", rasterName, "_GLCM.tif", sep="")
-  writeRaster(output, filename=out, options="INTERLEAVE=BAND", overwrite=TRUE)
-}
-# stop parallel process
-stopCluster(cl)
