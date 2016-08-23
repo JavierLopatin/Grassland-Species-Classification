@@ -8,19 +8,21 @@ library(glcm)
 library(doParallel)
 
 # set working direction
-home = "F:/Sp_Images/Site4/Raw"
+home = "/media/javier/JavierLopatin/Sp_Images/Site1/Raw/"
+#home = "F:/Sp_Images/Site4/Raw"
 setwd(home)
 
+processingFolder = "BN_MNF"
 bandName = paste("MNF_", seq(1,10,1), sep="")
 
-rasterNames <- rasterListNames(fileExtantion = ".tif", folder = "MNF")
-rasterlist <- rasterList(fileExtantion = ".tif", folder = "MNF", rasterNames = bandName)
+rasterNames <- rasterListNames(fileExtantion = ".tif", folder = processingFolder)
+rasterlist <- rasterList(fileExtantion = ".tif", folder = processingFolder, rasterNames = bandName)
 
 # MNF band to apply the transformation
 band = 2
 
 # create directory to stor GLCM images
-dir.create("GLCM")
+dir.create(paste(processingFolder, "_GLCM", sep=""))
 
 # initialize parallel processing
 cl <- makeCluster(detectCores())
@@ -31,7 +33,7 @@ for (i in 1:length(rasterlist)){
   rast <- rasterlist[[i]]
   rasterName = rasterNames[[i]]
   output <- GLCM(rast[[band]])
-  out = paste( file.path(home, "GLCM"), "/", rasterName, "_GLCM.tif", sep="")
+  out = paste( file.path(home, paste(processingFolder, "_GLCM", sep="")), "/", rasterName, "_GLCM.tif", sep="")
   writeRaster(output, filename=out, options="INTERLEAVE=BAND", overwrite=TRUE)
 }
 # stop parallel process
