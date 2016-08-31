@@ -8,8 +8,8 @@ library(glcm)
 library(doParallel)
 
 # set working direction
-home = "/media/javier/JavierLopatin/Sp_Images/Site1/Raw/"
-#home = "F:/Sp_Images/Site4/Raw"
+#home = "/media/javier/JavierLopatin/Sp_Images/Site1/Raw/"
+home = "F:/Sp_Images/Site4/Raw"
 setwd(home)
 
 processingFolder = "BN_MNF"
