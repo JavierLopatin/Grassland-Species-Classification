@@ -4,6 +4,56 @@
 ## Manuscript: 
 ## last changes: 
 
+pkgs<-c("rgdal", "raster", "doParallel")
+lapply(pkgs, require, character.only=T)
+
+
+# set working direction
+home = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp/"
+
+setwd(home)
+
+rasterNames <- rasterListNames(fileExtantion = ".tif", folder = "Raw")
+rasterlist <- rasterList(fileExtantion = ".tif", folder = "Raw")
+
+
+# assign names to the list
+a = gsub("0605_samples_", x=rasterNames, replacement ="")
+a = gsub(".tif", x=a, replacement ="")
+a = gsub("-", x=a, replacement ="_")
+names(rasterlist) <- a
+
+# assign band names to rasters
+# 61 band spectra
+bandNames <- c("398nm", "407nm", "415nm", "424nm", "432nm", "441nm", "450nm", "459nm",
+               "468nm", "477nm", "486nm", "495nm", "504nm", "513nm", "522nm", "531nm",
+               "540nm", "550nm", "558nm", "568nm", "577nm", "587nm", "596nm", "605nm",
+               "615nm", "624nm", "633nm", "643nm", "652nm", "661nm", "671nm", "680nm",
+               "690nm", "699nm", "708nm", "717nm", "727nm", "736nm", "746nm", "755nm",
+               "765nm", "775nm", "784nm", "794nm", "803nm", "813nm", "822nm", "832nm",
+               "842nm", "851nm", "861nm", "870nm", "880nm", "890nm", "899nm", "908nm", 
+               "918nm", "928nm", "937nm", "947nm", "957nm")
+
+#set names
+for (i in 1:length(rasterNames)){
+  names(rasterlist[[i]]) <- bandNames
+}
+
+## Extract species training areas
+# make a list of the shepfiles with the trainning areas
+shp_list = list.files("shp/points", pattern = ".shp")
+shp_list = gsub('.{4}$', '', shp_list)
+# import shepfiles
+setwd(paste(home, "shp/points", sep=""))
+shapefiles <- list()
+for (i in 1:length(shp_list)){
+  shp <- readOGR(dsn=".", layer= shp_list[i])
+  shapefiles[[i]] <- shp
+}
+
+# assign names to the list
+names(shapefiles) <- shp_list
+
 ## extract values per specie
 ###
 # initialize parallel processing
