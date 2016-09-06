@@ -4,6 +4,7 @@
 import os
 from glob import glob
 from rsgislib.segmentation import segutils
+from rsgislib.rastergis import ratutils 
 
 # Create a list of rasters
 rasterList = glob("*.tif")
@@ -42,9 +43,14 @@ for i in range(len(rasterList)):
     # The input image for the segmentation
     inputImage = rasterList[i]
     # The output segments (clumps) image
-    segmentClumps = "/clumps/"+rasterList[i][:-4]+"clumps.tif"
+    segmentClumps = "/clumps/"+rasterList[i][:-4]+"clumps.kea"
     # The output clump means image (for visualsation) 
-    outputMeanSegments = "/clumps/"+rasterList[i][:-4]+"segments.tif"
+    outputMeanSegments = "/clumps/"+rasterList[i][:-4]+"segments.kea"
     segutils.runShepherdSegmentation(inputImage, segmentClumps, outputMeanSegments, 
-                                     tmpPath, "GTiff", False, False, False, numClusters, 
+                                     tmpPath, "KEA", False, False, False, numClusters, 
                                      minObjectSize, distThres, None, imgSampling, maxKMeanIter)
+    
+    # Export shapefile with the clumps
+    outShapefile = "/shp/"+rasterList[i][:-4]
+    ratutils.createClumpsSHPBBOX(segmentClumps, 1, 2, 3, 4)                                 
+    
