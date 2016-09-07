@@ -20,37 +20,19 @@ if not os.path.exists("shp"):
 
 
 ##################### Perform Segmentation #####################
-# A temporary path for layers generated during the
-# segmentation process. The directory will be created
-# and deleted during processing.
-tmpPath = "./tmp/"
-# The number of clusters (k) in the KMeans.
-numClusters = 30
-# The minimum object size in pixels.
-minObjectSize = 50
-# The distance threshold to prevent merging.
-# this has been set to an arbitrarily large 
-# number to disable this function.  
-distThres = 1000000
-# The sampling of the input image for input
-# to the KMeans
-imgSampling = 100
-# Maximum number of iterations within KMeans
-maxKMeanIter = 200
 
-# RSGISLib function call to execute the segmentation
-for i in range(len(rasterList)):
-    # The input image for the segmentation
-    inputImage = rasterList[i]
-    # The output segments (clumps) image
-    segmentClumps = "/clumps/"+rasterList[i][:-4]+"clumps.kea"
-    # The output clump means image (for visualsation) 
-    outputMeanSegments = "/clumps/"+rasterList[i][:-4]+"segments.kea"
-    segutils.runShepherdSegmentation(inputImage, segmentClumps, outputMeanSegments, 
-                                     tmpPath, "KEA", False, False, False, numClusters, 
-                                     minObjectSize, distThres, None, imgSampling, maxKMeanIter)
+for i in range(len(rasterList)):	
+	# The input image for the segmentation
+	inputImage = rasterList[i]
+	# The output segments (clumps) image
+	clumpsFile = "clumps/"+rasterList[i][:-4]+"_Clump.kea"
+	# The output clump means image (for visualsation)
+	meanImage = "clumps/"+rasterList[i][:-4]+"_Segments.kea"
+	# run segmentation
+	segutils.runShepherdSegmentation(inputImage, clumpsFile,
+                    meanImage, numClusters=100, minPxls=1)
     
     # Export shapefile with the clumps
-    outShapefile = "/shp/"+rasterList[i][:-4]
-    ratutils.createClumpsSHPBBOX(segmentClumps, 1, 2, 3, 4)                                 
+    outShapefile = "shp/"+rasterList[i][:-4]+".shp"
+    ratutils.createClumpsSHPBBOX(clumpsFile, 1, 2, 3, 4, outShapefile)                                 
     
