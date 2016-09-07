@@ -3,8 +3,9 @@
 # Import python modules
 import os
 from glob import glob
+from osgeo import gdal
 from rsgislib.segmentation import segutils
-from rsgislib.rastergis import ratutils 
+
 
 # Create a list of rasters
 rasterList = glob("*.tif")
@@ -21,18 +22,20 @@ if not os.path.exists("shp"):
 
 ##################### Perform Segmentation #####################
 
-for i in range(len(rasterList)):	
-	# The input image for the segmentation
-	inputImage = rasterList[i]
-	# The output segments (clumps) image
-	clumpsFile = "clumps/"+rasterList[i][:-4]+"_Clump.kea"
-	# The output clump means image (for visualsation)
-	meanImage = "clumps/"+rasterList[i][:-4]+"_Segments.kea"
-	# run segmentation
-	segutils.runShepherdSegmentation(inputImage, clumpsFile,
+for i in range(len(rasterList)):
+    
+    # The input image for the segmentation
+    inputImage = rasterList[i]
+    # The output segments (clumps) image
+    clumpsFile = "clumps/"+rasterList[i][:-4]+"_Clump.kea"
+        # The output clump means image (for visualsation)
+    meanImage = "clumps/"+rasterList[i][:-4]+"_Segments.kea" 
+    # The output shapefile
+    shapeOut = "shp/"+rasterList[i][:-4]+".shp"
+
+    # run segmentation
+    segutils.runShepherdSegmentation(inputImage, clumpsFile,
                     meanImage, numClusters=100, minPxls=1)
-    
-    # Export shapefile with the clumps
-    outShapefile = "shp/"+rasterList[i][:-4]+".shp"
-    ratutils.createClumpsSHPBBOX(clumpsFile, 1, 2, 3, 4, outShapefile)                                 
-    
+
+    # run polygonization
+    gdal.Polygonize(clumpsFile, None, shapeOut, -1, [], callback=None)
