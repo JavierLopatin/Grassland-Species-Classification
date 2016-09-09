@@ -4,7 +4,6 @@
 ## Manuscript: 
 ## last changes: 
 
-#### run Clasification!
 
 home = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp"
 # home = "~/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp"
@@ -17,6 +16,11 @@ lapply(pkgs, require, character.only=T)
 # load the data
 data <- read.table("LeafHerbaceous.txt", sep = "", header = T)
 spectra <- data[, 2:length(data)]
+
+# add Species
+SpNames <- read.table("SpNamesLeafClip.csv", sep = "", header = T)
+# add to data
+data$Species <- SpNames$Species
 
 # create an hyperSpec object
 new("hyperSpec")
