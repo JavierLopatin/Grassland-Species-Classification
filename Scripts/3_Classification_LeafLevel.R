@@ -107,20 +107,6 @@ classificationLeafLevel <- function(classes, spec, wl=NA){
   # OA and Kappa per fold
   #tune.spec$resample
   
-  ### variable importance
-  vr.alpha <- t(tune.spec$finalModel$coefs) ## extract alpha vector
-  svr.index <-  tune.spec$finalModel$index ## extract alpha index
-  ## calculate pseudo-regression coefficients from the alpha vector
-  svrcf <- numeric (ncol (spectra))
-  for(i in 1:ncol(spectra)) 
-    svrcf[i] <- svr.alpha %*% spectra[svr.index, i]
-  svrcf <- svrcf / sd (svrcf) ## scale pseudo-coefficients
-  
-  ## get ensemble from all models and identify important variables
-  ensemblecf <- abs (plscf) * plsrsq + abs (svrcf) * svrrsq + abs (rfcf) * rfrsq
-  th <- mean (ensemblecf) + sd (ensemblecf) ## calculate threshold
-  selbands <- ensemblecf > th ## apply threshold
-  
   # predict
   pred.spec    <- predict(tune.spec, test[,2:length(train)])
 
@@ -133,14 +119,31 @@ classificationLeafLevel <- function(classes, spec, wl=NA){
   conf.spec    <- confusionMatrix(preMatrix(pred.spec, test$classes))
 
   # get accuracies
-  PA.spec[[i]]    <- conf.spec$byClass[,3] 
+  PA.spec    <- conf.spec$byClass[,3] 
 
-  UA.spec[[i]]    <- conf.spec$byClass[,4]
+  UA.spec    <- conf.spec$byClass[,4]
 
-  OA.spec[[i]]    <- conf.spec$overall["Accuracy"]
+  OA.spec    <- conf.spec$overall["Accuracy"]
 
-  kappa.spec[[i]]    <- conf.spec$overall["Kappa"]
-
+  kappa.spec <- conf.spec$overall["Kappa"]
+  
+  ###########################
+  ### variable importance ###
+  ###########################
+  
+  vr.alpha <- t(tune.spec$finalModel$coefs) ## extract alpha vector
+  svr.index <-  tune.spec$finalModel$index ## extract alpha index
+  ## calculate pseudo-regression coefficients from the alpha vector
+  svrcf <- numeric (ncol (spectra))
+  for(i in 1:ncol(spectra)) 
+    svrcf[i] <- svr.alpha %*% spectra[svr.index, i]
+  svrcf <- svrcf / sd (svrcf) ## scale pseudo-coefficients
+  
+  ##  select the important variables
+  ensemblecf <-  abs (svrcf) * OA.spec 
+  th <- mean (ensemblecf) + sd (ensemblecf) ## calculate threshold
+  selbands <- ensemblecf > th ## apply threshold
+  
   ## prepare output
   cf <- rbind (wl, plscf, rfcf, svrcf, ensemblecf, selbands)
   colnames (cf) <- colnames (x)
@@ -157,4 +160,4 @@ classificationLeafLevel <- function(classes, spec, wl=NA){
  }
 
 
-
+save.image("ClassLeafLevel.RData")
