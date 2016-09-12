@@ -159,8 +159,67 @@ classificationEnsemble <- function(classes, spec, wl=NA){
 }
 
 ################################################################################
-############################# END function ensemble ############################
+#################### END function classificationEnsemble #######################
 ################################################################################
+
+
+################################################################################
+##                                                                            ##
+## plot.ensemble: visualization of ensemble objects                           ##
+##                                                                            ##
+## Arguments:                                                                 ##
+## spec     spectral information. Used to create the quantiles of spectra     ##
+## en       classificationEnsemble object                                     ##
+##                                                                            ##
+################################################################################
+
+
+plot.classificationEnsemble <- function (spec, en,...) {
+  # extract the data from the classification Ensamble function
+  wl <- en[[1]][1,]
+  fit <- en[[2]]
+  cf <- en[[1]][2:4,]
+  cf <- cf * fit
+  fit <- round (fit, 2)
+  encf <- en[[1]][5,]
+  z1 <- matrix (rep (encf, 100), ncol=100)
+  sel <- as.logical (en[[1]][6,])
+  z2 <- matrix (rep (sel, 100), ncol=100)
+  z2[,11:100] <- NA
+  z2[z2==0] <- NA
+  # obtain the quantiles of the spectras
+  quant <- apply(spec, 2, quantile, probs =c(0.05, 0.25, 0.5, 0.75, 0.95))
+  # Plot the spectra
+  par (mar=c (5, 4, 4, 7) + 0.1, xpd=NA)
+  plot(wl, quant[1,], type="l", ylim = c(0,max(x)), axes=F, ylab = NA, xlab=NA, las=1)
+  lines(wl, quant[2,], type="l")
+  lines(wl, quant[3,], type="l")
+  lines(wl, quant[4,], type="l")
+  lines(wl, quant[5,], type="l")
+  polygon(c(wl, rev(wl)), c(quant[2,], rev(quant[1,])), col = "grey70")
+  polygon(c(wl, rev(wl)), c(quant[3,], rev(quant[2,])), col = "grey50")
+  polygon(c(wl, rev(wl)), c(quant[4,], rev(quant[3,])), col = "grey50")
+  polygon(c(wl, rev(wl)), c(quant[5,], rev(quant[4,])), col = "grey70")
+  axis(side = 4, las=1)
+  mtext(side = 4, line = 3, 'Reflectance')
+  # add coefficients
+  par(new = T)
+  plot(wl,  cf[1,], type = "l", col=2, xlab=expression(lambda(nm)), ylab="Weighted coefficients", las=1,
+       ylim=c(min(cf), max(cf)))
+  lines(wl,  cf[2,], type = "l", col=3)
+  lines(wl,  cf[3,], type = "l", col=4) 
+  # add spectral bands selected by the ensemble method
+  image (wl, seq(min (cf) * 1.1, max (cf) * 1.1, length.out=100), z2, col=7, 
+         xlab="", ylab="", add=T)
+  
+ }
+
+################################################################################
+################### END function plot.classificationEnsemble ###################
+################################################################################
+
+
+
 
 
 rasterListNames <- function(fileExtantion, folder){
