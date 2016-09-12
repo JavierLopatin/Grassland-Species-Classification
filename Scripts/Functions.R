@@ -27,6 +27,7 @@ classificationEnsemble <- function(classes, spec, wl=NA){
   
   ## load required libraries
   library (caret)
+  library(e1071)
   library(doParallel)
   
   # set data
