@@ -189,7 +189,7 @@ plot.classificationEnsemble <- function (spec, en,...) {
   quant <- apply(spec, 2, quantile, probs =c(0.05, 0.25, 0.5, 0.75, 0.95))
   # Plot the spectra
   par (mar=c (5, 4, 4, 7) + 0.1, xpd=NA)
-  plot(wl, quant[1,], type="l", ylim = c(0,max(spec)), axes=F, ylab = NA, xlab=NA, las=1)
+  plot(wl, quant[1,], type="l", ylim = c(0,0.7), axes=F, ylab = NA, xlab=NA, las=1)
   lines(wl, quant[2,], type="l")
   lines(wl, quant[3,], type="l")
   lines(wl, quant[4,], type="l")
