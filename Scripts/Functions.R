@@ -177,7 +177,6 @@ classificationEnsemble <- function(classes, spec, wl=NA){
 plot.classificationEnsemble <- function (spec, en, label=TRUE, ...) {
   # extract the data from the classification Ensamble function
   wl <- en[[1]][1,]
-  fit <- en[[2]]
   cf <- en[[1]][2:4,]
   cf <- cf * fit
   fit <- round (fit, 2)
