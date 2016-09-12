@@ -178,6 +178,7 @@ plot.classificationEnsemble <- function (spec, en, label=TRUE, ...) {
   # extract the data from the classification Ensamble function
   wl <- en[[1]][1,]
   cf <- en[[1]][2:4,]
+  fit <- en[[2]]
   cf <- cf * fit
   fit <- round (fit, 2)
   encf <- en[[1]][5,]
@@ -190,7 +191,7 @@ plot.classificationEnsemble <- function (spec, en, label=TRUE, ...) {
   quant <- apply(spec, 2, quantile, probs =c(0.05, 0.25, 0.5, 0.75, 0.95))
   # Plot the spectra
   par (mar=c (5, 4, 4, 7) + 0.1, xpd=NA)
-  plot(wl, quant[1,], type="l", ylim = c(0,0.7), axes=F, ylab = NA, xlab=NA, las=1)
+  plot(wl, quant[1,], type="l", ylim = c(0,0.8), axes=F, ylab = NA, xlab=NA, las=1)
   lines(wl, quant[2,], type="l")
   lines(wl, quant[3,], type="l")
   lines(wl, quant[4,], type="l")
@@ -213,10 +214,10 @@ plot.classificationEnsemble <- function (spec, en, label=TRUE, ...) {
   # Labels
   if(label==TRUE){
     labels <- c (paste (c ("PLS ", "RF ", "SVM "), "OA", "=", fit, sep=""), NA, 
-                 "ENSEMBLE", "Important", "No importance", "Selected")
+                 "Ensemble selection")
     legend ("topright", bty="n", col=c (2, 3, 4, NA, NA, rep (1, 3)), 
-            pt.bg=c (rep (NA, 5), 1, "white", 7), lwd=c (rep (2, 3), rep (NA, 5)),
-            pch=c (rep (NA, 5), rep (22, 3)), cex=0.7, pt.cex=1, legend=labels)
+            pt.bg=c(rep (NA, 4), 7), lwd=c(rep (2, 3), rep (NA, 2)),
+            pch=c (rep (NA, 4), 22), cex=0.7, pt.cex=1, legend=labels)
    }
  }
 
@@ -225,8 +226,7 @@ plot.classificationEnsemble <- function (spec, en, label=TRUE, ...) {
 ################################################################################
 
 
-
-
+###
 
 rasterListNames <- function(fileExtantion, folder){
   # make a list of all fileExtantion files
