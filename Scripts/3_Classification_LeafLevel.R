@@ -10,8 +10,7 @@ home = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp"
 
 setwd(home)
 
-pkgs<-c("caret", "raster", "rgdal", "e1071", "gtools", "doParallel", "autopls", "maptools", "hyperSpec")
-lapply(pkgs, require, character.only=T)
+library(hyperSpec)
 
 # load the data
 data <- read.table("LeafHerbaceous.txt", sep = "", header = T)
@@ -50,6 +49,7 @@ plot(hyperAISA, "spcprctl5")
 par(mfrow=c(1,2),lend = 1, mai = c(1.2, 1.2, 0.5, 0.5))
 plot(hyperASD, "spcprctl5")
 plot(hyperAISA, "spcprctl5")
+lines(svrcf)
 
 #### Source Functions from GitHub
 source_github <- function(u) {
@@ -87,28 +87,75 @@ classificationLeafLevel <- function(classes, spec, wl=NA){
   forTraining <- createDataPartition(data$classes, p = 0.6, list=F)
   train <- data [ forTraining,]
   test<- data [-forTraining,]
-  
+ 
   # Each model used 5 repeated 10-fold cross-validation. Use AUC to pick the best model
   controlObject <- trainControl(method = "repeatedcv", number = 10, repeats = 5,  classProbs=TRUE, allowParallel = TRUE)
-  
-  ## set tuning paramiters
-  grid <- expand.grid(cost  = seq(.001, .1, by = .01), gamma  = seq(1,100, by = 10))
   
   # initialize parallel processing
   cl <- makeCluster(detectCores())
   registerDoParallel(cl)
   
-  # tune
-  set.seed(123)
-  tune.spec <- train(x=train[, 2:length(train)], y=train$classes, method = "svmLinear2", tuneLength=10, preProc = c("center", "scale"), trControl = controlObject)
+  ##########################
+  ### PLS classification ###
+  ##########################
   
-  # fold info
-  #tune.spec$control
-  # OA and Kappa per fold
-  #tune.spec$resample
+  ## set tuning paramiters
+  grid <- expand.grid(ncomp = seq(1, 10, by = 1))
+  
+  # apply classification
+  set.seed(123)
+  plsClas <- train(x=train[, 2:length(train)], y=train$classes, method = "pls", tuneLength=10, 
+                   preProc = c("center", "scale"), trControl = controlObject)
   
   # predict
-  pred.spec    <- predict(tune.spec, test[,2:length(train)])
+  pls.pred <- predict(plsClas, test[, 2:length(train)])
+  
+  # confusion matix
+  conf.pls <- confusionMatrix(preMatrix(pls.pred, test$classes))
+  
+  # get accuracies
+  PA.pls    <- conf.pls$byClass[,3] 
+  UA.pls    <- conf.pls$byClass[,4]
+  OA.pls    <- conf.pls$overall["Accuracy"]
+  kappa.pls <- conf.pls$overall["Kappa"]
+  
+  ### variable importance
+  plscf <- as.vector (coef (plsClas$finalModel, ncomp=nlv, intercept=F)) ## extract coeff.
+  plscf <- plscf / sd (plscf) ## scale regression coefficients
+  
+  #########################
+  ### RF classification ###
+  #########################
+  
+  set.seed(123)
+  rfClas <- train(x=train[, 2:length(train)], y=train$classes, method = "rf", trControl = controlObject)
+  
+  # predict
+  rf.pred <- predict(rfClas, test[,2:length(train)])
+  
+  # confusion matix
+  conf.rf <- confusionMatrix(preMatrix(rf.pred, test$classes))
+  
+  # get accuracies
+  PA.rf    <- conf.rf$byClass[,3] 
+  UA.rf    <- conf.rf$byClass[,4]
+  OA.rf    <- conf.rf$overall["Accuracy"]
+  kappa.rf <- conf.rf$overall["Kappa"]
+  
+  ### variable importance
+  rfcf <- varImp(rfClas$finalModel)[[1]]
+  rfcf <- as.vector (rfcf / sd(rfcf))
+  
+  ############################
+  ### SVMDA classification ###
+  ############################
+  
+  set.seed(123)
+  svmClas <- train(x=train[, 2:length(train)], y=train$classes, method = "pls", tuneGrid = expand.grid(.ncomp = 1:10),
+                   preProc = c("center","scale"), metric = "ROC", trControl = controlObject)
+  
+  # predict
+  svm.pred <- predict(svmClas, test[,2:length(train)])
 
   # confusion matix
   preMatrix <- function(pred, test){ # functionn to prevent caret error for different length
@@ -116,42 +163,42 @@ classificationLeafLevel <- function(classes, spec, wl=NA){
     t = table(factor(pred, u), factor(test, u))
     return(t)
   }  
-  conf.spec    <- confusionMatrix(preMatrix(pred.spec, test$classes))
+  conf.svm <- confusionMatrix(preMatrix(svm.pred, test$classes))
 
   # get accuracies
-  PA.spec    <- conf.spec$byClass[,3] 
-
-  UA.spec    <- conf.spec$byClass[,4]
-
-  OA.spec    <- conf.spec$overall["Accuracy"]
-
-  kappa.spec <- conf.spec$overall["Kappa"]
+  PA.svm    <- conf.svm$byClass[,3] 
+  UA.svm    <- conf.svm$byClass[,4]
+  OA.svm    <- conf.svm$overall["Accuracy"]
+  kappa.svm <- conf.svm$overall["Kappa"]
   
-  ###########################
-  ### variable importance ###
-  ###########################
-  
-  vr.alpha <- t(tune.spec$finalModel$coefs) ## extract alpha vector
-  svr.index <-  tune.spec$finalModel$index ## extract alpha index
+  ### variable importance
+  vr.alpha <- t(svmClas$finalModel$coefs) ## extract alpha vector
+  svr.index <-  svmClas$finalModel$index ## extract alpha index
   ## calculate pseudo-regression coefficients from the alpha vector
-  svrcf <- numeric (ncol (spectra))
-  for(i in 1:ncol(spectra)) 
-    svrcf[i] <- svr.alpha %*% spectra[svr.index, i]
+  svrcf <- numeric (ncol (spec))
+  for(i in 1:ncol(spec)) 
+    svrcf[i] <- svr.alpha %*% spec[svr.index, i]
   svrcf <- svrcf / sd (svrcf) ## scale pseudo-coefficients
   
-  ##  select the important variables
+  #####################################################################    
+  ### get ensemble from all models and identify important variables ###
+  #####################################################################
+  
   ensemblecf <-  abs (svrcf) * OA.spec 
   th <- mean (ensemblecf) + sd (ensemblecf) ## calculate threshold
   selbands <- ensemblecf > th ## apply threshold
   
-  ## prepare output
-  cf <- rbind (wl, plscf, rfcf, svrcf, ensemblecf, selbands)
-  colnames (cf) <- colnames (x)
+  ######################
+  ### prepare output ###
+  ######################
   
-  fit <- c (plsrsq, rfrsq, svrrsq)
-  names (fit) <- c ("PLS R2", "RF R2", "SVR R2")
-  output <- list (cf, fit, th, pls, rf, svr)
-  names (output) <- c ("selection", "fits", "threshold", "PLS", "RF", "SVM")
+  cf <- rbind (wl, svrcf, ensemblecf, selbands)
+  colnames (cf) <- colnames (spec)
+  
+  fit <- c (OA.spec)
+  names (fit) <- c ("SVR OA")
+  output <- list (cf, fit, th, svmClas)
+  names (output) <- c ("selection", "fits", "threshold", "SVM")
   class (output) <- "ensemble"
   output
   
@@ -159,5 +206,6 @@ classificationLeafLevel <- function(classes, spec, wl=NA){
   stopCluster(cl)
  }
 
+plot(output)
 
 save.image("ClassLeafLevel.RData")
