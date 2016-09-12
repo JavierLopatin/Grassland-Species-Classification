@@ -63,9 +63,11 @@ source_github <- function(u) {
 source_github("https://raw.githubusercontent.com/JavierLopatin/Herbaceous-Species-Classification/master/Scripts/Functions.R")
 
 #########
-classes = data$Species
+subdata = data[1:100,]
+subdata$Species <- factor(subdata$Species)
+classes = subdata$Species
 wl = hyperAISA@wavelength
-spec = hyperAISA$spc
+spec = hyperAISA$spc[1:100,]
 
 classificationLeafLevel <- function(classes, spec, wl=NA){
   
@@ -73,7 +75,7 @@ classificationLeafLevel <- function(classes, spec, wl=NA){
     wl <- 1:ncol (classes)
   
   ## load required libraries
-  library (e1071)
+  #library (e1071)
   library (caret)
   library(doParallel)
   
@@ -99,18 +101,20 @@ classificationLeafLevel <- function(classes, spec, wl=NA){
   ### PLS classification ###
   ##########################
   
-  ## set tuning paramiters
-  grid <- expand.grid(ncomp = seq(1, 10, by = 1))
-  
   # apply classification
   set.seed(123)
-  plsClas <- train(x=train[, 2:length(train)], y=train$classes, method = "pls", tuneLength=10, 
+  plsClas <- train(x=train[, 2:length(train)], y=train$classes, method = "pls", tuneLength=20, 
                    preProc = c("center", "scale"), trControl = controlObject)
-  
+
   # predict
   pls.pred <- predict(plsClas, test[, 2:length(train)])
   
   # confusion matix
+  preMatrix <- function(pred, test){ # functionn to prevent caret error for different length
+    u = union(pred, test)
+    t = table(factor(pred, u), factor(test, u))
+    return(t)
+  }  
   conf.pls <- confusionMatrix(preMatrix(pls.pred, test$classes))
   
   # get accuracies
@@ -120,7 +124,7 @@ classificationLeafLevel <- function(classes, spec, wl=NA){
   kappa.pls <- conf.pls$overall["Kappa"]
   
   ### variable importance
-  plscf <- as.vector (coef (plsClas$finalModel, ncomp=nlv, intercept=F)) ## extract coeff.
+  plscf <- as.vector (coef (plsClas$finalModel, ncomp=plsClas$finalModel$ncomp, intercept=F)) ## extract coeff.
   plscf <- plscf / sd (plscf) ## scale regression coefficients
   
   #########################
@@ -128,7 +132,7 @@ classificationLeafLevel <- function(classes, spec, wl=NA){
   #########################
   
   set.seed(123)
-  rfClas <- train(x=train[, 2:length(train)], y=train$classes, method = "rf", trControl = controlObject)
+  rfClas <- train(x=train[, 2:length(train)], y=train$classes, method = "rf", tuneLength=15, trControl = controlObject)
   
   # predict
   rf.pred <- predict(rfClas, test[,2:length(train)])
@@ -146,23 +150,18 @@ classificationLeafLevel <- function(classes, spec, wl=NA){
   rfcf <- varImp(rfClas$finalModel)[[1]]
   rfcf <- as.vector (rfcf / sd(rfcf))
   
-  ############################
-  ### SVMDA classification ###
-  ############################
+  ##########################
+  ### SVM classification ###
+  ##########################
   
   set.seed(123)
-  svmClas <- train(x=train[, 2:length(train)], y=train$classes, method = "pls", tuneGrid = expand.grid(.ncomp = 1:10),
-                   preProc = c("center","scale"), metric = "ROC", trControl = controlObject)
+  svmClas <- train(x=train[, 2:length(train)], y=train$classes, method = "svmLinear2", tuneLength=15, 
+                     preProc = c("center", "scale"), trControl = controlObject)
   
   # predict
   svm.pred <- predict(svmClas, test[,2:length(train)])
 
   # confusion matix
-  preMatrix <- function(pred, test){ # functionn to prevent caret error for different length
-    u = union(pred, test)
-    t = table(factor(pred, u), factor(test, u))
-    return(t)
-  }  
   conf.svm <- confusionMatrix(preMatrix(svm.pred, test$classes))
 
   # get accuracies
@@ -184,7 +183,8 @@ classificationLeafLevel <- function(classes, spec, wl=NA){
   ### get ensemble from all models and identify important variables ###
   #####################################################################
   
-  ensemblecf <-  abs (svrcf) * OA.spec 
+  ## get ensemble from all models and identify important variables
+  ensemblecf <- abs (plscf) * plsrsq + abs (svrcf) * svrrsq + abs (rfcf) * rfrsq
   th <- mean (ensemblecf) + sd (ensemblecf) ## calculate threshold
   selbands <- ensemblecf > th ## apply threshold
   
@@ -192,13 +192,13 @@ classificationLeafLevel <- function(classes, spec, wl=NA){
   ### prepare output ###
   ######################
   
-  cf <- rbind (wl, svrcf, ensemblecf, selbands)
-  colnames (cf) <- colnames (spec)
+  cf <- rbind (wl, plscf, rfcf, svrcf, ensemblecf, selbands)
+  colnames (cf) <- colnames (x)
   
-  fit <- c (OA.spec)
-  names (fit) <- c ("SVR OA")
-  output <- list (cf, fit, th, svmClas)
-  names (output) <- c ("selection", "fits", "threshold", "SVM")
+  fit <- c (plsrsq, rfrsq, svrrsq)
+  names (fit) <- c ("PLS R2", "RF R2", "SVR R2")
+  output <- list (cf, fit, th, pls, rf, svr)
+  names (output) <- c ("selection", "fits", "threshold", "PLS", "RF", "SVM")
   class (output) <- "ensemble"
   output
   

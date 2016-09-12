@@ -78,7 +78,7 @@ for (i in 2:length(imgIn)){
       
       # tune
       set.seed(123)
-      tune.spec <- train(x=train[,1:61], y=train$spp, method = "svmLinear2", tuneLength=10, preProc = c("center", "scale"), trControl = controlObject)
+      tune.spec <- train(x=train[,1:61], y=train$spp, method = "svmLinear2", tuneGrid=grid, preProc = c("center", "scale"), trControl = controlObject)
       #set.seed(123)
       #tune.MNF <- train(x=train[,62:71], y=train$spp, method = "svmLinear2", tuneLength=10, preProc = c("center", "scale"), trControl = controlObject)
       #set.seed(123)
