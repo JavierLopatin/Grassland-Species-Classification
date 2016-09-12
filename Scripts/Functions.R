@@ -181,9 +181,7 @@ plot.classificationEnsemble <- function (spec, en,...) {
   fit <- en[[2]]
   cf <- en[[1]][2:4,]
   cf <- cf * fit
-  fit <- round (fit, 2)
   encf <- en[[1]][5,]
-  z1 <- matrix (rep (encf, 100), ncol=100)
   sel <- as.logical (en[[1]][6,])
   z2 <- matrix (rep (sel, 100), ncol=100)
   z2[,11:100] <- NA
