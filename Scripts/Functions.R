@@ -200,9 +200,11 @@ plot.classificationEnsemble <- function (spec, en, label=TRUE, ...) {
   # add coefficients
   par(new = T)
   plot(wl,  cf[1,], type = "l", col=2, xlab=expression(lambda(nm)), ylab="Weighted coefficients", las=1,
-       ylim=c(min(cf), max(cf)))
-  lines(wl,  cf[2,], type = "l", col=3)
-  lines(wl,  cf[3,], type = "l", col=4) 
+       ylim=c(min(cf), max(cf)), lty=1, lwd=2)
+  lines(wl,  cf[2,], type = "l", col=3, lty=2, lwd=2)
+  lines(wl,  cf[3,], type = "l", col=4, lty=3, lwd=2) 
+  par(xpd = F) 
+  abline(h=0, lty=2)
   # add spectral bands selected by the ensemble method
   image (wl, seq(min (cf) * 1.1, max (cf) * 1.1, length.out=100), z2, col=7, 
          xlab="", ylab="", add=T)
@@ -212,7 +214,7 @@ plot.classificationEnsemble <- function (spec, en, label=TRUE, ...) {
                  "Ensemble selection")
     legend ("topright", bty="n", col=c (2, 3, 4, NA, NA, rep (1, 3)), 
             pt.bg=c(rep (NA, 4), 7), lwd=c(rep (2, 3), rep (NA, 2)),
-            pch=c (rep (NA, 4), 22), cex=0.7, pt.cex=1, legend=labels)
+            pch=c (rep (NA, 4), 22), cex=0.7, pt.cex=1, legend=labels, lty=c(1,2,3,rep (NA, 2)))
    }
  }
 
@@ -344,19 +346,21 @@ significanceTest_LeafLevel <- function(data, fitASD, fitAISA, i){
    diff_kappa[[i]] <- m1.kappa - m2.kappa
     
   }
+  
   # stop parallel process
   stopCluster(cl)
   
   # prepare output
-  fit <- c(OA.ASD, OA.AISA, kappa.ASD, kappa.AISA, PA.ASD, PA.AISA, UA.ASD, UA.AISA)
+  fit <- list(OA.ASD, OA.AISA, kappa.ASD, kappa.AISA, PA.ASD, PA.AISA, UA.ASD, UA.AISA)
   names(fit) <- c("OA.ASD", "OA.AISA", "kappa.ASD", "kappa.AISA", "PA.ASD", "PA.AISA", "UA.ASD", "UA.AISA")
-  boot_test <- c(diff_OA, diff_kappa)
+  boot_test <- list(diff_OA, diff_kappa)
   names(boot_test) <- c("OA", "Kappa")
   output <- list(boot_test, fit)
   names(output) <- c("boot_test", "fit")
   class(output) <- "boot_test"
   output
- }
+ 
+  }
 
 
 ################################################################################
