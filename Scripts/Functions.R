@@ -237,7 +237,7 @@ plot.classificationEnsemble <- function (spec, en, label=TRUE, ...) {
 ##                                                                            ##
 ################################################################################
 
-significanceTest_LeafLevel <- function(data, fitASD, fitAISA, i){
+significanceTest_LeafLevel <- function(data, fitASD, fitAISA, B=500){
   
   library(hyperSpec)
   library(boot)
@@ -267,7 +267,6 @@ significanceTest_LeafLevel <- function(data, fitASD, fitAISA, i){
   set.seed(123)
   # set the bootstrap parameters
   N = length(data[,1]) # N° of observations
-  B = 500             # N° of bootstrap iterations
   
   # list to store
   diff_OA <- list()
@@ -295,7 +294,6 @@ significanceTest_LeafLevel <- function(data, fitASD, fitAISA, i){
    ###########
    ### ASD ###
    ###########
-   set.seed(123)
    m1 <-  svm(hyperASD$spc[idx,], hyperASD@data$Species[idx], gamma = fitASD$SVM$finalModel$gamma, cost = fitASD$SVM$finalModel$cost, probability = TRUE)
    
    m1.pred <- predict(m1, hyperASD$spc[-idx,])
@@ -322,7 +320,6 @@ significanceTest_LeafLevel <- function(data, fitASD, fitAISA, i){
    ############
    ### AISA ###
    ############
-   set.seed(123)
    m2 <-  svm(hyperAISA$spc[idx,], hyperAISA@data$Species[idx], gamma = fitAISA$SVM$finalModel$gamma, cost = fitAISA$SVM$finalModel$cost, probability = TRUE)
    
    m2.pred <- predict(m2, hyperAISA$spc[-idx,])
