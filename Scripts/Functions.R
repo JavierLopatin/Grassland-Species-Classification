@@ -219,6 +219,148 @@ plot.classificationEnsemble <- function (spec, en, label=TRUE, ...) {
 
 ################################################################################
 ##                                                                            ##
+## significanceTest_LeafLevel: Apply bootstrap significance test to leaf data ##
+##                                                                            ##
+## Arguments:                                                                 ##
+## -  data:    input dataset                                                  ##
+## - fitASD:   classificationEnsemble ASD object 
+## - fitAISA:   classificationEnsemble AISA object 
+##  
+## Function based on:
+## Lopatin, J., Dolos, K., Hernández, H. J., Galleguillos, M., & Fassnacht,   ##
+## F. E. (2016). Comparing Generalized Linear Models and random forest to     ##
+## model vascular plant species richness using LiDAR data in a natural forest ##
+## in central Chile. Remote Sensing of Environment, 173, 200-210.             ##
+## http://doi.org/10.1016/j.rse.2015.11.029                                   ##
+##                                                                            ##
+################################################################################
+
+significanceTest_LeafLevel <- function(data, fitASD, fitAISA, i){
+  
+  library(hyperSpec)
+  library(boot)
+  library(e1071)
+  library(doParallel)
+      
+  ####################
+  ### prepare data ###
+  ####################
+  classes <- data$Species 
+  # spectral bands
+  spectra <- data[, 2:(length(data)-1)]
+
+  new("hyperSpec")
+  hyperASD <- new("hyperSpec", spc=spectra, data=data, wavelength = seq(350, 2500, 1),
+                 label=list(spc="Reflectance", .wavelength =  expression(lambda(nm))))
+  
+  hyperASD <- hyperASD[,, c(390~max)]
+  hyperASD <- spc.bin (hyperASD, 10)
+  
+  hyperAISA <- hyperASD[,, c(390~990)]
+  
+  #########################
+  ### prepare bootstrap ###
+  #########################
+  set.seed(123)
+  # set the bootstrap parameters
+  N = length(data[,1]) # N° of observations
+  B = 500             # N° of bootstrap iterations
+  # list to store
+  diff_OA <- list()
+  diff_kappa <- list()
+  
+  OA.ASD <- list()
+  kappa.ASD <- list()
+  PA.ASD <- list()
+  UA.ASD <- list()
+  
+  OA.AISA <- list()
+  kappa.AISA <- list()
+  PA.AISA <- list()
+  UA.AISA <- list()
+  
+  # initialize parallel processing
+  cl <- makeCluster(detectCores())
+  registerDoParallel(cl)
+  
+  # start loop
+  for(i in 1:B){
+   # create random numbers with replacement to select samples from each group
+   idx = sample(1:N, N, replace=TRUE)
+    
+   ###########
+   ### ASD ###
+   ###########
+   set.seed(123)
+   m1 <-  svm(hyperASD$spc[idx,], hyperASD@data$Species[idx], gamma = fitASD$SVM$finalModel$gamma, cost = fitASD$SVM$finalModel$cost, probability = TRUE)
+   
+   m1.pred <- predict(m1, hyperASD$spc[-idx,])
+   
+   # confusion matix
+   preMatrix <- function(pred, test){ # functionn to prevent caret error for different length
+     u = union(pred, test)
+     t = table(factor(pred, u), factor(test, u))
+     return(t)
+   }  
+   m1.conf <- confusionMatrix(preMatrix(m1.pred, hyperASD@data$Species[-idx]))
+   
+   # get accuracies
+   m1.OA    <- m1.conf$overall["Accuracy"]
+   m1.kappa <- m1.conf$overall["Kappa"]
+   m1.PA    <- m1.conf$byClass[,3] 
+   m1.UA    <- m1.conf$byClass[,4]
+   
+   OA.ASD[[i]] <- m1.OA
+   kappa.ASD[[i]] <- m1.kappa
+   PA.ASD[[i]] <- m1.PA
+   UA.ASD[[i]] <- m1.UA
+   
+   ############
+   ### AISA ###
+   ############
+   set.seed(123)
+   m2 <-  svm(hyperAISA$spc[idx,], hyperAISA@data$Species[idx], gamma = fitAISA$SVM$finalModel$gamma, cost = fitAISA$SVM$finalModel$cost, probability = TRUE)
+   
+   m2.pred <- predict(m2, hyperAISA$spc[-idx,])
+   
+   # confusion matix
+   m2.conf <- confusionMatrix(preMatrix(m2.pred, hyperASD@data$Species[-idx]))
+   # get accuracies
+   m2.OA    <- m2.conf$overall["Accuracy"]
+   m2.kappa <- m2.conf$overall["Kappa"]
+   m2.PA    <- m2.conf$byClass[,3] 
+   m2.UA    <- m2.conf$byClass[,4]
+   
+   OA.AISA[[i]] <- m2.OA
+   kappa.AISA[[i]] <- m2.kappa
+   PA.AISA[[i]] <- m2.PA
+   UA.AISA[[i]] <- m2.UA
+   
+   ### compute the differences between ASD and AISA band settings
+   ### OA of ASD should be larger. So, if OA(m1) - OA(m2) is positive, ASD is significantly better.
+   diff_OA[[i]] <- m1.OA - m2.OA
+   
+   ### Kappa of ASD should be larger. So, if kappa(m1) - kappa(m2) is positive, ASD is significantly better.
+   diff_kappa[[i]] <- m1.kappa - m2.kappa
+    
+  }
+  # stop parallel process
+  stopCluster(cl)
+  
+  # prepare output
+  fit <- c(OA.ASD, OA.AISA, kappa.ASD, kappa.AISA, PA.ASD, PA.AISA, UA.ASD, UA.AISA)
+  names(fit) <- c("OA.ASD", "OA.AISA", "kappa.ASD", "kappa.AISA", "PA.ASD", "PA.AISA", "UA.ASD", "UA.AISA")
+  boot_test <- c(diff_OA, diff_kappa)
+  names(boot_test) <- c("OA", "Kappa")
+  output <- list(boot_test, fit)
+  names(output) <- c("boot_test", "fit")
+  class(output) <- "boot_test"
+  output
+ }
+
+
+################################################################################
+##                                                                            ##
 ## GLCM: Apply Gray Level Covariance Matrix to an image                       ##
 ##                                                                            ##
 ## Arguments:                                                                 ##
