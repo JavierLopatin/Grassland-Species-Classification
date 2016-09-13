@@ -10,6 +10,10 @@ home = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp"
 
 setwd(home)
 
+load("fitAISALeaf.RData")
+load("fitASDLeaf.RData")
+load("boot_testLeaf.Rdata")
+
 library(hyperSpec)
 
 # load the data
@@ -44,7 +48,6 @@ nwl(hyperASD)
 
 # set a data with the AISA+ spectral characteristics
 hyperAISA <- hyperASD[,, c(390~990)]
-hyperAISA <- spc.bin (hyperAISA, 10)
 nwl(hyperAISA)
 plot(hyperAISA)
 
@@ -69,25 +72,43 @@ source_github("https://raw.githubusercontent.com/JavierLopatin/Herbaceous-Specie
 
 # With the AISA+ band seting
 fitAISA <- classificationEnsemble(hyperAISA@data$Species, hyperAISA$spc, hyperAISA@wavelength)
-plot.classificationEnsemble(hyperAISA$spc, fitAISA, label = T)
+plot.classificationEnsemble(hyperAISA$spc, fitAISA)
+save(fitAISA, file="fitAISALeaf.Rdata")
 
 # ASD full range
 fitASD <-  classificationEnsemble(hyperASD@data$Species, hyperASD$spc, hyperASD@wavelength)
 plot.classificationEnsemble(hyperASD$spc, fitASD)
+save(fitASD, file="fitASDLeaf.Rdata")
+
+##################################
+## Bootstrap significance test ###
+##################################
+
+boot_test <- significanceTest_LeafLevel(data, fitASD, fitAISA)
+save(boot_test, file="boot_testLeaf.Rdata")
 
 ####################
 ### Plot results ###
 ####################
 
+# feature selection
 pdf(file = "Figures/plot_hyper.pdf", width=10, height=10)
-
 par(mfrow = c(2,1), mai = c(0,0,0,0))
-plot.classificationEnsemble(hyperASD$spc, fitASD, label = T)
+plot.classificationEnsemble(hyperASD$spc, fitASD)
 mtext("A", side=3, line=0.5, adj=0, cex=1.3)
 
-plot.classificationEnsemble(hyperAISA$spc, fitAISA, label = T)
+plot.classificationEnsemble(hyperAISA$spc, fitAISA)
 mtext("B", side=3, line=0.5, adj=0, cex=1.3)
-
 dev.off()
 
-save.image("ClassLeafLevel.RData")
+# Confusion matrix
+library(beanplot)
+
+# OA and Kappa
+beanplot( boot_test$fit$OA.ASD, boot_test$fit$OA.AISA, boot_test$fit$kappa.ASD, boot_test$fit$kappa.AISA, 
+          col = list("black", "gray"), border = NA, innerboerder=NA, beanlines="median", 
+          ll = 0, side = "b", log="", main = "Squared Pearson's correlation coefficient", 
+          names=c("Total", "Tree", "Shrub", "Herb"), ylab = expression(r^2), ylim = c(0,1), 
+          yaxs = "i",cex.lab=1.3, cex.axis=1.3, las=1)
+
+
