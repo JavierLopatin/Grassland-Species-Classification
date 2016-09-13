@@ -2,26 +2,26 @@
 ## Functions used in the paper
 
 
-################################################################################
-##                                                                            ##
-## Multi-method ensemble selection of spectral bands                          ##
-##                                                                            ##
-## This function performs a band selection based on a multi-method ensemble   ##
-## assessment of the variable importance and classification coefficients of   ##
-## three different model types: Partial Least Squares Discriminant Analysis,  ##
-## Random Forest and Support Vector Machine classifications                   ## 
-##                                                                            ## 
-## Arguments:                                                                 ##
-## x        Numeric matrix containing the spectra (samples as rows)           ##
-## y        Numeric vector containing the response variable                   ##
-## wl       Numeric vector containing the wavelength information of the bands ##
-##                                                                            ##
-## function based on the paper:                                               ##
-## Feilhauer, H., Asner, G. P., & Martin, R. E. (2015). Multi-method ensemble ##
-## selection of spectral bands related to leaf biochemistry. Remote Sensing of## 
-## Environment, 164(November), 57-65. http://doi.org/10.1016/j.rse.2015.03.033##                                           ##
-##                                                                            ##
-################################################################################
+##################################################################################
+##                                                                              ##
+## Multi-method ensemble selection of spectral bands                            ##
+##                                                                              ##
+## This function performs a band selection based on a multi-method ensemble     ##
+## assessment of the variable importance and classification coefficients of     ##
+## three different model types: Partial Least Squares Discriminant Analysis,    ##
+## Random Forest and Support Vector Machine classifications                     ## 
+##                                                                              ## 
+## Arguments:                                                                   ##
+## - x        Numeric matrix containing the spectra (samples as rows)           ##
+## - y        Numeric vector containing the response variable                   ##
+## - wl       Numeric vector containing the wavelength information of the bands ##
+##                                                                              ##
+## function based on the paper:                                                 ##
+## Feilhauer, H., Asner, G. P., & Martin, R. E. (2015). Multi-method ensemble   ##
+## selection of spectral bands related to leaf biochemistry. Remote Sensing of  ## 
+## Environment, 164(November), 57-65. http://doi.org/10.1016/j.rse.2015.03.033  ##                                           ##
+##                                                                              ##
+##################################################################################
 
 classificationEnsemble <- function(classes, spec, wl=NA){
   
@@ -160,17 +160,12 @@ classificationEnsemble <- function(classes, spec, wl=NA){
 }
 
 ################################################################################
-#################### END function classificationEnsemble #######################
-################################################################################
-
-
-################################################################################
 ##                                                                            ##
 ## plot.ensemble: visualization of ensemble objects                           ##
 ##                                                                            ##
 ## Arguments:                                                                 ##
-## spec     spectral information. Used to create the quantiles of spectra     ##
-## en       classificationEnsemble object                                     ##
+## - spec     spectral information. Used to create the quantiles of spectra   ##
+## - en       classificationEnsemble object                                   ##
 ##                                                                            ##
 ################################################################################
 
@@ -221,13 +216,35 @@ plot.classificationEnsemble <- function (spec, en, label=TRUE, ...) {
    }
  }
 
+
 ################################################################################
-################### END function plot.classificationEnsemble ###################
+##                                                                            ##
+## GLCM: Apply Gray Level Covariance Matrix to an image                       ##
+##                                                                            ##
+## Arguments:                                                                 ##
+## -  img       input image                                                   ##
+##                                                                            ##
 ################################################################################
 
+GLCM <- function(img){
+  # Estimate the GLCM values of one band
+  texture <- glcm(img, n_grey = 32, window = c(3, 3), shift = c(1, 1), 
+                  statistics =c("homogeneity", "contrast", "dissimilarity", "entropy","second_moment", "correlation"),
+                  min_x=NULL, max_x=NULL, na_opt="any",na_val=NA, scale_factor=1, asinteger=FALSE)
+  stats <- c("homogeneity", "contrast", "dissimilarity", "entropy","second_moment", "correlation")
+  Names <- paste(names(img), "_", stats, sep="")
+  names(texture) <- Names
+  return (texture)
+}
 
-###
+################################################################################
+##                                                                            ##
+## Small functions to help in repetitive tasks                                ##
+##                                                                            ##
+##                                                                            ##
+################################################################################
 
+## List the names of the rasters in a folder
 rasterListNames <- function(fileExtantion, folder){
   # make a list of all fileExtantion files
   rast_list = list.files(folder, pattern = fileExtantion)
@@ -236,6 +253,7 @@ rasterListNames <- function(fileExtantion, folder){
   return(rast_list)
 }
 
+## List and load the rasters contained in a folder
 rasterList <- function(fileExtantion, folder, rasterNames=NULL){
   # make a list of all fileExtantion files
   rast_list = list.files(folder, pattern = fileExtantion)
@@ -252,17 +270,3 @@ rasterList <- function(fileExtantion, folder, rasterNames=NULL){
   setwd(home)
   return(rasterlist)
 }
-
-
-GLCM <- function(img){
-  # Estimate the GLCM values of one band
-  texture <- glcm(img, n_grey = 32, window = c(3, 3), shift = c(1, 1), 
-                  statistics =c("homogeneity", "contrast", "dissimilarity", "entropy","second_moment", "correlation"),
-                  min_x=NULL, max_x=NULL, na_opt="any",na_val=NA, scale_factor=1, asinteger=FALSE)
-  stats <- c("homogeneity", "contrast", "dissimilarity", "entropy","second_moment", "correlation")
-  Names <- paste(names(img), "_", stats, sep="")
-  names(texture) <- Names
-  return (texture)
-}
-
-
