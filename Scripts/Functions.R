@@ -243,6 +243,7 @@ significanceTest_LeafLevel <- function(data, fitASD, fitAISA, i){
   library(boot)
   library(e1071)
   library(doParallel)
+  library(caret)
       
   ####################
   ### prepare data ###
@@ -267,6 +268,7 @@ significanceTest_LeafLevel <- function(data, fitASD, fitAISA, i){
   # set the bootstrap parameters
   N = length(data[,1]) # N° of observations
   B = 500             # N° of bootstrap iterations
+  
   # list to store
   diff_OA <- list()
   diff_kappa <- list()
