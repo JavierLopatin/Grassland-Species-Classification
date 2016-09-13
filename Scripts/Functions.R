@@ -122,13 +122,13 @@ classificationEnsemble <- function(classes, spec, wl=NA){
   kappa.svm <- conf.svm$overall["Kappa"]
   
   ### variable importance
-  vr.alpha <- t(svmClas$finalModel$coefs) ## extract alpha vector
+  svr.alpha <- t(svmClas$finalModel$coefs) ## extract alpha vector
+  svr.alpha <- colMeans(svr.alpha)
   svr.index <-  svmClas$finalModel$index ## extract alpha index
   ## calculate pseudo-regression coefficients from the alpha vector
   svrcf <- numeric (ncol (spec))
-  for(i in 1:ncol(spec)){
+  for(i in 1:ncol(spec))
     svrcf[i] <- svr.alpha %*% spec[svr.index, i]
-  } 
   svrcf <- svrcf / sd (svrcf) ## scale pseudo-coefficients
   
   #####################################################################    
@@ -152,8 +152,8 @@ classificationEnsemble <- function(classes, spec, wl=NA){
   
   fit <- c (OA.pls, OA.rf, OA.svm)
   names (fit) <- c ("PLS-DA OA", "RF OA", "SVR OA")
-  output <- list (cf, fit, th, plsClas, rfClas, svmClas)
-  names (output) <- c ("selection", "fits", "threshold", "PLS", "RF", "SVM")
+  output <- list (cf, fit, th, plsClas, rfClas, svmClas, conf.pls, conf.rf, conf.svm)
+  names (output) <- c ("selection", "fits", "threshold", "PLS", "RF", "SVM", "confusionMatrix.PLS", "confusionMatrix.RF", "confusionMatrix.SVM")
   class (output) <- "ensemble"
   output
   
