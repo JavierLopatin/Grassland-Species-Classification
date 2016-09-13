@@ -4,7 +4,6 @@
 ## Manuscript: 
 ## last changes: 
 
-
 home = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp"
 # home = "~/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp"
 
@@ -87,6 +86,10 @@ save(fitASD, file="fitASDLeaf.Rdata")
 boot_test <- significanceTest_LeafLevel(data, fitASD, fitAISA)
 save(boot_test, file="boot_testLeaf.Rdata")
 
+boot_test$boot_test$OA
+
+
+
 ####################
 ### Plot results ###
 ####################
@@ -104,11 +107,17 @@ dev.off()
 # Confusion matrix
 library(beanplot)
 
+PA.ASD  <- do.call("rbind", boot_test$fit$PA.ASD)
+PA.AISA <- do.call("rbind", boot_test$fit$PA.AISA)
+UA.ASD  <- do.call("rbind", boot_test$fit$UA.ASD)
+UA.AISA <- do.call("rbind", boot_test$fit$UA.AISA)
+
 # OA and Kappa
-beanplot( boot_test$fit$OA.ASD, boot_test$fit$OA.AISA, boot_test$fit$kappa.ASD, boot_test$fit$kappa.AISA, 
+beanplot( unlist(boot_test$fit$OA.ASD), unlist(boot_test$fit$OA.AISA), 
+          unlist(boot_test$fit$kappa.ASD), unlist(boot_test$fit$kappa.AISA), 
           col = list("black", "gray"), border = NA, innerboerder=NA, beanlines="median", 
-          ll = 0, side = "b", log="", main = "Squared Pearson's correlation coefficient", 
-          names=c("Total", "Tree", "Shrub", "Herb"), ylab = expression(r^2), ylim = c(0,1), 
+          ll = 0, side = "b", log="", main = "", 
+          names=c("OA", "Kappa"), ylab = "Accurracy [0-1]", ylim = c(0,1), 
           yaxs = "i",cex.lab=1.3, cex.axis=1.3, las=1)
 
 
