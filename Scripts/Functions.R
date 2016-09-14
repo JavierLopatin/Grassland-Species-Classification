@@ -19,7 +19,7 @@
 ## function based on the paper:                                                 ##
 ## Feilhauer, H., Asner, G. P., & Martin, R. E. (2015). Multi-method ensemble   ##
 ## selection of spectral bands related to leaf biochemistry. Remote Sensing of  ## 
-## Environment, 164(November), 57-65. http://doi.org/10.1016/j.rse.2015.03.033  ##                                           ##
+## Environment, 164, 57-65. http://doi.org/10.1016/j.rse.2015.03.033            ##
 ##                                                                              ##
 ##################################################################################
 
