@@ -225,10 +225,10 @@ plot.classificationEnsemble <- function (spec, en, label=TRUE, ...) {
 ##                                                                            ##
 ## Arguments:                                                                 ##
 ## -  data:    input dataset                                                  ##
-## - fitASD:   classificationEnsemble ASD object 
-## - fitAISA:   classificationEnsemble AISA object 
-##  
-## Function based on:
+## - fitASD:   classificationEnsemble ASD object                              ##
+## - fitAISA:   classificationEnsemble AISA object                            ##
+##                                                                            ##
+## Function based on:                                                         ##
 ## Lopatin, J., Dolos, K., Hernández, H. J., Galleguillos, M., & Fassnacht,   ##
 ## F. E. (2016). Comparing Generalized Linear Models and random forest to     ##
 ## model vascular plant species richness using LiDAR data in a natural forest ##
