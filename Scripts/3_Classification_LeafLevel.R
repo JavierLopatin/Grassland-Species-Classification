@@ -16,10 +16,10 @@ load("boot_testLeaf.Rdata")
 library(hyperSpec)
 
 # load the data
-data <- read.table("LeafHerbaceous.txt", sep = "", header = T)
+data <- read.table("/data/LeafHerbaceous.txt", sep = "", header = T)
 
 # add Species
-SpNames <- read.table("SpNamesLeafClip.csv", sep = "", header = T)
+SpNames <- read.table("/data/SpNamesLeafClip.csv", sep = "", header = T)
 # add to data
 data$Species <- SpNames$Species
 # erase bad data
