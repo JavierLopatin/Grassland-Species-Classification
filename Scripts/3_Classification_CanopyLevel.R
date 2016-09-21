@@ -11,6 +11,12 @@ home = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp"
 
 setwd(home)
 
+load("fit_potVal_1_spectra.RData")
+load("fit_rf_1_spectra.RData")
+load("fit_potVal_1_spectraBN.RData")
+load("fit_rf_1_spectraBN.RData")
+load("fit_potVal_1.RData")
+
 ### load the data
 # Site1
 potVal_1 <- read.table("data/potVal_trainningAreas_site1.csv", sep = ",", header = T)
@@ -48,7 +54,7 @@ source_github("https://raw.githubusercontent.com/JavierLopatin/Herbaceous-Specie
 # potVal
 fit_potVal_1_spectra <- classificationEnsemble(potVal_1$Species, potVal_1[,2:62], wl)
 plot.classificationEnsemble( potVal_1[,2:62]/10000, fit_potVal_1_spectra)
-save(fit_potVal_1, file="fit_potVal_1.Rdata")
+save(fit_potVal_1_spectra, file="fit_potVal_1_spectra1.Rdata")
 
 # rip it off
 fit_rf_1_spectra <-  classificationEnsemble(rf_1$Species, rf_1[,2:62], wl)

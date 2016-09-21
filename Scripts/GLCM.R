@@ -12,7 +12,7 @@ library(doParallel)
 home = "F:/Sp_Images/Site4/Raw"
 setwd(home)
 
-processingFolder = "BN_MNF"
+processingFolder = "MNF"
 bandName = paste("MNF_", seq(1,10,1), sep="")
 
 rasterNames <- rasterListNames(fileExtantion = ".tif", folder = processingFolder)

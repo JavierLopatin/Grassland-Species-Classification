@@ -17,7 +17,7 @@ for f in $FILES
 do
   echo "Processing $f file..."
   filename=`basename ${f} .${3}`
-  echo "Output: ${2}/${filename}.kea"
-  gdalwarp -r cubic -multi -wt Float32 -of KEA -tr $4 -$4 ${f} ${2}/${filename}.kea
-  gdalcalcstats ${2}/${filename}.kea -ignore 0
+  echo "Output: ${2}/${filename}.tif"
+  gdalwarp -r cubic -multi -wt Float32 -of GTiff -tr $4 -$4 ${f} ${2}/${filename}.tif
+  gdalcalcstats ${2}/${filename}.tif -ignore 0
 done
