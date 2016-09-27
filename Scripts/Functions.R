@@ -199,7 +199,7 @@ plot.classificationEnsemble <- function (spec, en, label=TRUE, ...) {
   mtext(side = 4, line = 3, 'Reflectance')
   # add coefficients
   par(new = T)
-  plot(wl,  cf[1,], type = "l", col=2, xlab=expression(lambda(nm)), ylab="Weighted coefficients", las=1,
+  plot(wl,  cf[1,], type = "l", col=2, ylab="Weighted coefficients", las=1,
        ylim=c(min(cf), max(cf)), lty=1, lwd=2)
   lines(wl,  cf[2,], type = "l", col=3, lty=2, lwd=2)
   lines(wl,  cf[3,], type = "l", col=4, lty=3, lwd=2) 
