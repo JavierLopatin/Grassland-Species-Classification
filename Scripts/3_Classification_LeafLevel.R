@@ -7,16 +7,13 @@
 home = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp"
 setwd(home)
 
-load("fitAISALeaf.RData")
-load("fitASDLeaf.RData")
-load("boot_testLeaf.Rdata")
-
+# load required libraries
 library(hyperSpec)
 
 # load the data
 data <- read.table("/data/LeafHerbaceous.txt", sep = "", header = T)
 
-# add Species
+# load species names
 SpNames <- read.table("/data/SpNamesLeafClip.csv", sep = "", header = T)
 # add to data
 data$Species <- SpNames$Species
