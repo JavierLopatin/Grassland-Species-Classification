@@ -5,8 +5,6 @@
 ## last changes: 
 
 home = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp"
-# home = "~/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp"
-
 setwd(home)
 
 load("fitAISALeaf.RData")
@@ -89,7 +87,7 @@ save(boot_test, file="boot_testLeaf.Rdata")
 # Hist do not have to overlap with 0, otherwise is not significant
 # The black "zero-line" needs to be left of the blue "alpha-line". The green line is just the upper quantile.
 par(mfrow=c(1,2), mar=c(2,3,3,1))
-main <- c("OA Leaf level", "Kappa LEaf level")
+main <- c("OA Leaf level", "Kappa Leaf level")
 for(i in 1:2){
   hist(unlist(boot_test$boot_test[i]), main=main[i], col="grey", border="white", xlab="", ylab="")
   abline(v=quantile(unlist(boot_test$boot_test[i]), probs=c(0.05, 0.95)), col=c("blue", "green"))
