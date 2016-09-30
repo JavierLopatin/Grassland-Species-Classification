@@ -32,7 +32,7 @@
 ##                                                                            ##
 ##----------------------------------------------------------------------------##
 
-classificationEnsemble <- function(classes, spec, wl=NA){
+classificationEnsemble <- function(data, Site, wl=NA){
   
   ## load required libraries
   library (caret)
@@ -40,15 +40,19 @@ classificationEnsemble <- function(classes, spec, wl=NA){
   library(doParallel)
   
   # set data
-  data <- data.frame(classes, spec)
-  data <- na.omit(data)
+  x = grep(Site, data$Site) 
+  x1 <- bestData[x, ]
+  x1$Species <- factor(x1$Species)
+  
+  data2 <- data.frame(classes = x1$Species, x1[, 3:length(x1)])
+  data2 <- na.omit(data2)
   
   # Set the random number seed so we can reproduce the results
   set.seed(123)
   # Split data in training and test
-  forTraining <- createDataPartition(data$classes, p = 0.6, list=F)
-  train <- data [ forTraining,]
-  test<- data [-forTraining,]
+  forTraining <- createDataPartition(data2$classes, p = 0.6, list=F)
+  train <- data2 [ forTraining,]
+  test<- data2 [-forTraining,]
   
   # Each model used 5 repeated 10-fold cross-validation. Use AUC to pick the best model
   controlObject <- trainControl(method = "cv", number = 10,  repeats=10, classProbs=TRUE, allowParallel = TRUE)
@@ -182,7 +186,7 @@ classificationEnsemble <- function(classes, spec, wl=NA){
 ##                                                                            ##
 ##----------------------------------------------------------------------------##
 
-ApplyBootsClassification <- function(classes, spec, en, rasterPlots, boots=100, outDir, modelTag){  
+ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, outDir, modelTag){  
   
   library(raster)
   library(rgdal)
@@ -193,6 +197,12 @@ ApplyBootsClassification <- function(classes, spec, en, rasterPlots, boots=100, 
   library(doParallel)
   
   # extract the data from the classification Ensamble function
+  x = grep(Site, data$Site) 
+  x1 <- bestData[x, ]
+  x1$Species <- factor(x1$Species)
+  
+  data2 <- data.frame(classes = x1$Species, x1[, 3:length(x1)])
+  
   wl <- en[[1]][1,]
   
   ncomp = en$PLS$finalModel$ncomp
@@ -203,8 +213,6 @@ ApplyBootsClassification <- function(classes, spec, en, rasterPlots, boots=100, 
   
   bestCost <- en$SVM$finalModel$cost
   bestGamma <- en$SVM$finalModel$gamma
-  
-  data <- data.frame(classes, spec)
   
   ## apply funtion to predict species cover with SVM
   
@@ -244,13 +252,13 @@ ApplyBootsClassification <- function(classes, spec, en, rasterPlots, boots=100, 
   
   for (i in 1:boots){
     
-    N = length(data[,1])
+    N = length(data2[,1])
     
     # create random numbers with replacement to select samples from each group
     idx = sample(1:N, N, replace=TRUE)
     
-    train <- data[idx,]
-    val <- data[-idx,]
+    train <- data2[idx,]
+    val <- data2[-idx,]
     
     # store and select the observations
     obs <- val$classes
@@ -263,7 +271,7 @@ ApplyBootsClassification <- function(classes, spec, en, rasterPlots, boots=100, 
     PLS  <- plsda(x =  train[,2:length(train)], y = as.factor( train$classes ), ncomp = ncomp, 
                   probMethod = probMethod)
     # use all data to apply to image
-    PLS2 <- plsda(x =  data[,2:length(data)], y = as.factor( data$classes ), ncomp = ncomp, 
+    PLS2 <- plsda(x =  data2[,2:length(data2)], y = as.factor( data2$classes ), ncomp = ncomp, 
                   probMethod = probMethod)
     
     # sotore tunning model
@@ -289,7 +297,7 @@ ApplyBootsClassification <- function(classes, spec, en, rasterPlots, boots=100, 
     RF  <- randomForest( y = as.factor( train$classes ), x = train[,2:length(train)],
                          ntree= bestNtree, mtry = bestMtry)
     # use all data to apply to image
-    RF2 <- randomForest( y = as.factor( data$classes ), x = data[,2:length(data)],
+    RF2 <- randomForest( y = as.factor( data2$classes ), x = data2[,2:length(data2)],
                          ntree= bestNtree, mtry = bestMtry)
     
     # sotore tunning model
@@ -315,7 +323,7 @@ ApplyBootsClassification <- function(classes, spec, en, rasterPlots, boots=100, 
     SVM  <- svm(train[,2:length(train)], train$classes, kernel = "linear",
                 gamma = bestGamma, cost = bestCost, probability = TRUE)
     # use all data to apply to image
-    SVM2 <- svm(data[,2:length(data)], data$classes, kernel = "linear",
+    SVM2 <- svm(data2[,2:length(data2)], data2$classes, kernel = "linear",
                 gamma = bestGamma, cost = bestCost, probability = TRUE)
     
     # sotore tunning model
@@ -388,13 +396,13 @@ ApplyBootsClassification <- function(classes, spec, en, rasterPlots, boots=100, 
         a = c(1, seq(10, 19, 1), 2, seq(20,length(levels(r_PLS)[[1]][,1]),1), seq(3,9,1)) 
       }
       
-      if ( !is.null( setdiff( levels(r_PLS)[[1]][,1], poly@data$layer ) ) ){
-        poly$sp <- levels(r_PLS)[[1]][,2][poly@data$layer]
+      if ( !is.null( setdiff( levels(r_PLS)[[1]][,1], poly_PLS@data$layer ) ) ){
+        poly_PLS$sp <- levels(r_PLS)[[1]][,2][poly_PLS@data$layer]
       } else { 
         b = as.vector_PLS(levels(r_PLS)[[1]][,1]) 
         b[a]
-        b[not.pred(r_PLS, poly)] <- NA
-        poly$sp <- na.omit(b)
+        b[not.pred(r_PLS, poly_PLS)] <- NA
+        poly_PLS$sp <- na.omit(b)
       }
       
       ### RF
@@ -406,13 +414,13 @@ ApplyBootsClassification <- function(classes, spec, en, rasterPlots, boots=100, 
         a = c(1, seq(10, 19, 1), 2, seq(20,length(levels(r_RF)[[1]][,1]),1), seq(3,9,1)) 
       }
       
-      if ( !is.null( setdiff( levels(r_RF)[[1]][,1], poly@data$layer ) ) ){
-        poly$sp <- levels(r_RF)[[1]][,2][poly@data$layer]
+      if ( !is.null( setdiff( levels(r_RF)[[1]][,1], poly_RF@data$layer ) ) ){
+        poly_RF$sp <- levels(r_RF)[[1]][,2][poly_RF@data$layer]
       } else { 
         b = as.vector_RF(levels(r_RF)[[1]][,1]) 
         b[a]
-        b[not.pred(r_RF, poly)] <- NA
-        poly$sp <- na.omit(b)
+        b[not.pred(r_RF, poly_RF)] <- NA
+        poly_RF$sp <- na.omit(b)
       }
       
       ### SVM-DA
@@ -424,13 +432,13 @@ ApplyBootsClassification <- function(classes, spec, en, rasterPlots, boots=100, 
         a = c(1, seq(10, 19, 1), 2, seq(20,length(levels(r_SVM)[[1]][,1]),1), seq(3,9,1)) 
       }
       
-      if ( !is.null( setdiff( levels(r_SVM)[[1]][,1], poly@data$layer ) ) ){
-        poly$sp <- levels(r_SVM)[[1]][,2][poly@data$layer]
+      if ( !is.null( setdiff( levels(r_SVM)[[1]][,1], poly_SVM@data$layer ) ) ){
+        poly_SVM$sp <- levels(r_SVM)[[1]][,2][poly_SVM@data$layer]
       } else { 
         b = as.vector_SVM(levels(r_SVM)[[1]][,1]) 
         b[a]
-        b[not.pred(r_SVM, poly)] <- NA
-        poly$sp <- na.omit(b)
+        b[not.pred(r_SVM, poly_SVM)] <- NA
+        poly_SVM$sp <- na.omit(b)
       }
       
       
@@ -456,9 +464,9 @@ ApplyBootsClassification <- function(classes, spec, en, rasterPlots, boots=100, 
       shpList.RF[[i]]  <- poly_RF
       shpList.SVM[[i]] <- poly_SVM
       
-      writeOGR(poly_PLS, outPolydir, outPoly_PLS, driver="ESRI Shapefile", overwrite_layer = T)
-      writeOGR(poly_RF,  outPolydir, outPoly_RF,  driver="ESRI Shapefile", overwrite_layer = T)
-      writeOGR(poly_SVM, outPolydir, outPoly_SVM, driver="ESRI Shapefile", overwrite_layer = T)
+      writeOGR(poly_PLS, outPolydir_PLS, outPoly_PLS, driver="ESRI Shapefile", overwrite_layer = T)
+      writeOGR(poly_RF,  outPolydir_RF, outPoly_RF,  driver="ESRI Shapefile", overwrite_layer = T)
+      writeOGR(poly_SVM, outPolydir_SVM, outPoly_SVM, driver="ESRI Shapefile", overwrite_layer = T)
       
     }
     
