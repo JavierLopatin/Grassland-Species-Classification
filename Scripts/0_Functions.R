@@ -182,7 +182,7 @@ classificationEnsemble <- function(classes, spec, wl=NA){
 ##                                                                            ##
 ##----------------------------------------------------------------------------##
 
-ApplyBootsClassification <- function(classes, spec, en, rasterPlots, boots=100, outDir){  
+ApplyBootsClassification <- function(classes, spec, en, rasterPlots, boots=100, outDir, modelTag){  
   
   library(raster)
   library(rgdal)
@@ -436,15 +436,15 @@ ApplyBootsClassification <- function(classes, spec, en, rasterPlots, boots=100, 
       
       ### export shapefiles
       # create a folder per plot to store results
-      plotName = paste( names(rasterPlots)[j], "_PLS", sep=""  )
+      plotName = paste( names(rasterPlots)[j], "_PLS_", modelTag, sep=""  )
       dir.create(file.path(outDir, plotName), showWarnings = FALSE)
       outPolydir_PLS = file.path(outDir, plotName)
       
-      plotName = paste( names(rasterPlots)[j], "_RF", sep=""  )
+      plotName = paste( names(rasterPlots)[j], "_RF_", modelTag, sep=""  )
       dir.create(file.path(outDir, plotName), showWarnings = FALSE)
       outPolydir_RF = file.path(outDir, plotName)
       
-      plotName = paste( names(rasterPlots)[j], "_SVM", sep=""  )
+      plotName = paste( names(rasterPlots)[j], "_SVM_", modelTag, sep=""  )
       dir.create(file.path(outDir, plotName), showWarnings = FALSE)
       outPolydir_SVM = file.path(outDir, plotName)
       
