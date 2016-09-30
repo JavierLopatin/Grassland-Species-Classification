@@ -1,36 +1,36 @@
-##############################################################################
-## R-Script - 0_Functions.R                                                 ##
-## author: Javier Lopatin                                                   ##
-## mail: javierlopatin@gmail.com                                            ##  
-##                                                                          ##
+################################################################################
+## R-Script - 0_Functions.R                                                   ##
+## author: Javier Lopatin                                                     ##
+## mail: javierlopatin@gmail.com                                              ##  
+##                                                                            ##
 ## description: 
 ##
 ## Manuscript: 
 ##
 ## last changes: 
-##                                                                          ##
-##############################################################################
+##                                                                            ##
+################################################################################
 
-##------------------------------------------------------------------------------##
-##                                                                              ##
-## Multi-method ensemble selection of spectral bands                            ##
-##                                                                              ##
-## This function performs a band selection based on a multi-method ensemble     ##
-## assessment of the variable importance and classification coefficients of     ##
-## three different model types: Partial Least Squares Discriminant Analysis,    ##
-## Random Forest and Support Vector Machine classifications                     ## 
-##                                                                              ## 
-## Arguments:                                                                   ##
-## - x        Numeric matrix containing the spectra (samples as rows)           ##
-## - y        Numeric vector containing the response variable                   ##
-## - wl       Numeric vector containing the wavelength information of the bands ##
-##                                                                              ##
-## function based on the paper:                                                 ##
-## Feilhauer, H., Asner, G. P., & Martin, R. E. (2015). Multi-method ensemble   ##
-## selection of spectral bands related to leaf biochemistry. Remote Sensing of  ## 
-## Environment, 164, 57-65. http://doi.org/10.1016/j.rse.2015.03.033            ##
-##                                                                              ##
-##------------------------------------------------------------------------------##
+##----------------------------------------------------------------------------##
+##                                                                            ##
+## Multi-method ensemble selection of spectral bands                          ##
+##                                                                            ##
+## This function performs a band selection based on a multi-method ensemble   ##
+## assessment of the variable importance and classification coefficients of   ##
+## three different model types: Partial Least Squares Discriminant Analysis,  ##
+## Random Forest and Support Vector Machine classifications                   ## 
+##                                                                            ## 
+## Arguments:                                                                 ##
+## - x      Numeric matrix containing the spectra (samples as rows)           ##
+## - y      Numeric vector containing the response variable                   ##
+## - wl     Numeric vector containing the wavelength information of the bands ##
+##                                                                            ##
+## function based on the paper:                                               ##
+## Feilhauer, H., Asner, G.P., & Martin, R.E. (2015). Multi-method ensemble   ##
+## selection of spectral bands related to leaf biochemistry. Remote Sensing   ## 
+## of Environment, 164, 57-65. http://doi.org/10.1016/j.rse.2015.03.033       ##
+##                                                                            ##
+##----------------------------------------------------------------------------##
 
 classificationEnsemble <- function(classes, spec, wl=NA){
   
@@ -558,7 +558,7 @@ plot.classificationEnsemble <- function (spec, en, xlab_tag,label=TRUE, ...) {
 ## - fitAISA:   classificationEnsemble AISA object                            ##
 ##                                                                            ##
 ## Function based on:                                                         ##
-## Lopatin, J., Dolos, K., Hernández, H. J., Galleguillos, M., & Fassnacht,   ##
+## Lopatin, J., Dolos, K., HernÃ¡ndez, H. J., Galleguillos, M., & Fassnacht,   ##
 ## F. E. (2016). Comparing Generalized Linear Models and random forest to     ##
 ## model vascular plant species richness using LiDAR data in a natural forest ##
 ## in central Chile. Remote Sensing of Environment, 173, 200-210.             ##
@@ -595,7 +595,7 @@ significanceTest_LeafLevel <- function(data, fitASD, fitAISA, B=500){
   #########################
   set.seed(123)
   # set the bootstrap parameters
-  N = length(data[,1]) # N° of observations
+  N = length(data[,1]) # NÂ° of observations
   
   # list to store
   diff_OA <- list()
@@ -728,19 +728,27 @@ rasterListNames <- function(fileExtantion, folder){
 }
 
 ## List and load the rasters contained in a folder
-rasterList <- function(fileExtantion, folder, rasterNames=NULL){
+rasterList <- function(fileExtantion, folder, dir=NULL, select=NULL){
+  # if dir = NULL, set it to "home" by default
+  if (is.null(dir)){
+    dir = home
+  }
   # make a list of all fileExtantion files
   rast_list = list.files(folder, pattern = fileExtantion)
+  # select only rasters with a especific pattern
+  if (!is.null(select)){
+    rast_list <- rast_list[ grep(select, rast_list) ]
+  }
+  # raster names
+  rasterNames = gsub('.{4}$', '', rast_list)
   # import rasters
-  setwd(file.path(home, folder))
+  setwd(file.path(dir, folder))
   rasterlist <- list()
   for(i in 1:length(rast_list)){
     rast <- stack(rast_list[i])
-    if (is.null(rasterNames)){
-      names(rast) <- rasterNames
-      }
     rasterlist[[i]] <- rast
   }
-  setwd(home)
+  names(rasterlist) <- rasterNames
+  setwd(dir)
   return(rasterlist)
 }
