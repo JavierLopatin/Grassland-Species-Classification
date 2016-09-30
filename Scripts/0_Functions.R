@@ -168,6 +168,326 @@ classificationEnsemble <- function(classes, spec, wl=NA){
   
 }
 
+
+##----------------------------------------------------------------------------##
+##                                                                            ##
+## ApplyBestClassification:                                                   ##
+##                                                                            ##
+## Apply the best model from classificationEnsemble to the plots using        ##
+## a bootstrapping procidure. Exported results are in shapefile format        ## 
+##                                                                            ##
+## Arguments:                                                                 ##
+## - spec     spectral information. Used to create the quantiles of spectra   ##
+## - en       classificationEnsemble object                                   ##
+##                                                                            ##
+##----------------------------------------------------------------------------##
+
+ApplyBootsClassification <- function(classes, spec, en, rasterPlots, boots=100, outDir){  
+  
+  library(raster)
+  library(rgdal)
+  library(caret)
+  library(e1071)
+  library(randomForest)
+  library(pls)
+  library(doParallel)
+  
+  # extract the data from the classification Ensamble function
+  wl <- en[[1]][1,]
+  
+  ncomp = en$PLS$finalModel$ncomp
+  probMethod = en$PLS$finalModel$probMethod
+  
+  bestNtree = en$RF$finalModel$ntree
+  bestMtry = en$RF$finalModel$mtry
+  
+  bestCost <- en$SVM$finalModel$cost
+  bestGamma <- en$SVM$finalModel$gamma
+  
+  data <- data.frame(classes, spec)
+  
+  ## apply funtion to predict species cover with SVM
+  
+  # list of accuracies
+  PA.PLS    <- list()
+  UA.PLS    <- list()
+  OA.PLS    <- list()
+  kappa.PLS <- list()
+  model.PLS <- list()
+  predict.PLS <- list()
+  rasterList.PLS <- list()
+  shpList.PLS <- list()
+  
+  PA.RF    <- list()
+  UA.RF    <- list()
+  OA.RF    <- list()
+  kappa.RF <- list()
+  model.RF <- list()
+  predict.RF <- list()
+  rasterList.RF <- list()
+  shpList.RF <- list()
+  
+  PA.SVM    <- list()
+  UA.SVM    <- list()
+  OA.SVM    <- list()
+  kappa.SVM <- list()
+  model.SVM <- list()
+  predict.SVM <- list()
+  rasterList.SVM <- list()
+  shpList.SVM <- list()
+  
+  OBS <- list()
+  
+  # initialize parallel processing
+  cl <- makeCluster(detectCores())
+  registerDoParallel(cl)
+  
+  for (i in 1:boots){
+    
+    N = length(data[,1])
+    
+    # create random numbers with replacement to select samples from each group
+    idx = sample(1:N, N, replace=TRUE)
+    
+    train <- data[idx,]
+    val <- data[-idx,]
+    
+    # store and select the observations
+    obs <- val$classes
+    OBS[[i]]<-obs
+    
+    #################
+    ### Apply PLS ###
+    #################
+    
+    PLS  <- plsda(x =  train[,2:length(train)], y = as.factor( train$classes ), ncomp = ncomp, 
+                  probMethod = probMethod)
+    # use all data to apply to image
+    PLS2 <- plsda(x =  data[,2:length(data)], y = as.factor( data$classes ), ncomp = ncomp, 
+                  probMethod = probMethod)
+    
+    # sotore tunning model
+    model.PLS[[i]] <- PLS
+    
+    # predict
+    pred    <- predict(PLS, val[,2:length(val)])
+    predict.PLS[[i]] <- pred
+    
+    # confusion matix
+    conf   <- confusionMatrix(pred, val$classes)
+    
+    # get accuracies
+    PA.PLS[[i]]       <- conf$byClass[,3] 
+    UA.PLS[[i]]       <- conf$byClass[,4]
+    OA.PLS[[i]]       <- conf$overall["Accuracy"]
+    kappa.PLS[[i]]    <- conf$overall["Kappa"]
+    
+    #################
+    ### Apply SVM ###
+    #################
+    
+    RF  <- randomForest( y = as.factor( train$classes ), x = train[,2:length(train)],
+                         ntree= bestNtree, mtry = bestMtry)
+    # use all data to apply to image
+    RF2 <- randomForest( y = as.factor( data$classes ), x = data[,2:length(data)],
+                         ntree= bestNtree, mtry = bestMtry)
+    
+    # sotore tunning model
+    model.RF[[i]] <- RF
+    
+    # predict
+    pred    <- predict(RF, val[,2:length(val)])
+    predict.RF[[i]] <- pred
+    
+    # confusion matix
+    conf   <- confusionMatrix(pred, val$classes)
+    
+    # get accuracies
+    PA.RF[[i]]       <- conf$byClass[,3] 
+    UA.RF[[i]]       <- conf$byClass[,4]
+    OA.RF[[i]]       <- conf$overall["Accuracy"]
+    kappa.RF[[i]]    <- conf$overall["Kappa"]
+
+    #################
+    ### Apply SVM ###
+    #################
+    
+    SVM  <- svm(train[,2:length(train)], train$classes, kernel = "linear",
+                gamma = bestGamma, cost = bestCost, probability = TRUE)
+    # use all data to apply to image
+    SVM2 <- svm(data[,2:length(data)], data$classes, kernel = "linear",
+                gamma = bestGamma, cost = bestCost, probability = TRUE)
+    
+    # sotore tunning model
+    model.SVM[[i]] <- SVM
+    
+    # predict
+    pred    <- predict(SVM, val[,2:length(val)])
+    predict.SVM[[i]] <- pred
+    
+    # confusion matix
+    conf   <- confusionMatrix(pred, val$classes)
+    
+    # get accuracies
+    PA.SVM[[i]]       <- conf$byClass[,3] 
+    UA.SVM[[i]]       <- conf$byClass[,4]
+    OA.SVM[[i]]       <- conf$overall["Accuracy"]
+    kappa.SVM[[i]]    <- conf$overall["Kappa"]
+    
+    
+    ##############################
+    ### Apply models to raster ### 
+    ##############################
+    
+    dummyList.PLS <- list()
+    dummyList.RF <- list()
+    dummyList.SVM <- list()
+    
+    for (j in 1:length(rasterPlots)){
+      raster = rasterPlots[[j]]
+      names(raster) <- paste( rep("B", 61), seq(1,61,1),  sep="" )
+      # mask out raster zones with NDVI below 0.3
+      red <- raster[[31]]
+      Ired <- raster[[43]]
+      NDVI <- (Ired-red)/(Ired+red)
+      NDVI[NDVI<0.3]<- NA
+      # apply mask
+      raster <- mask(raster, NDVI)
+      
+      #### Predict PLS DA
+      r_PLS  <- predict(raster, PLS2, type="class")
+      dummyList.PLS[[j]] <- r_PLS
+      #### Predict RF
+      r_RF <- predict(raster, RF2, type="class")
+      dummyList.RF[[j]] <- r_RF
+      #### Predict SVM
+      r_SVM  <- predict(raster, SVM2, type="class")
+      dummyList.SVM[[j]] <- r_SVM
+      
+      ## poliginize to keep the species name label
+      poly_PLS <- rasterToPolygons(r_PLS, dissolve = T)
+      poly_RF  <- rasterToPolygons(r_RF,  dissolve = T)
+      poly_SVM <- rasterToPolygons(r_SVM, dissolve = T)
+      
+      ## add spp manes to the shapefiles
+      # create a function to finde classes that were not predicted
+      # lexicographic vector
+      not.pred <- function(pred, poly){
+        a = c(1, seq(10, length(levels(pred)[[1]][,1]), 1), seq(2,9,1))
+        b = setdiff(levels(pred[[i]])[[1]][,1], poly@data$layer)  
+        c = which(a == b)
+        return(c)
+      }
+      
+      ### PLS-DA
+      if ( length(levels(r_PLS)[[1]][,1]) < 10 ){
+        a = c(1,2,3,4,5,6,7,8,9)
+      } else if  (length(levels(r_PLS)[[1]][,1]) >= 10 & length(levels(r_PLS)[[1]][,1]) < 20){
+        a = c(1, seq(10, length(levels(r_PLS)[[1]][,1]), 1), seq(2,9,1)) 
+      } else {
+        a = c(1, seq(10, 19, 1), 2, seq(20,length(levels(r_PLS)[[1]][,1]),1), seq(3,9,1)) 
+      }
+      
+      if ( !is.null( setdiff( levels(r_PLS)[[1]][,1], poly@data$layer ) ) ){
+        poly$sp <- levels(r_PLS)[[1]][,2][poly@data$layer]
+      } else { 
+        b = as.vector_PLS(levels(r_PLS)[[1]][,1]) 
+        b[a]
+        b[not.pred(r_PLS, poly)] <- NA
+        poly$sp <- na.omit(b)
+      }
+      
+      ### RF
+      if ( length(levels(r_RF)[[1]][,1]) < 10 ){
+        a = c(1,2,3,4,5,6,7,8,9)
+      } else if  (length(levels(r_RF)[[1]][,1]) >= 10 & length(levels(r_RF)[[1]][,1]) < 20){
+        a = c(1, seq(10, length(levels(r_RF)[[1]][,1]), 1), seq(2,9,1)) 
+      } else {
+        a = c(1, seq(10, 19, 1), 2, seq(20,length(levels(r_RF)[[1]][,1]),1), seq(3,9,1)) 
+      }
+      
+      if ( !is.null( setdiff( levels(r_RF)[[1]][,1], poly@data$layer ) ) ){
+        poly$sp <- levels(r_RF)[[1]][,2][poly@data$layer]
+      } else { 
+        b = as.vector_RF(levels(r_RF)[[1]][,1]) 
+        b[a]
+        b[not.pred(r_RF, poly)] <- NA
+        poly$sp <- na.omit(b)
+      }
+      
+      ### SVM-DA
+      if ( length(levels(r_SVM)[[1]][,1]) < 10 ){
+        a = c(1,2,3,4,5,6,7,8,9)
+      } else if  (length(levels(r_SVM)[[1]][,1]) >= 10 & length(levels(r_SVM)[[1]][,1]) < 20){
+        a = c(1, seq(10, length(levels(r_SVM)[[1]][,1]), 1), seq(2,9,1)) 
+      } else {
+        a = c(1, seq(10, 19, 1), 2, seq(20,length(levels(r_SVM)[[1]][,1]),1), seq(3,9,1)) 
+      }
+      
+      if ( !is.null( setdiff( levels(r_SVM)[[1]][,1], poly@data$layer ) ) ){
+        poly$sp <- levels(r_SVM)[[1]][,2][poly@data$layer]
+      } else { 
+        b = as.vector_SVM(levels(r_SVM)[[1]][,1]) 
+        b[a]
+        b[not.pred(r_SVM, poly)] <- NA
+        poly$sp <- na.omit(b)
+      }
+      
+      
+      ### export shapefiles
+      # create a folder per plot to store results
+      plotName = paste( names(rasterPlots)[j], "_PLS", sep=""  )
+      dir.create(file.path(outDir, plotName), showWarnings = FALSE)
+      outPolydir_PLS = file.path(outDir, plotName)
+      
+      plotName = paste( names(rasterPlots)[j], "_RF", sep=""  )
+      dir.create(file.path(outDir, plotName), showWarnings = FALSE)
+      outPolydir_RF = file.path(outDir, plotName)
+      
+      plotName = paste( names(rasterPlots)[j], "_SVM", sep=""  )
+      dir.create(file.path(outDir, plotName), showWarnings = FALSE)
+      outPolydir_SVM = file.path(outDir, plotName)
+      
+      outPoly_PLS = paste( names(rasterPlots)[j], "_PLS_", i, sep="" )
+      outPoly_RF  = paste( names(rasterPlots)[j], "_RF_", i, sep="" )
+      outPoly_SVM = paste( names(rasterPlots)[j], "_SVM_", i, sep="" )
+      
+      shpList.PLS[[i]] <- poly_PLS
+      shpList.RF[[i]]  <- poly_RF
+      shpList.SVM[[i]] <- poly_SVM
+      
+      writeOGR(poly_PLS, outPolydir, outPoly_PLS, driver="ESRI Shapefile", overwrite_layer = T)
+      writeOGR(poly_RF,  outPolydir, outPoly_RF,  driver="ESRI Shapefile", overwrite_layer = T)
+      writeOGR(poly_SVM, outPolydir, outPoly_SVM, driver="ESRI Shapefile", overwrite_layer = T)
+      
+    }
+    
+    rasterList.SVM[[i]] <- dummyList.SVM
+  }
+  
+  # stop parallel process
+  stopCluster(cl) 
+  
+  ######################
+  ### prepare output ###
+  ######################
+  
+  fit <- c (PA.PLS, UA.PLS, OA.PLS, kappa.PLS, PA.RF, UA.RF, OA.RF, kappa.RF, PA.SVM, UA.SVM, OA.SVM, kappa.SVM)
+  names (fit) <- c ("PLS PA", "PLS UA", "PLS OA", "PLS Kappa", 
+                    "RF PA", "RF UA", "RF OA", "RF Kappa", 
+                    "SVM PA", "SVM UA", "SVM OA", "SVM Kappa")
+  output <- list (fit, model.PLS, predict.PLS, rasterList.PLS, shpList.PLS,
+                  model.RF, predict.RF, rasterList.RF, shpList.RF,
+                  model.SVM, predict.SVM, rasterList.SVM, shpList.SVM)
+  names (output) <- c ("fits", "PLS Model", "PLS Predictions", "PLS rasterPredictions", "PLS shpPredictions",
+                       "RF Model", "RF Predictions", "RF rasterPredictions", "RF shpPredictions",
+                       "SVM Model", "SVM Predictions", "SVM rasterPredictions", "SVM shpPredictions")
+  class (output) <- "BootsClassification"
+  output
+  
+}
+
+
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
 ## plot.ensemble: visualization of ensemble objects                           ##
