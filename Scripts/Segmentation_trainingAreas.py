@@ -1,12 +1,30 @@
 #!/usr/bin/env python
 
 """
+<<<<<<< HEAD
+=======
+########################################################################################################
+>>>>>>> 96cce89f0ae51338f8a2442e52f6222b2df7bf22
 Python scritp to perform k-mean base segmentation to 
 automatic delineation of homogeneous training areas 
 for classification.
 
+<<<<<<< HEAD
 The segmentation algorithm is based on:
      
+=======
+Author: Javier Lopatin
+Email: javierlopatin@gmail.com
+Date: 09/08/2016
+Version: 1.0
+
+The segmentation algorithm is based on:
+   Clewley, D.; Bunting, P.; Shepherd, J.; Gillingham, S.; Flood, N.; Dymond, J.; Lucas, R.; 
+   Armston, J.; Moghaddam, M. A Python-Based Open Source System for Geographic Object-Based Image 
+   Analysis (GEOBIA) Utilizing Raster Attribute Tables. Remote Sensing 2014, 6, 6111-6135.
+   http://www.mdpi.com/2072-4292/6/7/6111   
+########################################################################################################
+>>>>>>> 96cce89f0ae51338f8a2442e52f6222b2df7bf22
 """
 
 # Import python modules
@@ -45,4 +63,8 @@ for i in range(len(rasterList)):
                     meanImage, numClusters=100, minPxls=1)
 
     # run polygonization
+<<<<<<< HEAD
     vectorutils.polygoniseRaster(clumpsFile, shapeOut)
+=======
+    vectorutils.polygoniseRaster(clumpsFile, shapeOut)
+>>>>>>> 96cce89f0ae51338f8a2442e52f6222b2df7bf22
