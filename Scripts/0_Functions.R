@@ -13,9 +13,10 @@
 
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
-## Multi-method ensemble selection of spectral bands                          ##
+## tunningModels and  Multi-method ensemble selection of spectral bands       ##
 ##                                                                            ##
-## This function performs a band selection based on a multi-method ensemble   ##
+## This function performs a tunning procidure on the models and               ##
+## a band selection based on a multi-method ensemble                          ##
 ## assessment of the variable importance and classification coefficients of   ##
 ## three different model types: Partial Least Squares Discriminant Analysis,  ##
 ## Random Forest and Support Vector Machine classifications                   ## 
@@ -25,14 +26,14 @@
 ## - y      Numeric vector containing the response variable                   ##
 ## - wl     Numeric vector containing the wavelength information of the bands ##
 ##                                                                            ##
-## function based on the paper:                                               ##
+## variable importance based on the paper:                                    ##
 ## Feilhauer, H., Asner, G.P., & Martin, R.E. (2015). Multi-method ensemble   ##
 ## selection of spectral bands related to leaf biochemistry. Remote Sensing   ## 
 ## of Environment, 164, 57-65. http://doi.org/10.1016/j.rse.2015.03.033       ##
 ##                                                                            ##
 ##----------------------------------------------------------------------------##
 
-classificationEnsemble <- function(data, Site, wl=NA){
+tunningModels <- function(data, Site, wl=NA){
   
   ## load required libraries
   library (caret)
@@ -198,7 +199,7 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
   
   # extract the data from the classification Ensamble function
   x = grep(Site, data$Site) 
-  x1 <- bestData[x, ]
+  x1 <- data[x, ]
   x1$Species <- factor(x1$Species)
   
   data2 <- data.frame(classes = x1$Species, x1[, 3:length(x1)])
@@ -250,6 +251,7 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
   cl <- makeCluster(detectCores())
   registerDoParallel(cl)
   
+  set.seet(123)
   for (i in 1:boots){
     
     N = length(data2[,1])
