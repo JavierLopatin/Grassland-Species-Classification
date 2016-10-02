@@ -251,7 +251,6 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
   cl <- makeCluster(detectCores())
   registerDoParallel(cl)
   
-  set.seet(123)
   for (i in 1:boots){
     
     N = length(data2[,1])
@@ -271,9 +270,6 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
     #################
     
     PLS  <- plsda(x =  train[,2:length(train)], y = as.factor( train$classes ), ncomp = ncomp, 
-                  probMethod = probMethod)
-    # use all data to apply to image
-    PLS2 <- plsda(x =  data2[,2:length(data2)], y = as.factor( data2$classes ), ncomp = ncomp, 
                   probMethod = probMethod)
     
     # sotore tunning model
@@ -298,9 +294,6 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
     
     RF  <- randomForest( y = as.factor( train$classes ), x = train[,2:length(train)],
                          ntree= bestNtree, mtry = bestMtry)
-    # use all data to apply to image
-    RF2 <- randomForest( y = as.factor( data2$classes ), x = data2[,2:length(data2)],
-                         ntree= bestNtree, mtry = bestMtry)
     
     # sotore tunning model
     model.RF[[i]] <- RF
@@ -323,9 +316,6 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
     #################
     
     SVM  <- svm(train[,2:length(train)], train$classes, kernel = "linear",
-                gamma = bestGamma, cost = bestCost, probability = TRUE)
-    # use all data to apply to image
-    SVM2 <- svm(data2[,2:length(data2)], data2$classes, kernel = "linear",
                 gamma = bestGamma, cost = bestCost, probability = TRUE)
     
     # sotore tunning model
@@ -365,13 +355,13 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
       raster <- mask(raster, NDVI)
       
       #### Predict PLS DA
-      r_PLS  <- predict(raster, PLS2, type="class")
+      r_PLS  <- predict(raster, PLS, type="class")
       dummyList.PLS[[j]] <- r_PLS
       #### Predict RF
-      r_RF <- predict(raster, RF2, type="class")
+      r_RF <- predict(raster, RF, type="class")
       dummyList.RF[[j]] <- r_RF
       #### Predict SVM
-      r_SVM  <- predict(raster, SVM2, type="class")
+      r_SVM  <- predict(raster, SVM, type="class")
       dummyList.SVM[[j]] <- r_SVM
       
       ## poliginize to keep the species name label
