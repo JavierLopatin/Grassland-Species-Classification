@@ -71,10 +71,37 @@ rasterDir = "F:/Sp_Images"
 setwd(rasterDir)
 
 # load rasters with "plot" pattern in the name
-plots1 <-  rasterList(fileExtantion = ".tif", folder = "Site1/Raw/BN", dir=rasterDir, select="plot")
-plots2 <-  rasterList(fileExtantion = ".tif", folder = "Site2/Raw/BN", dir=rasterDir, select="plot")
-plots3 <-  rasterList(fileExtantion = ".tif", folder = "Site3/Raw/BN", dir=rasterDir, select="plot")
-plots4 <-  rasterList(fileExtantion = ".tif", folder = "Site4/Raw/BN", dir=rasterDir, select="plot")
+plots1 <-  rasterList(fileExtantion = ".tif", folder = "Site1/Raw", dir=rasterDir, select="plot")
+plots2 <-  rasterList(fileExtantion = ".tif", folder = "Site2/Raw", dir=rasterDir, select="plot")
+plots3 <-  rasterList(fileExtantion = ".tif", folder = "Site3/Raw", dir=rasterDir, select="plot")
+plots4 <-  rasterList(fileExtantion = ".tif", folder = "Site4/Raw", dir=rasterDir, select="plot")
+
+plots1_BN <-  rasterList(fileExtantion = ".tif", folder = "Site1/Raw/BN", dir=rasterDir, select="plot")
+plots2_BN <-  rasterList(fileExtantion = ".tif", folder = "Site2/Raw/BN", dir=rasterDir, select="plot")
+plots3_BN <-  rasterList(fileExtantion = ".tif", folder = "Site3/Raw/BN", dir=rasterDir, select="plot")
+plots4_BN <-  rasterList(fileExtantion = ".tif", folder = "Site4/Raw/BN", dir=rasterDir, select="plot")
+
+plots1_MNF <-  rasterList(fileExtantion = ".tif", folder = "Site1/Raw/MNF", dir=rasterDir, select="plot")
+plots2_MNF <-  rasterList(fileExtantion = ".tif", folder = "Site2/Raw/MNF", dir=rasterDir, select="plot")
+plots3_MNF <-  rasterList(fileExtantion = ".tif", folder = "Site3/Raw/MNF", dir=rasterDir, select="plot")
+plots4_MNF <-  rasterList(fileExtantion = ".tif", folder = "Site4/Raw/MNF", dir=rasterDir, select="plot")
+
+plots1_BN_MNF <-  rasterList(fileExtantion = ".tif", folder = "Site1/Raw/BN_MNF", dir=rasterDir, select="plot")
+plots2_BN_MNF <-  rasterList(fileExtantion = ".tif", folder = "Site2/Raw/BN_MNF", dir=rasterDir, select="plot")
+plots3_BN_MNF <-  rasterList(fileExtantion = ".tif", folder = "Site3/Raw/BN_MNF", dir=rasterDir, select="plot")
+plots4_BN_MNF <-  rasterList(fileExtantion = ".tif", folder = "Site4/Raw/BN_MNF", dir=rasterDir, select="plot")
+
+plots1_GLCM <-  rasterList(fileExtantion = ".tif", folder = "Site1/Raw/MNF_GLCM", dir=rasterDir, select="plot")
+plots2_GLCM <-  rasterList(fileExtantion = ".tif", folder = "Site2/Raw/GLCM", dir=rasterDir, select="plot")
+plots3_GLCM <-  rasterList(fileExtantion = ".tif", folder = "Site3/Raw/GLCM", dir=rasterDir, select="plot")
+plots4_GLCM <-  rasterList(fileExtantion = ".tif", folder = "Site4/Raw/MNF_GLCM", dir=rasterDir, select="plot")
+
+plots1_BN_GLCM <-  rasterList(fileExtantion = ".tif", folder = "Site1/Raw/BN_MNF_GLCM", dir=rasterDir, select="plot")
+plots2_BN_GLCM <-  rasterList(fileExtantion = ".tif", folder = "Site2/Raw/BN_MNF_GLCM", dir=rasterDir, select="plot")
+plots3_BN_GLCM <-  rasterList(fileExtantion = ".tif", folder = "Site3/Raw/BN_MNF_GLCM", dir=rasterDir, select="plot")
+plots4_BN_GLCM <-  rasterList(fileExtantion = ".tif", folder = "Site4/Raw/BN_MNF_GLCM", dir=rasterDir, select="plot")
+
+
 
 
 ##########################
@@ -174,7 +201,7 @@ save(fit_boot_rf_4, file="results_canopy/fit_boot_rf_4.RData")
 fit_potVal_BN_1 <- tunningModels(data = potVal_BN, Site = 1, wl)
 save(fit_potVal_BN_1, file="results_canopy/fit_potVal_BN_1.RData")
 # Bootstrap validation 
-fit_boot_potVal_BN_1 <- ApplyBootsClassification(data = potVal_BN, Site = 1, rasterPlots = plots1, 
+fit_boot_potVal_BN_1 <- ApplyBootsClassification(data = potVal_BN, Site = 1, rasterPlots = plots1_BN, 
                                               en = fit_potVal_BN_1, outDir = outputDir, modelTag = "potVal_BN" )
 save(fit_boot_potVal_BN_1, file="results_canopy/fit_boot_potVal_BN_1.RData")
 
@@ -182,7 +209,7 @@ save(fit_boot_potVal_BN_1, file="results_canopy/fit_boot_potVal_BN_1.RData")
 fit_potVal_BN_2 <- tunningModels(data = potVal_BN, Site = 2, wl)
 save(fit_potVal_BN_2, file="results_canopy/fit_potVal_BN_2.RData")
 # Bootstrap validation 
-fit_boot_potVal_BN_2 <- ApplyBootsClassification(data = potVal_BN, Site = 2, rasterPlots = plots2, 
+fit_boot_potVal_BN_2 <- ApplyBootsClassification(data = potVal_BN, Site = 2, rasterPlots = plots2_BN, 
                                               en = fit_potVal_BN_2, outDir = outputDir, modelTag = "potVal_BN" )
 save(fit_boot_potVal_BN_2, file="results_canopy/fit_boot_potVal_BN_2.RData")
 
@@ -190,7 +217,7 @@ save(fit_boot_potVal_BN_2, file="results_canopy/fit_boot_potVal_BN_2.RData")
 fit_potVal_BN_3 <- tunningModels(data = potVal_BN, Site = 3, wl)
 save(fit_potVal_BN_3, file="results_canopy/fit_potVal_BN_3.RData")
 # Bootstrap validation 
-fit_boot_potVal_BN_3 <- ApplyBootsClassification(data = potVal_BN, Site = 3, rasterPlots = plots3, 
+fit_boot_potVal_BN_3 <- ApplyBootsClassification(data = potVal_BN, Site = 3, rasterPlots = plots3_BN, 
                                               en = fit_potVal_BN_3, outDir = outputDir, modelTag = "potVal_BN" )
 save(fit_boot_potVal_BN_3, file="results_canopy/fit_boot_potVal_BN_3.RData")
 
@@ -198,7 +225,7 @@ save(fit_boot_potVal_BN_3, file="results_canopy/fit_boot_potVal_BN_3.RData")
 fit_potVal_BN_4 <- tunningModels(data = potVal_BN, Site = 4, wl)
 save(fit_potVal_BN_4, file="results_canopy/fit_potVal_BN_4.RData")
 # Bootstrap validation 
-fit_boot_potVal_BN_4 <- ApplyBootsClassification(data = potVal_BN, Site = 4, rasterPlots = plots4, 
+fit_boot_potVal_BN_4 <- ApplyBootsClassification(data = potVal_BN, Site = 4, rasterPlots = plots4_BN, 
                                               en = fit_potVal_BN_4, outDir = outputDir, modelTag = "potVal_BN" )
 save(fit_boot_potVal_BN_4, file="results_canopy/fit_boot_potVal_BN_4.RData")
 
@@ -210,7 +237,7 @@ save(fit_boot_potVal_BN_4, file="results_canopy/fit_boot_potVal_BN_4.RData")
 fit_rf_BN_1 <- tunningModels(data = rf_BN, Site = 1, wl)
 save(fit_rf_BN_1, file="results_canopy/fit_rf_BN_1.RData")
 # Bootstrap validation 
-fit_boot_rf_BN_1 <- ApplyBootsClassification(data = rf_BN, Site = 1, rasterPlots = plots1, 
+fit_boot_rf_BN_1 <- ApplyBootsClassification(data = rf_BN, Site = 1, rasterPlots = plots1_BN, 
                                           en = fit_rf_BN_1, outDir = outputDir, modelTag = "rf_BN" )
 save(fit_boot_rf_BN_1, file="results_canopy/fit_boot_rf_BN_1.RData")
 
@@ -218,7 +245,7 @@ save(fit_boot_rf_BN_1, file="results_canopy/fit_boot_rf_BN_1.RData")
 fit_rf_BN_2 <- tunningModels(data = rf_BN, Site = 2, wl)
 save(fit_rf_BN_2, file="results_canopy/fit_rf_BN_2.RData")
 # Bootstrap validation 
-fit_boot_rf_BN_2 <- ApplyBootsClassification(data = rf_BN, Site = 2, rasterPlots = plots2, 
+fit_boot_rf_BN_2 <- ApplyBootsClassification(data = rf_BN, Site = 2, rasterPlots = plots2_BN, 
                                           en = fit_rf_BN_2, outDir = outputDir, modelTag = "rf_BN" )
 save(fit_boot_rf_BN_2, file="results_canopy/fit_boot_rf_BN_2.RData")
 
@@ -226,7 +253,7 @@ save(fit_boot_rf_BN_2, file="results_canopy/fit_boot_rf_BN_2.RData")
 fit_rf_BN_3 <- tunningModels(data = rf_BN, Site = 3, wl)
 save(fit_rf_BN_3, file="results_canopy/fit_rf_BN_3.RData")
 # Bootstrap validation 
-fit_boot_rf_BN_3 <- ApplyBootsClassification(data = rf_BN, Site = 3, rasterPlots = plots3, 
+fit_boot_rf_BN_3 <- ApplyBootsClassification(data = rf_BN, Site = 3, rasterPlots = plots3_BN, 
                                           en = fit_rf_BN_3, outDir = outputDir, modelTag = "rf_BN" )
 save(fit_boot_rf_BN_3, file="results_canopy/fit_boot_rf_BN_3.RData")
 
@@ -234,7 +261,7 @@ save(fit_boot_rf_BN_3, file="results_canopy/fit_boot_rf_BN_3.RData")
 fit_rf_BN_4 <- tunningModels(data = rf_BN, Site = 4, wl)
 save(fit_rf_BN_4, file="results_canopy/fit_rf_BN_4.RData")
 # Bootstrap validation 
-fit_boot_rf_BN_4 <- ApplyBootsClassification(data = rf_BN, Site = 4, rasterPlots = plots4, 
+fit_boot_rf_BN_4 <- ApplyBootsClassification(data = rf_BN, Site = 4, rasterPlots = plots4_BN, 
                                           en = fit_rf_BN_4, outDir = outputDir, modelTag = "rf_BN" )
 save(fit_boot_rf_BN_4, file="results_canopy/fit_boot_rf_BN_4.RData")
 
@@ -250,7 +277,7 @@ save(fit_boot_rf_BN_4, file="results_canopy/fit_boot_rf_BN_4.RData")
 fit_potVal_MNF_1 <- tunningModels(data = potVal_MNF, Site = 1, wl)
 save(fit_potVal_MNF_1, file="results_canopy/fit_potVal_MNF_1.RData")
 # Bootstrap validation 
-fit_boot_potVal_MNF_1 <- ApplyBootsClassification(data = potVal_MNF, Site = 1, rasterPlots = plots1, 
+fit_boot_potVal_MNF_1 <- ApplyBootsClassification(data = potVal_MNF, Site = 1, rasterPlots = plots1_MNF, 
                                                  en = fit_potVal_MNF_1, outDir = outputDir, modelTag = "potVal_MNF" )
 save(fit_boot_potVal_MNF_1, file="results_canopy/fit_boot_potVal_MNF_1.RData")
 
@@ -258,7 +285,7 @@ save(fit_boot_potVal_MNF_1, file="results_canopy/fit_boot_potVal_MNF_1.RData")
 fit_potVal_MNF_2 <- tunningModels(data = potVal_MNF, Site = 2, wl)
 save(fit_potVal_MNF_2, file="results_canopy/fit_potVal_MNF_2.RData")
 # Bootstrap validation 
-fit_boot_potVal_MNF_2 <- ApplyBootsClassification(data = potVal_MNF, Site = 2, rasterPlots = plots2, 
+fit_boot_potVal_MNF_2 <- ApplyBootsClassification(data = potVal_MNF, Site = 2, rasterPlots = plots2_MNF, 
                                                  en = fit_potVal_MNF_2, outDir = outputDir, modelTag = "potVal_MNF" )
 save(fit_boot_potVal_MNF_2, file="results_canopy/fit_boot_potVal_MNF_2.RData")
 
@@ -266,7 +293,7 @@ save(fit_boot_potVal_MNF_2, file="results_canopy/fit_boot_potVal_MNF_2.RData")
 fit_potVal_MNF_3 <- tunningModels(data = potVal_MNF, Site = 3, wl)
 save(fit_potVal_MNF_3, file="results_canopy/fit_potVal_MNF_3.RData")
 # Bootstrap validation 
-fit_boot_potVal_MNF_3 <- ApplyBootsClassification(data = potVal_MNF, Site = 3, rasterPlots = plots3, 
+fit_boot_potVal_MNF_3 <- ApplyBootsClassification(data = potVal_MNF, Site = 3, rasterPlots = plots3_MNF, 
                                                  en = fit_potVal_MNF_3, outDir = outputDir, modelTag = "potVal_MNF" )
 save(fit_boot_potVal_MNF_3, file="results_canopy/fit_boot_potVal_MNF_3.RData")
 
@@ -274,7 +301,7 @@ save(fit_boot_potVal_MNF_3, file="results_canopy/fit_boot_potVal_MNF_3.RData")
 fit_potVal_MNF_4 <- tunningModels(data = potVal_MNF, Site = 4, wl)
 save(fit_potVal_MNF_4, file="results_canopy/fit_potVal_MNF_4.RData")
 # Bootstrap validation 
-fit_boot_potVal_MNF_4 <- ApplyBootsClassification(data = potVal_MNF, Site = 4, rasterPlots = plots4, 
+fit_boot_potVal_MNF_4 <- ApplyBootsClassification(data = potVal_MNF, Site = 4, rasterPlots = plots4_MNF, 
                                                  en = fit_potVal_MNF_4, outDir = outputDir, modelTag = "potVal_MNF" )
 save(fit_boot_potVal_MNF_4, file="results_canopy/fit_boot_potVal_MNF_4.RData")
 
@@ -286,7 +313,7 @@ save(fit_boot_potVal_MNF_4, file="results_canopy/fit_boot_potVal_MNF_4.RData")
 fit_rf_MNF_1 <- tunningModels(data = rf_MNF, Site = 1, wl)
 save(fit_rf_MNF_1, file="results_canopy/fit_rf_MNF_1.RData")
 # Bootstrap validation 
-fit_boot_rf_MNF_1 <- ApplyBootsClassification(data = rf_MNF, Site = 1, rasterPlots = plots1, 
+fit_boot_rf_MNF_1 <- ApplyBootsClassification(data = rf_MNF, Site = 1, rasterPlots = plots1_MNF, 
                                              en = fit_rf_MNF_1, outDir = outputDir, modelTag = "rf_MNF" )
 save(fit_boot_rf_MNF_1, file="results_canopy/fit_boot_rf_MNF_1.RData")
 
@@ -294,7 +321,7 @@ save(fit_boot_rf_MNF_1, file="results_canopy/fit_boot_rf_MNF_1.RData")
 fit_rf_MNF_2 <- tunningModels(data = rf_MNF, Site = 2, wl)
 save(fit_rf_MNF_2, file="results_canopy/fit_rf_MNF_2.RData")
 # Bootstrap validation 
-fit_boot_rf_MNF_2 <- ApplyBootsClassification(data = rf_MNF, Site = 2, rasterPlots = plots2, 
+fit_boot_rf_MNF_2 <- ApplyBootsClassification(data = rf_MNF, Site = 2, rasterPlots = plots2_MNF, 
                                              en = fit_rf_MNF_2, outDir = outputDir, modelTag = "rf_MNF" )
 save(fit_boot_rf_MNF_2, file="results_canopy/fit_boot_rf_MNF_2.RData")
 
@@ -302,7 +329,7 @@ save(fit_boot_rf_MNF_2, file="results_canopy/fit_boot_rf_MNF_2.RData")
 fit_rf_MNF_3 <- tunningModels(data = rf_MNF, Site = 3, wl)
 save(fit_rf_MNF_3, file="results_canopy/fit_rf_MNF_3.RData")
 # Bootstrap validation 
-fit_boot_rf_MNF_3 <- ApplyBootsClassification(data = rf_MNF, Site = 3, rasterPlots = plots3, 
+fit_boot_rf_MNF_3 <- ApplyBootsClassification(data = rf_MNF, Site = 3, rasterPlots = plots3_MNF, 
                                              en = fit_rf_MNF_3, outDir = outputDir, modelTag = "rf_MNF" )
 save(fit_boot_rf_MNF_3, file="results_canopy/fit_boot_rf_MNF_3.RData")
 
@@ -310,7 +337,7 @@ save(fit_boot_rf_MNF_3, file="results_canopy/fit_boot_rf_MNF_3.RData")
 fit_rf_MNF_4 <- tunningModels(data = rf_MNF, Site = 4, wl)
 save(fit_rf_MNF_4, file="results_canopy/fit_rf_MNF_4.RData")
 # Bootstrap validation 
-fit_boot_rf_MNF_4 <- ApplyBootsClassification(data = rf_MNF, Site = 4, rasterPlots = plots4, 
+fit_boot_rf_MNF_4 <- ApplyBootsClassification(data = rf_MNF, Site = 4, rasterPlots = plots4_MNF, 
                                              en = fit_rf_MNF_4, outDir = outputDir, modelTag = "rf_MNF" )
 save(fit_boot_rf_MNF_4, file="results_canopy/fit_boot_rf_MNF_4.RData")
 
@@ -327,7 +354,7 @@ save(fit_boot_rf_MNF_4, file="results_canopy/fit_boot_rf_MNF_4.RData")
 fit_potVal_BN_MNF_1 <- tunningModels(data = potVal_BN_MNF, Site = 1, wl)
 save(fit_potVal_BN_MNF_1, file="results_canopy/fit_potVal_BN_MNF_1.RData")
 # Bootstrap validation 
-fit_boot_potVal_BN_MNF_1 <- ApplyBootsClassification(data = potVal_BN_MNF, Site = 1, rasterPlots = plots1, 
+fit_boot_potVal_BN_MNF_1 <- ApplyBootsClassification(data = potVal_BN_MNF, Site = 1, rasterPlots = plots1_BN_MNF, 
                                                  en = fit_potVal_BN_MNF_1, outDir = outputDir, modelTag = "potVal_BN_MNF" )
 save(fit_boot_potVal_BN_MNF_1, file="results_canopy/fit_boot_potVal_BN_MNF_1.RData")
 
@@ -335,7 +362,7 @@ save(fit_boot_potVal_BN_MNF_1, file="results_canopy/fit_boot_potVal_BN_MNF_1.RDa
 fit_potVal_BN_MNF_2 <- tunningModels(data = potVal_BN_MNF, Site = 2, wl)
 save(fit_potVal_BN_MNF_2, file="results_canopy/fit_potVal_BN_MNF_2.RData")
 # Bootstrap validation 
-fit_boot_potVal_BN_MNF_2 <- ApplyBootsClassification(data = potVal_BN_MNF, Site = 2, rasterPlots = plots2, 
+fit_boot_potVal_BN_MNF_2 <- ApplyBootsClassification(data = potVal_BN_MNF, Site = 2, rasterPlots = plots2_BN_MNF, 
                                                  en = fit_potVal_BN_MNF_2, outDir = outputDir, modelTag = "potVal_BN_MNF" )
 save(fit_boot_potVal_BN_MNF_2, file="results_canopy/fit_boot_potVal_BN_MNF_2.RData")
 
@@ -343,7 +370,7 @@ save(fit_boot_potVal_BN_MNF_2, file="results_canopy/fit_boot_potVal_BN_MNF_2.RDa
 fit_potVal_BN_MNF_3 <- tunningModels(data = potVal_BN_MNF, Site = 3, wl)
 save(fit_potVal_BN_MNF_3, file="results_canopy/fit_potVal_BN_MNF_3.RData")
 # Bootstrap validation 
-fit_boot_potVal_BN_MNF_3 <- ApplyBootsClassification(data = potVal_BN_MNF, Site = 3, rasterPlots = plots3, 
+fit_boot_potVal_BN_MNF_3 <- ApplyBootsClassification(data = potVal_BN_MNF, Site = 3, rasterPlots = plots3_BN_MNF, 
                                                  en = fit_potVal_BN_MNF_3, outDir = outputDir, modelTag = "potVal_BN_MNF" )
 save(fit_boot_potVal_BN_MNF_3, file="results_canopy/fit_boot_potVal_BN_MNF_3.RData")
 
@@ -351,7 +378,7 @@ save(fit_boot_potVal_BN_MNF_3, file="results_canopy/fit_boot_potVal_BN_MNF_3.RDa
 fit_potVal_BN_MNF_4 <- tunningModels(data = potVal_BN_MNF, Site = 4, wl)
 save(fit_potVal_BN_MNF_4, file="results_canopy/fit_potVal_BN_MNF_4.RData")
 # Bootstrap validation 
-fit_boot_potVal_BN_MNF_4 <- ApplyBootsClassification(data = potVal_BN_MNF, Site = 4, rasterPlots = plots4, 
+fit_boot_potVal_BN_MNF_4 <- ApplyBootsClassification(data = potVal_BN_MNF, Site = 4, rasterPlots = plots4_BN_MNF, 
                                                  en = fit_potVal_BN_MNF_4, outDir = outputDir, modelTag = "potVal_BN_MNF" )
 save(fit_boot_potVal_BN_MNF_4, file="results_canopy/fit_boot_potVal_BN_MNF_4.RData")
 
@@ -363,7 +390,7 @@ save(fit_boot_potVal_BN_MNF_4, file="results_canopy/fit_boot_potVal_BN_MNF_4.RDa
 fit_rf_BN_MNF_1 <- tunningModels(data = rf_BN_MNF, Site = 1, wl)
 save(fit_rf_BN_MNF_1, file="results_canopy/fit_rf_BN_MNF_1.RData")
 # Bootstrap validation 
-fit_boot_rf_BN_MNF_1 <- ApplyBootsClassification(data = rf_BN_MNF, Site = 1, rasterPlots = plots1, 
+fit_boot_rf_BN_MNF_1 <- ApplyBootsClassification(data = rf_BN_MNF, Site = 1, rasterPlots = plots1_BN_MNF, 
                                              en = fit_rf_BN_MNF_1, outDir = outputDir, modelTag = "rf_BN_MNF" )
 save(fit_boot_rf_BN_MNF_1, file="results_canopy/fit_boot_rf_BN_MNF_1.RData")
 
@@ -371,7 +398,7 @@ save(fit_boot_rf_BN_MNF_1, file="results_canopy/fit_boot_rf_BN_MNF_1.RData")
 fit_rf_BN_MNF_2 <- tunningModels(data = rf_BN_MNF, Site = 2, wl)
 save(fit_rf_BN_MNF_2, file="results_canopy/fit_rf_BN_MNF_2.RData")
 # Bootstrap validation 
-fit_boot_rf_BN_MNF_2 <- ApplyBootsClassification(data = rf_BN_MNF, Site = 2, rasterPlots = plots2, 
+fit_boot_rf_BN_MNF_2 <- ApplyBootsClassification(data = rf_BN_MNF, Site = 2, rasterPlots = plots2_BN_MNF, 
                                              en = fit_rf_BN_MNF_2, outDir = outputDir, modelTag = "rf_BN_MNF" )
 save(fit_boot_rf_BN_MNF_2, file="results_canopy/fit_boot_rf_BN_MNF_2.RData")
 
@@ -379,7 +406,7 @@ save(fit_boot_rf_BN_MNF_2, file="results_canopy/fit_boot_rf_BN_MNF_2.RData")
 fit_rf_BN_MNF_3 <- tunningModels(data = rf_BN_MNF, Site = 3, wl)
 save(fit_rf_BN_MNF_3, file="results_canopy/fit_rf_BN_MNF_3.RData")
 # Bootstrap validation 
-fit_boot_rf_BN_MNF_3 <- ApplyBootsClassification(data = rf_BN_MNF, Site = 3, rasterPlots = plots3, 
+fit_boot_rf_BN_MNF_3 <- ApplyBootsClassification(data = rf_BN_MNF, Site = 3, rasterPlots = plots3_BN_MNF, 
                                              en = fit_rf_BN_MNF_3, outDir = outputDir, modelTag = "rf_BN_MNF" )
 save(fit_boot_rf_BN_MNF_3, file="results_canopy/fit_boot_rf_BN_MNF_3.RData")
 
@@ -387,7 +414,7 @@ save(fit_boot_rf_BN_MNF_3, file="results_canopy/fit_boot_rf_BN_MNF_3.RData")
 fit_rf_BN_MNF_4 <- tunningModels(data = rf_BN_MNF, Site = 4, wl)
 save(fit_rf_BN_MNF_4, file="results_canopy/fit_rf_BN_MNF_4.RData")
 # Bootstrap validation 
-fit_boot_rf_BN_MNF_4 <- ApplyBootsClassification(data = rf_BN_MNF, Site = 4, rasterPlots = plots4, 
+fit_boot_rf_BN_MNF_4 <- ApplyBootsClassification(data = rf_BN_MNF, Site = 4, rasterPlots = plots4_BN_MNF, 
                                              en = fit_rf_BN_MNF_4, outDir = outputDir, modelTag = "rf_BN_MNF" )
 save(fit_boot_rf_BN_MNF_4, file="results_canopy/fit_boot_rf_BN_MNF_4.RData")
 
@@ -403,7 +430,7 @@ save(fit_boot_rf_BN_MNF_4, file="results_canopy/fit_boot_rf_BN_MNF_4.RData")
 fit_potVal_GLCM_1 <- tunningModels(data = potVal_GLCM, Site = 1, wl)
 save(fit_potVal_GLCM_1, file="results_canopy/fit_potVal_GLCM_1.RData")
 # Bootstrap validation 
-fit_boot_potVal_GLCM_1 <- ApplyBootsClassification(data = potVal_GLCM, Site = 1, rasterPlots = plots1, 
+fit_boot_potVal_GLCM_1 <- ApplyBootsClassification(data = potVal_GLCM, Site = 1, rasterPlots = plots1_GLCM, 
                                                  en = fit_potVal_GLCM_1, outDir = outputDir, modelTag = "potVal_GLCM" )
 save(fit_boot_potVal_GLCM_1, file="results_canopy/fit_boot_potVal_GLCM_1.RData")
 
@@ -411,7 +438,7 @@ save(fit_boot_potVal_GLCM_1, file="results_canopy/fit_boot_potVal_GLCM_1.RData")
 fit_potVal_GLCM_2 <- tunningModels(data = potVal_GLCM, Site = 2, wl)
 save(fit_potVal_GLCM_2, file="results_canopy/fit_potVal_GLCM_2.RData")
 # Bootstrap validation 
-fit_boot_potVal_GLCM_2 <- ApplyBootsClassification(data = potVal_GLCM, Site = 2, rasterPlots = plots2, 
+fit_boot_potVal_GLCM_2 <- ApplyBootsClassification(data = potVal_GLCM, Site = 2, rasterPlots = plots2_GLCM, 
                                                  en = fit_potVal_GLCM_2, outDir = outputDir, modelTag = "potVal_GLCM" )
 save(fit_boot_potVal_GLCM_2, file="results_canopy/fit_boot_potVal_GLCM_2.RData")
 
@@ -419,7 +446,7 @@ save(fit_boot_potVal_GLCM_2, file="results_canopy/fit_boot_potVal_GLCM_2.RData")
 fit_potVal_GLCM_3 <- tunningModels(data = potVal_GLCM, Site = 3, wl)
 save(fit_potVal_GLCM_3, file="results_canopy/fit_potVal_GLCM_3.RData")
 # Bootstrap validation 
-fit_boot_potVal_GLCM_3 <- ApplyBootsClassification(data = potVal_GLCM, Site = 3, rasterPlots = plots3, 
+fit_boot_potVal_GLCM_3 <- ApplyBootsClassification(data = potVal_GLCM, Site = 3, rasterPlots = plots3_GLCM, 
                                                  en = fit_potVal_GLCM_3, outDir = outputDir, modelTag = "potVal_GLCM" )
 save(fit_boot_potVal_GLCM_3, file="results_canopy/fit_boot_potVal_GLCM_3.RData")
 
@@ -427,7 +454,7 @@ save(fit_boot_potVal_GLCM_3, file="results_canopy/fit_boot_potVal_GLCM_3.RData")
 fit_potVal_GLCM_4 <- tunningModels(data = potVal_GLCM, Site = 4, wl)
 save(fit_potVal_GLCM_4, file="results_canopy/fit_potVal_GLCM_4.RData")
 # Bootstrap validation 
-fit_boot_potVal_GLCM_4 <- ApplyBootsClassification(data = potVal_GLCM, Site = 4, rasterPlots = plots4, 
+fit_boot_potVal_GLCM_4 <- ApplyBootsClassification(data = potVal_GLCM, Site = 4, rasterPlots = plots4_GLCM, 
                                                  en = fit_potVal_GLCM_4, outDir = outputDir, modelTag = "potVal_GLCM" )
 save(fit_boot_potVal_GLCM_4, file="results_canopy/fit_boot_potVal_GLCM_4.RData")
 
@@ -439,7 +466,7 @@ save(fit_boot_potVal_GLCM_4, file="results_canopy/fit_boot_potVal_GLCM_4.RData")
 fit_rf_GLCM_1 <- tunningModels(data = rf_GLCM, Site = 1, wl)
 save(fit_rf_GLCM_1, file="results_canopy/fit_rf_GLCM_1.RData")
 # Bootstrap validation 
-fit_boot_rf_GLCM_1 <- ApplyBootsClassification(data = rf_GLCM, Site = 1, rasterPlots = plots1,
+fit_boot_rf_GLCM_1 <- ApplyBootsClassification(data = rf_GLCM, Site = 1, rasterPlots = plots1_GLCM,
                                              en = fit_rf_GLCM_1, outDir = outputDir, modelTag = "rf_GLCM" )
 save(fit_boot_rf_GLCM_1, file="results_canopy/fit_boot_rf_GLCM_1.RData")
 
@@ -447,7 +474,7 @@ save(fit_boot_rf_GLCM_1, file="results_canopy/fit_boot_rf_GLCM_1.RData")
 fit_rf_GLCM_2 <- tunningModels(data = rf_GLCM, Site = 2, wl)
 save(fit_rf_GLCM_2, file="results_canopy/fit_rf_GLCM_2.RData")
 # Bootstrap validation 
-fit_boot_rf_GLCM_2 <- ApplyBootsClassification(data = rf_GLCM, Site = 2, rasterPlots = plots2, 
+fit_boot_rf_GLCM_2 <- ApplyBootsClassification(data = rf_GLCM, Site = 2, rasterPlots = plots2_GLCM, 
                                              en = fit_rf_GLCM_2, outDir = outputDir, modelTag = "rf_GLCM" )
 save(fit_boot_rf_GLCM_2, file="results_canopy/fit_boot_rf_GLCM_2.RData")
 
@@ -455,7 +482,7 @@ save(fit_boot_rf_GLCM_2, file="results_canopy/fit_boot_rf_GLCM_2.RData")
 fit_rf_GLCM_3 <- tunningModels(data = rf_GLCM, Site = 3, wl)
 save(fit_rf_GLCM_3, file="results_canopy/fit_rf_GLCM_3.RData")
 # Bootstrap validation 
-fit_boot_rf_GLCM_3 <- ApplyBootsClassification(data = rf_GLCM, Site = 3, rasterPlots = plots3, 
+fit_boot_rf_GLCM_3 <- ApplyBootsClassification(data = rf_GLCM, Site = 3, rasterPlots = plots3_GLCM, 
                                              en = fit_rf_GLCM_3, outDir = outputDir, modelTag = "rf_GLCM" )
 save(fit_boot_rf_GLCM_3, file="results_canopy/fit_boot_rf_GLCM_3.RData")
 
@@ -463,7 +490,7 @@ save(fit_boot_rf_GLCM_3, file="results_canopy/fit_boot_rf_GLCM_3.RData")
 fit_rf_GLCM_4 <- tunningModels(data = rf_GLCM, Site = 4, wl)
 save(fit_rf_GLCM_4, file="results_canopy/fit_rf_GLCM_4.RData")
 # Bootstrap validation 
-fit_boot_rf_GLCM_4 <- ApplyBootsClassification(data = rf_GLCM, Site = 4, rasterPlots = plots4, 
+fit_boot_rf_GLCM_4 <- ApplyBootsClassification(data = rf_GLCM, Site = 4, rasterPlots = plots4_GLCM, 
                                              en = fit_rf_GLCM_4, outDir = outputDir, modelTag = "rf_GLCM" )
 save(fit_boot_rf_GLCM_4, file="results_canopy/fit_boot_rf_GLCM_4.RData")
 
@@ -479,7 +506,7 @@ save(fit_boot_rf_GLCM_4, file="results_canopy/fit_boot_rf_GLCM_4.RData")
 fit_potVal_BN_GLCM_1 <- tunningModels(data = potVal_BN_GLCM, Site = 1, wl)
 save(fit_potVal_BN_GLCM_1, file="results_canopy/fit_potVal_BN_GLCM_1.RData")
 # Bootstrap validation 
-fit_boot_potVal_BN_GLCM_1 <- ApplyBootsClassification(data = potVal_BN_GLCM, Site = 1, rasterPlots = plots1, 
+fit_boot_potVal_BN_GLCM_1 <- ApplyBootsClassification(data = potVal_BN_GLCM, Site = 1, rasterPlots = plots1_BN_GLCM, 
                                                  en = fit_potVal_BN_GLCM_1, outDir = outputDir, modelTag = "potVal_BN_GLCM" )
 save(fit_boot_potVal_BN_GLCM_1, file="results_canopy/fit_boot_potVal_BN_GLCM_1.RData")
 
@@ -487,7 +514,7 @@ save(fit_boot_potVal_BN_GLCM_1, file="results_canopy/fit_boot_potVal_BN_GLCM_1.R
 fit_potVal_BN_GLCM_2 <- tunningModels(data = potVal_BN_GLCM, Site = 2, wl)
 save(fit_potVal_BN_GLCM_2, file="results_canopy/fit_potVal_BN_GLCM_2.RData")
 # Bootstrap validation 
-fit_boot_potVal_BN_GLCM_2 <- ApplyBootsClassification(data = potVal_BN_GLCM, Site = 2, rasterPlots = plots2, 
+fit_boot_potVal_BN_GLCM_2 <- ApplyBootsClassification(data = potVal_BN_GLCM, Site = 2, rasterPlots = plots2_BN_GLCM, 
                                                  en = fit_potVal_BN_GLCM_2, outDir = outputDir, modelTag = "potVal_BN_GLCM" )
 save(fit_boot_potVal_BN_GLCM_2, file="results_canopy/fit_boot_potVal_BN_GLCM_2.RData")
 
@@ -495,7 +522,7 @@ save(fit_boot_potVal_BN_GLCM_2, file="results_canopy/fit_boot_potVal_BN_GLCM_2.R
 fit_potVal_BN_GLCM_3 <- tunningModels(data = potVal_BN_GLCM, Site = 3, wl)
 save(fit_potVal_BN_GLCM_3, file="results_canopy/fit_potVal_BN_GLCM_3.RData")
 # Bootstrap validation 
-fit_boot_potVal_BN_GLCM_3 <- ApplyBootsClassification(data = potVal_BN_GLCM, Site = 3, rasterPlots = plots3, 
+fit_boot_potVal_BN_GLCM_3 <- ApplyBootsClassification(data = potVal_BN_GLCM, Site = 3, rasterPlots = plots3_BN_GLCM, 
                                                  en = fit_potVal_BN_GLCM_3, outDir = outputDir, modelTag = "potVal_BN_GLCM" )
 save(fit_boot_potVal_BN_GLCM_3, file="results_canopy/fit_boot_potVal_BN_GLCM_3.RData")
 
@@ -503,7 +530,7 @@ save(fit_boot_potVal_BN_GLCM_3, file="results_canopy/fit_boot_potVal_BN_GLCM_3.R
 fit_potVal_BN_GLCM_4 <- tunningModels(data = potVal_BN_GLCM, Site = 4, wl)
 save(fit_potVal_BN_GLCM_4, file="results_canopy/fit_potVal_BN_GLCM_4.RData")
 # Bootstrap validation 
-fit_boot_potVal_BN_GLCM_4 <- ApplyBootsClassification(data = potVal_BN_GLCM, Site = 4, rasterPlots = plots4, 
+fit_boot_potVal_BN_GLCM_4 <- ApplyBootsClassification(data = potVal_BN_GLCM, Site = 4, rasterPlots = plots4_BN_GLCM, 
                                                  en = fit_potVal_BN_GLCM_4, outDir = outputDir, modelTag = "potVal_BN_GLCM" )
 save(fit_boot_potVal_BN_GLCM_4, file="results_canopy/fit_boot_potVal_BN_GLCM_4.RData")
 
@@ -515,7 +542,7 @@ save(fit_boot_potVal_BN_GLCM_4, file="results_canopy/fit_boot_potVal_BN_GLCM_4.R
 fit_rf_BN_GLCM_1 <- tunningModels(data = rf_BN_GLCM, Site = 1, wl)
 save(fit_rf_BN_GLCM_1, file="results_canopy/fit_rf_BN_GLCM_1.RData")
 # Bootstrap validation 
-fit_boot_rf_BN_GLCM_1 <- ApplyBootsClassification(data = rf_BN_GLCM, Site = 1, rasterPlots = plots1, 
+fit_boot_rf_BN_GLCM_1 <- ApplyBootsClassification(data = rf_BN_GLCM, Site = 1, rasterPlots = plots1_BN_GLCM, 
                                              en = fit_rf_BN_GLCM_1, outDir = outputDir, modelTag = "rf_BN_GLCM" )
 save(fit_boot_rf_BN_GLCM_1, file="results_canopy/fit_boot_rf_BN_GLCM_1.RData")
 
@@ -523,7 +550,7 @@ save(fit_boot_rf_BN_GLCM_1, file="results_canopy/fit_boot_rf_BN_GLCM_1.RData")
 fit_rf_BN_GLCM_2 <- tunningModels(data = rf_BN_GLCM, Site = 2, wl)
 save(fit_rf_BN_GLCM_2, file="results_canopy/fit_rf_BN_GLCM_2.RData")
 # Bootstrap validation 
-fit_boot_rf_BN_GLCM_2 <- ApplyBootsClassification(data = rf_BN_GLCM, Site = 2, rasterPlots = plots2, 
+fit_boot_rf_BN_GLCM_2 <- ApplyBootsClassification(data = rf_BN_GLCM, Site = 2, rasterPlots = plots2_BN_GLCM, 
                                              en = fit_rf_BN_GLCM_2, outDir = outputDir, modelTag = "rf_BN_GLCM" )
 save(fit_boot_rf_BN_GLCM_2, file="results_canopy/fit_boot_rf_BN_GLCM_2.RData")
 
@@ -531,7 +558,7 @@ save(fit_boot_rf_BN_GLCM_2, file="results_canopy/fit_boot_rf_BN_GLCM_2.RData")
 fit_rf_BN_GLCM_3 <- tunningModels(data = rf_BN_GLCM, Site = 3, wl)
 save(fit_rf_BN_GLCM_3, file="results_canopy/fit_rf_BN_GLCM_3.RData")
 # Bootstrap validation 
-fit_boot_rf_BN_GLCM_3 <- ApplyBootsClassification(data = rf_BN_GLCM, Site = 3, rasterPlots = plots3, 
+fit_boot_rf_BN_GLCM_3 <- ApplyBootsClassification(data = rf_BN_GLCM, Site = 3, rasterPlots = plots3_BN_GLCM, 
                                              en = fit_rf_BN_GLCM_3, outDir = outputDir, modelTag = "rf_BN_GLCM" )
 save(fit_boot_rf_BN_GLCM_3, file="results_canopy/fit_boot_rf_BN_GLCM_3.RData")
 
@@ -539,7 +566,7 @@ save(fit_boot_rf_BN_GLCM_3, file="results_canopy/fit_boot_rf_BN_GLCM_3.RData")
 fit_rf_BN_GLCM_4 <- tunningModels(data = rf_BN_GLCM, Site = 4, wl)
 save(fit_rf_BN_GLCM_4, file="results_canopy/fit_rf_BN_GLCM_4.RData")
 # Bootstrap validation 
-fit_boot_rf_BN_GLCM_4 <- ApplyBootsClassification(data = rf_BN_GLCM, Site = 4, rasterPlots = plots4, 
+fit_boot_rf_BN_GLCM_4 <- ApplyBootsClassification(data = rf_BN_GLCM, Site = 4, rasterPlots = plots4_BN_GLCM, 
                                              en = fit_rf_BN_GLCM_4, outDir = outputDir, modelTag = "rf_BN_GLCM" )
 save(fit_boot_rf_BN_GLCM_4, file="results_canopy/fit_boot_rf_BN_GLCM_4.RData")
 
