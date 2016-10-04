@@ -225,27 +225,21 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
   kappa.PLS <- list()
   model.PLS <- list()
   predict.PLS <- list()
-  rasterList.PLS <- list()
-  shpList.PLS <- list()
-  
+ 
   PA.RF    <- list()
   UA.RF    <- list()
   OA.RF    <- list()
   kappa.RF <- list()
   model.RF <- list()
   predict.RF <- list()
-  rasterList.RF <- list()
-  shpList.RF <- list()
-  
+
   PA.SVM    <- list()
   UA.SVM    <- list()
   OA.SVM    <- list()
   kappa.SVM <- list()
   model.SVM <- list()
   predict.SVM <- list()
-  rasterList.SVM <- list()
-  shpList.SVM <- list()
-  
+
   OBS <- list()
   
   # initialize parallel processing
@@ -277,11 +271,11 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
     model.PLS[[i]] <- PLS
     
     # predict
-    pred    <- predict(PLS, val[,2:length(val)])
-    predict.PLS[[i]] <- pred
+    pred_pls    <- predict(PLS, val[,2:length(val)])
+    predict.PLS[[i]] <- pred_pls
     
     # confusion matix
-    conf   <- confusionMatrix(pred, val$classes)
+    conf   <- confusionMatrix(pred_pls, val$classes)
     
     # get accuracies
     PA.PLS[[i]]       <- conf$byClass[,3] 
@@ -300,11 +294,11 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
     model.RF[[i]] <- RF
     
     # predict
-    pred    <- predict(RF, val[,2:length(val)])
-    predict.RF[[i]] <- pred
+    pred_rf    <- predict(RF, val[,2:length(val)])
+    predict.RF[[i]] <- pred_rf
     
     # confusion matix
-    conf   <- confusionMatrix(pred, val$classes)
+    conf   <- confusionMatrix(pred_rf, val$classes)
     
     # get accuracies
     PA.RF[[i]]       <- conf$byClass[,3] 
@@ -323,11 +317,11 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
     model.SVM[[i]] <- SVM
     
     # predict
-    pred    <- predict(SVM, val[,2:length(val)])
-    predict.SVM[[i]] <- pred
+    pred_svm    <- predict(SVM, val[,2:length(val)])
+    predict.SVM[[i]] <- pred_svm
     
     # confusion matix
-    conf   <- confusionMatrix(pred, val$classes)
+    conf   <- confusionMatrix(pred_svm, val$classes)
     
     # get accuracies
     PA.SVM[[i]]       <- conf$byClass[,3] 
@@ -339,10 +333,6 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
     ##############################
     ### Apply models to raster ### 
     ##############################
-    
-    dummyList.PLS <- list()
-    dummyList.RF <- list()
-    dummyList.SVM <- list()
     
     for (j in 1:length(rasterPlots)){
       raster = rasterPlots[[j]]
@@ -357,15 +347,11 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
       
       #### Predict PLS DA
       r_PLS  <- predict(raster, PLS, type="class")
-      dummyList.PLS[[j]] <- r_PLS
       #### Predict RF
       r_RF <- predict(raster, RF, type="class")
-      dummyList.RF[[j]] <- r_RF
       #### Predict SVM
       r_SVM  <- predict(raster, SVM, type="class")
-      dummyList.SVM[[j]] <- r_SVM
-      
-
+ 
       ### export rasters
       # create a folder per plot to store results
       plotName = paste( names(rasterPlots)[j], "_PLS_", modelTag, sep=""  )
@@ -380,21 +366,20 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
       dir.create(file.path(outDir, plotName), showWarnings = FALSE)
       outdir_SVM = file.path(outDir, plotName)
       
-      out_PLS = paste( names(rasterPlots)[j], "_PLS_", i, sep="" )
-      out_RF  = paste( names(rasterPlots)[j], "_RF_", i, sep="" )
-      out_SVM = paste( names(rasterPlots)[j], "_SVM_", i, sep="" )
+      out_PLS = paste( names(rasterPlots)[j], "_PLS_", i, ".tif", sep="" )
+      out_RF  = paste( names(rasterPlots)[j], "_RF_", i, ".tif", sep="" )
+      out_SVM = paste( names(rasterPlots)[j], "_SVM_", i, ".tif", sep="" )
       
-      shpList.PLS[[i]] <- poly_PLS
-      shpList.RF[[i]]  <- poly_RF
-      shpList.SVM[[i]] <- poly_SVM
+      out_PLS = file.path(outdir_PLS, out_PLS)
+      out_RF  = file.path(outdir_RF, out_RF)
+      out_SVM = file.path(outdir_PLS, out_SVM)
       
-      writeOGR(poly_PLS, outdir_PLS, out_PLS, driver="ESRI Shapefile", overwrite_layer = T)
-      writeOGR(poly_RF,  outdir_RF, out_RF,  driver="ESRI Shapefile", overwrite_layer = T)
-      writeOGR(poly_SVM, outdir_SVM, out_SVM, driver="ESRI Shapefile", overwrite_layer = T)
+      
+      writeRaster(r_PLS, filename=out_PLS, format="GTiff", overwrite = T)
+      writeRaster(r_RF,  filename=out_RF,  format="GTiff", overwrite = T)
+      writeRaster(r_SVM, filename=out_SVM, format="GTiff", overwrite = T)
       
     }
-    
-    rasterList.SVM[[i]] <- dummyList.SVM
   }
   
   # stop parallel process
@@ -408,12 +393,12 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
   names (fit) <- c ("PLS PA", "PLS UA", "PLS OA", "PLS Kappa", 
                     "RF PA", "RF UA", "RF OA", "RF Kappa", 
                     "SVM PA", "SVM UA", "SVM OA", "SVM Kappa")
-  output <- list (fit, model.PLS, predict.PLS, rasterList.PLS, shpList.PLS,
-                  model.RF, predict.RF, rasterList.RF, shpList.RF,
-                  model.SVM, predict.SVM, rasterList.SVM, shpList.SVM)
-  names (output) <- c ("fits", "PLS Model", "PLS Predictions", "PLS rasterPredictions", "PLS shpPredictions",
-                       "RF Model", "RF Predictions", "RF rasterPredictions", "RF shpPredictions",
-                       "SVM Model", "SVM Predictions", "SVM rasterPredictions", "SVM shpPredictions")
+  output <- list (fit, model.PLS, predict.PLS, 
+                       model.RF, predict.RF, 
+                       model.SVM, predict.SVM)
+  names (output) <- c ("fits", "PLS Model", "PLS Predictions", 
+                       "RF Model", "RF Predictions", 
+                       "SVM Model", "SVM Predictions")
   class (output) <- "BootsClassification"
   output
   
