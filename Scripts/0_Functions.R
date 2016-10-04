@@ -738,8 +738,8 @@ rasterListNames <- function(fileExtantion, folder){
   # make a list of all fileExtantion files
   rast_list = list.files(folder, pattern = fileExtantion)
   # delete the ".dat" from the name
-  x = grep(".tif.aux.xml", rast_list) 
-  rast_list <- rast_list[-x]
+  x = grep(".tif.aux.xml", rast_list)
+  if ( length(x) > 0 ){ rast_list <- rast_list[-x] }
   rast_list = gsub('.{4}$', '', rast_list)
   return(rast_list)
 }
@@ -753,7 +753,7 @@ rasterList <- function(fileExtantion, folder, dir=NULL, select=NULL){
   # make a list of all fileExtantion files
   rast_list = list.files(folder, pattern = fileExtantion)
   x = grep(".tif.aux.xml", rast_list) 
-  rast_list <- rast_list[-x]
+  if ( length(x) > 0 ){ rast_list <- rast_list[-x] }
   # select only rasters with a especific pattern
   if (!is.null(select)){
     rast_list <- rast_list[ grep(select, rast_list) ]
