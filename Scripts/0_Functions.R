@@ -42,9 +42,10 @@ tunningModels <- function(data, Site, wl=NA){
   
   # set data
   x = grep(Site, data$Site) 
-  x1 <- bestData[x, ]
+  x1 <- data[x, ]
   x1$Species <- factor(x1$Species)
   
+  spec <- x1[, 3:length(x1)]
   data2 <- data.frame(classes = x1$Species, x1[, 3:length(x1)])
   data2 <- na.omit(data2)
   
@@ -364,101 +365,32 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
       r_SVM  <- predict(raster, SVM, type="class")
       dummyList.SVM[[j]] <- r_SVM
       
-      ## poliginize to keep the species name label
-      poly_PLS <- rasterToPolygons(r_PLS, dissolve = T)
-      poly_RF  <- rasterToPolygons(r_RF,  dissolve = T)
-      poly_SVM <- rasterToPolygons(r_SVM, dissolve = T)
-      
-      ## add spp manes to the shapefiles
-      # create a function to finde classes that were not predicted
-      # lexicographic vector
-      not.pred <- function(pred, poly){
-        a = c(1, seq(10, length(levels(pred)[[1]][,1]), 1), seq(2,9,1))
-        b = setdiff(levels(pred[[i]])[[1]][,1], poly@data$layer)  
-        c = which(a == b)
-        return(c)
-      }
-      
-      ### PLS-DA
-      if ( length(levels(r_PLS)[[1]][,1]) < 10 ){
-        a = c(1,2,3,4,5,6,7,8,9)
-      } else if  (length(levels(r_PLS)[[1]][,1]) >= 10 & length(levels(r_PLS)[[1]][,1]) < 20){
-        a = c(1, seq(10, length(levels(r_PLS)[[1]][,1]), 1), seq(2,9,1)) 
-      } else {
-        a = c(1, seq(10, 19, 1), 2, seq(20,length(levels(r_PLS)[[1]][,1]),1), seq(3,9,1)) 
-      }
-      
-      if ( !is.null( setdiff( levels(r_PLS)[[1]][,1], poly_PLS@data$layer ) ) ){
-        poly_PLS$sp <- levels(r_PLS)[[1]][,2][poly_PLS@data$layer]
-      } else { 
-        b = as.vector_PLS(levels(r_PLS)[[1]][,1]) 
-        b[a]
-        b[not.pred(r_PLS, poly_PLS)] <- NA
-        poly_PLS$sp <- na.omit(b)
-      }
-      
-      ### RF
-      if ( length(levels(r_RF)[[1]][,1]) < 10 ){
-        a = c(1,2,3,4,5,6,7,8,9)
-      } else if  (length(levels(r_RF)[[1]][,1]) >= 10 & length(levels(r_RF)[[1]][,1]) < 20){
-        a = c(1, seq(10, length(levels(r_RF)[[1]][,1]), 1), seq(2,9,1)) 
-      } else {
-        a = c(1, seq(10, 19, 1), 2, seq(20,length(levels(r_RF)[[1]][,1]),1), seq(3,9,1)) 
-      }
-      
-      if ( !is.null( setdiff( levels(r_RF)[[1]][,1], poly_RF@data$layer ) ) ){
-        poly_RF$sp <- levels(r_RF)[[1]][,2][poly_RF@data$layer]
-      } else { 
-        b = as.vector_RF(levels(r_RF)[[1]][,1]) 
-        b[a]
-        b[not.pred(r_RF, poly_RF)] <- NA
-        poly_RF$sp <- na.omit(b)
-      }
-      
-      ### SVM-DA
-      if ( length(levels(r_SVM)[[1]][,1]) < 10 ){
-        a = c(1,2,3,4,5,6,7,8,9)
-      } else if  (length(levels(r_SVM)[[1]][,1]) >= 10 & length(levels(r_SVM)[[1]][,1]) < 20){
-        a = c(1, seq(10, length(levels(r_SVM)[[1]][,1]), 1), seq(2,9,1)) 
-      } else {
-        a = c(1, seq(10, 19, 1), 2, seq(20,length(levels(r_SVM)[[1]][,1]),1), seq(3,9,1)) 
-      }
-      
-      if ( !is.null( setdiff( levels(r_SVM)[[1]][,1], poly_SVM@data$layer ) ) ){
-        poly_SVM$sp <- levels(r_SVM)[[1]][,2][poly_SVM@data$layer]
-      } else { 
-        b = as.vector_SVM(levels(r_SVM)[[1]][,1]) 
-        b[a]
-        b[not.pred(r_SVM, poly_SVM)] <- NA
-        poly_SVM$sp <- na.omit(b)
-      }
-      
-      
-      ### export shapefiles
+
+      ### export rasters
       # create a folder per plot to store results
       plotName = paste( names(rasterPlots)[j], "_PLS_", modelTag, sep=""  )
       dir.create(file.path(outDir, plotName), showWarnings = FALSE)
-      outPolydir_PLS = file.path(outDir, plotName)
+      outdir_PLS = file.path(outDir, plotName)
       
       plotName = paste( names(rasterPlots)[j], "_RF_", modelTag, sep=""  )
       dir.create(file.path(outDir, plotName), showWarnings = FALSE)
-      outPolydir_RF = file.path(outDir, plotName)
+      outdir_RF = file.path(outDir, plotName)
       
       plotName = paste( names(rasterPlots)[j], "_SVM_", modelTag, sep=""  )
       dir.create(file.path(outDir, plotName), showWarnings = FALSE)
-      outPolydir_SVM = file.path(outDir, plotName)
+      outdir_SVM = file.path(outDir, plotName)
       
-      outPoly_PLS = paste( names(rasterPlots)[j], "_PLS_", i, sep="" )
-      outPoly_RF  = paste( names(rasterPlots)[j], "_RF_", i, sep="" )
-      outPoly_SVM = paste( names(rasterPlots)[j], "_SVM_", i, sep="" )
+      out_PLS = paste( names(rasterPlots)[j], "_PLS_", i, sep="" )
+      out_RF  = paste( names(rasterPlots)[j], "_RF_", i, sep="" )
+      out_SVM = paste( names(rasterPlots)[j], "_SVM_", i, sep="" )
       
       shpList.PLS[[i]] <- poly_PLS
       shpList.RF[[i]]  <- poly_RF
       shpList.SVM[[i]] <- poly_SVM
       
-      writeOGR(poly_PLS, outPolydir_PLS, outPoly_PLS, driver="ESRI Shapefile", overwrite_layer = T)
-      writeOGR(poly_RF,  outPolydir_RF, outPoly_RF,  driver="ESRI Shapefile", overwrite_layer = T)
-      writeOGR(poly_SVM, outPolydir_SVM, outPoly_SVM, driver="ESRI Shapefile", overwrite_layer = T)
+      writeOGR(poly_PLS, outdir_PLS, out_PLS, driver="ESRI Shapefile", overwrite_layer = T)
+      writeOGR(poly_RF,  outdir_RF, out_RF,  driver="ESRI Shapefile", overwrite_layer = T)
+      writeOGR(poly_SVM, outdir_SVM, out_SVM, driver="ESRI Shapefile", overwrite_layer = T)
       
     }
     
@@ -484,6 +416,89 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
                        "SVM Model", "SVM Predictions", "SVM rasterPredictions", "SVM shpPredictions")
   class (output) <- "BootsClassification"
   output
+  
+}
+
+
+##----------------------------------------------------------------------------##
+##                                                                            ##
+## obstainCovers: Obtain the covers prediction valiuos per plot               ##
+##                                                                            ##
+## Arguments:                                                                 ##
+## - rasterDir:   folder of the predicted plots of ApplyBootsClassification   ##
+## - shpDir:      folder of the shapefiles used to mask the image             ##
+## - shpMaskName: Name of the plot to use as a mask                           ## 
+##                                                                            ##
+##----------------------------------------------------------------------------##
+
+obstainCovers <- function(rasterDir, shpDir, shpMaskName){ 
+  
+  library(raster)
+  library(rgdal)
+  
+  
+  #######################################
+  ### obtain observed covers per plot ###
+  #######################################
+  
+  x = grep(18, species$Plot) 
+  y <- species[x,]
+  y$Species = factor(y$Species) 
+  
+  store_plot <-  matrix(nrow = 1, ncol = length( levels(y$Species) ))
+  colnames(store_plot) <- levels(y$Species)
+  
+  for (i in 1:length( levels(y$Species))){
+    sp = levels(y$Species)[i]
+    z =  grep(sp, y$Species)
+    z <- y[z,]
+    sumCov = sum(z$Cover)
+    cov = (sumCov*100)/1600
+    store_plot[[1,i]] <- cov
+  }
+  
+  #########################################
+  ### estimate predicted cover per plot ###
+  #########################################
+  setwd(rasterDir)
+  
+  rstLisr <- rasterList(fileExtantion = ".tif", folder = ".", dir = rasterDir, select=NULL)
+  shp <- readOGR(dsn = shpDir, layer = shpMaskName)
+  
+  levs = levels(rstLisr[[1]])
+  levels = levs[[1]][,2]
+  levelsNumber = length(levels)
+  store_areas <- matrix(nrow = 100, ncol = levelsNumber)
+  colnames(store_areas) <- levels
+  for (i in 1:100){
+    clip <- crop(rstLisr[[i]], shp)
+    
+    # count number of pixels
+    area = ncell(clip)
+    
+    # cover per class
+    for (j in 1:levelsNumber){ 
+      count_class = freq(clip, value=j)
+      percent = (count_class*100)/area
+      # add value to store_areas matrix
+      store_areas[[i,j]] <- percent
+    }
+  }
+  
+  ################################
+  ### Export results to tables ###
+  ################################
+  
+  setwd(home)
+  
+  dir.create("Covers_results", showWarnings = FALSE)
+  ObsCov = paste( "ObsCov_", shpMaskName, ".txt", sep=""  )
+  ObsCov = file.path( home, "Covers_results", ObsCov )
+  PredCov = paste( "PredCov_", shpMaskName, ".txt", sep=""  )
+  PredCov = file.path( home, "Covers_results", PredCov )
+  
+  write.table(store_plot, file = ObsCov, sep = " ", row.names = F, col.names = T )
+  write.table(store_areas, file = PredCov, sep = " ", row.names = F, col.names = T )
   
 }
 
@@ -558,7 +573,7 @@ plot.classificationEnsemble <- function (spec, en, xlab_tag,label=TRUE, ...) {
 ## - fitAISA:   classificationEnsemble AISA object                            ##
 ##                                                                            ##
 ## Function based on:                                                         ##
-## Lopatin, J., Dolos, K., Hernández, H. J., Galleguillos, M., & Fassnacht,   ##
+## Lopatin, J., Dolos, K., Hernández, H. J., Galleguillos, M., & Fassnacht,  ##
 ## F. E. (2016). Comparing Generalized Linear Models and random forest to     ##
 ## model vascular plant species richness using LiDAR data in a natural forest ##
 ## in central Chile. Remote Sensing of Environment, 173, 200-210.             ##
@@ -723,6 +738,8 @@ rasterListNames <- function(fileExtantion, folder){
   # make a list of all fileExtantion files
   rast_list = list.files(folder, pattern = fileExtantion)
   # delete the ".dat" from the name
+  x = grep(".tif.aux.xml", rast_list) 
+  rast_list <- rast_list[-x]
   rast_list = gsub('.{4}$', '', rast_list)
   return(rast_list)
 }
@@ -735,6 +752,8 @@ rasterList <- function(fileExtantion, folder, dir=NULL, select=NULL){
   }
   # make a list of all fileExtantion files
   rast_list = list.files(folder, pattern = fileExtantion)
+  x = grep(".tif.aux.xml", rast_list) 
+  rast_list <- rast_list[-x]
   # select only rasters with a especific pattern
   if (!is.null(select)){
     rast_list <- rast_list[ grep(select, rast_list) ]
