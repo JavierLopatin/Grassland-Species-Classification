@@ -13,15 +13,15 @@ home = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp"
 setwd(home)
 
 load("results_canopy/fit_potVal_1.RData")
-load("results_canopy/fit_rf.RData")
-load("results_canopy/fit_potVal_BN.RData")
-load("results_canopy/fit_potVal.RData")
-load("results_canopy/fit_rf_BN.RData")
-load("results_canopy/fit_potVal_MNF.RData")
-load("results_canopy/fit_rf_MNF.RData")
-load("results_canopy/fit_potVal_BN_MNF.RData")
-load("results_canopy/fit_rf_BN_MNF.RData")
-load("results_canopy/fit_potVal_GLCM.RData")
+#load("results_canopy/fit_rf.RData")
+#load("results_canopy/fit_potVal_BN.RData")
+#load("results_canopy/fit_potVal.RData")
+#load("results_canopy/fit_rf_BN.RData")
+#load("results_canopy/fit_potVal_MNF.RData")
+#load("results_canopy/fit_rf_MNF.RData")
+#load("results_canopy/fit_potVal_BN_MNF.RData")
+#load("results_canopy/fit_rf_BN_MNF.RData")
+#load("results_canopy/fit_potVal_GLCM.RData")
 
 #####################
 ### load the data ###
