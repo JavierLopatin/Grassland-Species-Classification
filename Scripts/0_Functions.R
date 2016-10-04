@@ -216,6 +216,7 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
   bestCost <- en$SVM$finalModel$cost
   bestGamma <- en$SVM$finalModel$gamma
   
+
   ## apply funtion to predict species cover with SVM
   
   # list of accuracies
@@ -223,21 +224,18 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
   UA.PLS    <- list()
   OA.PLS    <- list()
   kappa.PLS <- list()
-  model.PLS <- list()
   predict.PLS <- list()
  
   PA.RF    <- list()
   UA.RF    <- list()
   OA.RF    <- list()
   kappa.RF <- list()
-  model.RF <- list()
   predict.RF <- list()
 
   PA.SVM    <- list()
   UA.SVM    <- list()
   OA.SVM    <- list()
   kappa.SVM <- list()
-  model.SVM <- list()
   predict.SVM <- list()
 
   OBS <- list()
@@ -267,9 +265,6 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
     PLS  <- plsda(x =  train[,2:length(train)], y = as.factor( train$classes ), ncomp = ncomp, 
                   probMethod = probMethod)
     
-    # sotore tunning model
-    model.PLS[[i]] <- PLS
-    
     # predict
     pred_pls    <- predict(PLS, val[,2:length(val)])
     predict.PLS[[i]] <- pred_pls
@@ -289,10 +284,7 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
     
     RF  <- randomForest( y = as.factor( train$classes ), x = train[,2:length(train)],
                          ntree= bestNtree, mtry = bestMtry)
-    
-    # sotore tunning model
-    model.RF[[i]] <- RF
-    
+
     # predict
     pred_rf    <- predict(RF, val[,2:length(val)])
     predict.RF[[i]] <- pred_rf
@@ -312,10 +304,7 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
     
     SVM  <- svm(train[,2:length(train)], train$classes, kernel = "linear",
                 gamma = bestGamma, cost = bestCost, probability = TRUE)
-    
-    # sotore tunning model
-    model.SVM[[i]] <- SVM
-    
+
     # predict
     pred_svm    <- predict(SVM, val[,2:length(val)])
     predict.SVM[[i]] <- pred_svm
@@ -345,13 +334,13 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
       # apply mask
       raster <- mask(raster, NDVI)
       
-      #### Predict PLS DA
+      ### Predict PLS DA
       r_PLS  <- predict(raster, PLS, type="class")
-      #### Predict RF
+      ### Predict RF
       r_RF <- predict(raster, RF, type="class")
       #### Predict SVM
       r_SVM  <- predict(raster, SVM, type="class")
- 
+      
       ### export rasters
       # create a folder per plot to store results
       plotName = paste( names(rasterPlots)[j], "_PLS_", modelTag, sep=""  )
@@ -374,7 +363,7 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
       out_RF  = file.path(outdir_RF, out_RF)
       out_SVM = file.path(outdir_PLS, out_SVM)
       
-      
+      # Export rasters
       writeRaster(r_PLS, filename=out_PLS, format="GTiff", overwrite = T)
       writeRaster(r_RF,  filename=out_RF,  format="GTiff", overwrite = T)
       writeRaster(r_SVM, filename=out_SVM, format="GTiff", overwrite = T)
@@ -389,18 +378,23 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
   ### prepare output ###
   ######################
   
-  fit <- c (PA.PLS, UA.PLS, OA.PLS, kappa.PLS, PA.RF, UA.RF, OA.RF, kappa.RF, PA.SVM, UA.SVM, OA.SVM, kappa.SVM)
-  names (fit) <- c ("PLS PA", "PLS UA", "PLS OA", "PLS Kappa", 
-                    "RF PA", "RF UA", "RF OA", "RF Kappa", 
-                    "SVM PA", "SVM UA", "SVM OA", "SVM Kappa")
-  output <- list (fit, model.PLS, predict.PLS, 
-                       model.RF, predict.RF, 
-                       model.SVM, predict.SVM)
-  names (output) <- c ("fits", "PLS Model", "PLS Predictions", 
-                       "RF Model", "RF Predictions", 
-                       "SVM Model", "SVM Predictions")
-  class (output) <- "BootsClassification"
-  output
+
+  fits <- data.frame( unlist(OA.PLS), unlist(OA.RF), unlist(OA.SVM),
+                     unlist(kappa.PLS), unlist(kappa.RF), unlist(kappa.SVM))
+  names(fits) <- c("OA_PLS", "OA_RF", "OA_SVM", "Kappa_PLS", "Kappa_RF", "Kapa_SVM")
+  
+  fits_2 <- data.frame( PLS$obsLevels , unlist(PA.PLS), unlist(PA.RF), unlist(PA.SVM), 
+                        unlist(OA.PLS), unlist(OA.RF), unlist(OA.SVM))
+  names(fits_2) <- c("Species", "PA_PLS", "PA_RF", "PA_SVM", "OA_PLS", "OA_RF", "OA_SVM")
+  
+  predict_all <- data.frame( unlist(OBS), unlist(predict.PLS), unlist(predict.RF), unlist(predict.SVM) )
+  names(predict_all) <- c("Observed", "PLS", "RF", "SVM")
+  
+  ### Export 
+  
+  write.table(fits, file = file.path(outDir, paste("Fits_Site_", Site, "_", modelTag, ".txt", sep="")), row.names = F, col.names = T)
+  write.table(fits_2, file = file.path(outDir, paste("FitsPA_OA_Site_", Site, "_", modelTag, ".txt", sep="")), row.names = F, col.names = T)
+  write.table(predict_all, file = file.path(outDir, paste("Predicts_Site_", Site, "_", modelTag, ".txt", sep="")), row.names = F, col.names = T)
   
 }
 
