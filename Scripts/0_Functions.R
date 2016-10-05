@@ -204,8 +204,7 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
   x1$Species <- factor(x1$Species)
   
   data2 <- data.frame(classes = x1$Species, x1[, 3:length(x1)])
-  
-  wl <- en[[1]][1,]
+  data2 <- na.omit(data2)
   
   ncomp = en$PLS$finalModel$ncomp
   probMethod = en$PLS$finalModel$probMethod
@@ -243,8 +242,16 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
   # initialize parallel processing
   cl <- makeCluster(detectCores())
   registerDoParallel(cl)
+ 
+  # progress bar
+  pb <- txtProgressBar(min = 0, max = boots, style = 3)
+  print(paste0(modelTag, "_", Site))
   
   for (i in 1:boots){
+    
+    # progress bar
+    Sys.sleep(0.1)
+    setTxtProgressBar(pb, i)
     
     N = length(data2[,1])
     
@@ -282,7 +289,7 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
     ### Apply SVM ###
     #################
     
-    RF  <- randomForest( y = as.factor( train$classes ), x = train[,2:length(train)],
+    RF  <- randomForest( y = factor( train$classes ), x = train[,2:length(train)],
                          ntree= bestNtree, mtry = bestMtry)
 
     # predict
@@ -370,6 +377,9 @@ ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, out
       
     }
   }
+
+  # close progress bar
+  close(pb)
   
   # stop parallel process
   stopCluster(cl) 
