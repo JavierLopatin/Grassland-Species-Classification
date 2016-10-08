@@ -33,7 +33,7 @@ wl <- c( 398, 407, 415, 424, 432, 441, 450, 459, 468, 477, 486, 495, 504, 513, 5
          765, 775, 784, 794, 803, 813, 822, 832, 842, 851, 861, 870, 880, 890, 899, 908, 918, 928, 937, 947, 957)
   
 # load species cover dataset
-species <- read.table("Plots_Species.csv", header = T, sep=",")
+species <- read.table("Data/Plots_Species.csv", header = T, sep=",")
 
 
 #### Source Functions from GitHub
@@ -68,75 +68,58 @@ setwd(home)
 
 save.image("Class_Canopy.RData")
 
-outputDir = "D:/Sp_Images"
 
 #------------------------#
 # Spectra                #
 #------------------------#
+valData = species
+potVal = potVal_spec
+rf = rf_spec
+rasterList = raster_spec
 
-##############
-### potVal ###
-##############
+ApplyModels <- function(valData, potVal, rf, rasterList, wl){
+  
+  ## Apply functions tunningModels and BootsClassification per plot
+  
+  for (i in 1:length(rasterList)){ # four sites
+    
+    # obtain the validation data per plot
+    raster = rasterList[[i]]
+    plot = unique(na.omit(as.numeric(unlist(strsplit( names( rasterList )[[i]], "[^0-9]+")))))
+    plot_name = paste0("plot_", plot)  
+    
+    x = grep( plot, valData$Plot )  
+    data = valData[x, ] 
+    data$Species <- factor( data$Species ) # reset species Levels
+    # get species to classify in the plot
+    classes = unique( data$Species )
+    
+    # obtain subset of data of potVal and rf that include these species
+    x = grep( paste(classes, collapse = "|") , potVal$Species )
+    data_potVal = potVal[x, ]
+    data_potVal$Species <- factor(data_potVal$Species) 
+    
+    x = grep( paste(classes, collapse = "|") , rf$Species )
+    data_rf = rf[x, ]
+    data_rf$Species <- factor(data_rf$Species) 
+    
+    ### apply tunningModels function
+    fit_potVal <-  tunningModels(classes = data_potVal$Species, 
+                                 spectra = data_potVal[, 3:length( data_potVal )],
+                                 wl = wl)
+    
+    fit_rf     <-  tunningModels(classes = data_rfl$Species, 
+                                 spectra = data_rf[, 3:length( data_rf )],
+                                 wl = wl)
+    
+    
+    }
+  
+  
+  
+}
 
-#### Site 1
-#fit_potVal_1 <- tunningModels(data = potVal, Site = 1, wl)
-#save(fit_potVal_1, file="results_canopy/fit_potVal_1.RData")
-# Bootstrap validation 
-fit_boot_potVal_1 <- ApplyBootsClassification(data = potVal, Site = 1, rasterPlots = plots1, boots=10,
-                               en = fit_potVal_1, outDir = outputDir, modelTag = "potVal" )
 
-#### Site 2
-#fit_potVal_2 <- tunningModels(data = potVal, Site = 2, wl)
-#save(fit_potVal_2, file="results_canopy/fit_potVal_2.RData")
-# Bootstrap validation 
-fit_boot_potVal_2 <- ApplyBootsClassification(data = potVal, Site = 2, rasterPlots = plots2, boots=10,
-                                            en = fit_potVal_2, outDir = outputDir, modelTag = "potVal" )
-
-#### Site 3
-#fit_potVal_3 <- tunningModels(data = potVal, Site = 3, wl)
-#save(fit_potVal_3, file="results_canopy/fit_potVal_3.RData")
-# Bootstrap validation 
-fit_boot_potVal_3 <- ApplyBootsClassification(data = potVal, Site = 3, rasterPlots = plots3,boots=10, 
-                                            en = fit_potVal_3, outDir = outputDir, modelTag = "potVal" )
-
-#### Site 4
-#fit_potVal_4 <- tunningModels(data = potVal, Site = 4, wl)
-save(fit_potVal_4, file="results_canopy/fit_potVal_4.RData")
-# Bootstrap validation 
-fit_boot_potVal_4 <- ApplyBootsClassification(data = potVal, Site = 4, rasterPlots = plots4, boots=10,
-                                            en = fit_potVal_4, outDir = outputDir, modelTag = "potVal" )
-
-#################
-### rip it off ###
-##################
-
-#### Site 1
-#fit_rf_1 <- tunningModels(data = rf, Site = 1, wl)
-#save(fit_rf_1, file="results_canopy/fit_rf_1.RData")
-# Bootstrap validation 
-fit_boot_rf_1 <- ApplyBootsClassification(data = rf, Site = 1, rasterPlots = plots1, boots=10,
-                                              en = fit_rf_1, outDir = outputDir, modelTag = "rf" )
-
-#### Site 2
-#fit_rf_2 <- tunningModels(data = rf, Site = 2, wl)
-#save(fit_rf_2, file="results_canopy/fit_rf_2.RData")
-# Bootstrap validation 
-fit_boot_rf_2 <- ApplyBootsClassification(data = rf, Site = 2, rasterPlots = plots2, boots=10,
-                                              en = fit_rf_2, outDir = outputDir, modelTag = "rf" )
-
-#### Site 3
-#fit_rf_3 <- tunningModels(data = rf, Site = 3, wl)
-#save(fit_rf_3, file="results_canopy/fit_rf_3.RData")
-# Bootstrap validation 
-fit_boot_rf_3 <- ApplyBootsClassification(data = rf, Site = 3, rasterPlots = plots3, boots=10,
-                                              en = fit_rf_3, outDir = outputDir, modelTag = "rf" )
-
-#### Site 4
-#fit_rf_4 <- tunningModels(data = rf, Site = 4, wl)
-#save(fit_rf_4, file="results_canopy/fit_rf_4.RData")
-# Bootstrap validation 
-fit_boot_rf_4 <- ApplyBootsClassification(data = rf, Site = 4, rasterPlots = plots4, boots=10,
-                                              en = fit_rf_4, outDir = outputDir, modelTag = "rf" )
 
 
 

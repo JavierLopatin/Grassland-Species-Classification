@@ -33,7 +33,7 @@
 ##                                                                            ##
 ##----------------------------------------------------------------------------##
 
-tunningModels <- function(data, Site, wl=NA){
+tunningModels <- function(classes, spectra, wl=NA){
   
   ## load required libraries
   library (caret)
@@ -41,12 +41,7 @@ tunningModels <- function(data, Site, wl=NA){
   library(doParallel)
   
   # set data
-  x = grep(Site, data$Site) 
-  x1 <- data[x, ]
-  x1$Species <- factor(x1$Species)
-  
-  spec <- x1[, 3:length(x1)]
-  data2 <- data.frame(classes = x1$Species, x1[, 3:length(x1)])
+  data2 <- data.frame(classes = classes, spectra)
   data2 <- na.omit(data2)
   
   # Set the random number seed so we can reproduce the results
@@ -66,6 +61,8 @@ tunningModels <- function(data, Site, wl=NA){
   #############################
   ### PLS-DA classification ###
   #############################
+  
+  print("Tunning PLS-DA Model...")
   
   # apply classification
   set.seed(123)
@@ -93,9 +90,13 @@ tunningModels <- function(data, Site, wl=NA){
   plscf <- as.vector(rowMeans(plsClas$finalModel$coefficients)) ## extract coeff.
   plscf <- plscf / sd (plscf) ## scale regression coefficients
   
+  print("Done!")
+  
   #########################
   ### RF classification ###
   #########################
+  
+  print("Tunning RF Model...")
   
   set.seed(123)
   rfClas <- train(x=train[, 2:length(train)], y=train$classes, method = "rf", tuneLength=15, trControl = controlObject)
@@ -116,9 +117,13 @@ tunningModels <- function(data, Site, wl=NA){
   rfcf <- varImp(rfClas$finalModel)[[1]]
   rfcf <- as.vector (rfcf / sd(rfcf))
   
+  print("Done!")
+  
   ##########################
   ### SVM classification ###
   ##########################
+  
+  print("Tunning SVM Model...")
   
   set.seed(123)
   svmClas <- train(x=train[, 2:length(train)], y=train$classes, method = "svmLinear2", tuneLength=15, 
@@ -145,6 +150,8 @@ tunningModels <- function(data, Site, wl=NA){
   for(i in 1:ncol(spec))
     svrcf[i] <- svr.alpha %*% spec[svr.index, i]
   svrcf <- svrcf / sd (svrcf) ## scale pseudo-coefficients
+  
+  print("Done!")
   
   #####################################################################    
   ### get ensemble from all models and identify important variables ###
@@ -188,7 +195,7 @@ tunningModels <- function(data, Site, wl=NA){
 ##                                                                            ##
 ##----------------------------------------------------------------------------##
 
-ApplyBootsClassification <- function(data, en, Site, rasterPlots, boots=100, outDir, modelTag){  
+BootsClassification <- function(data, en, Site, rasterPlots, boots=100, outDir, modelTag){  
   
   library(raster)
   library(rgdal)
@@ -900,7 +907,7 @@ rasterList <- function(fileExtantion, folder, dir=NULL, select=NULL){
 
 
 
-ApplyBootsClassification3 <- function(data, en, rasterPlots, boots=100, outDir, modelTag){  
+BootsClassification3 <- function(data, en, rasterPlots, boots=100, outDir, modelTag){  
   
   library(raster)
   library(rgdal)
