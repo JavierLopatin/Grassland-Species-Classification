@@ -52,7 +52,8 @@ tunningModels <- function(classes, spectra, wl=NA){
   test<- data2 [-forTraining,]
   
   # Each model used 5 repeated 10-fold cross-validation. Use AUC to pick the best model
-  controlObject <- trainControl(method = "cv", number = 10,  repeats=10, classProbs=TRUE, allowParallel = TRUE)
+  controlObject <- trainControl(method = "cv", number = 10,  repeats=10, classProbs=TRUE, 
+                                allowParallel = TRUE, verboseIter = T)
   
   # initialize parallel processing
   cl <- makeCluster(detectCores())
@@ -67,7 +68,7 @@ tunningModels <- function(classes, spectra, wl=NA){
   # apply classification
   set.seed(123)
   plsClas <- train(x=train[, 2:length(train)], y=train$classes, method = "pls", tuneLength=20, 
-                   preProc = c("center", "scale"), trControl = controlObject)
+                   preProc = c("center", "scale"), trControl = controlObject, verbose = TRUE)
   
   # predict
   pls.pred <- predict(plsClas, test[, 2:length(train)])
@@ -99,7 +100,8 @@ tunningModels <- function(classes, spectra, wl=NA){
   print("Tunning RF Model...")
   
   set.seed(123)
-  rfClas <- train(x=train[, 2:length(train)], y=train$classes, method = "rf", tuneLength=15, trControl = controlObject)
+  rfClas <- train(x=train[, 2:length(train)], y=train$classes, method = "rf", tuneLength=15, 
+                  trControl = controlObject, verbose = TRUE)
   
   # predict
   rf.pred <- predict(rfClas, test[,2:length(train)])
@@ -127,7 +129,7 @@ tunningModels <- function(classes, spectra, wl=NA){
   
   set.seed(123)
   svmClas <- train(x=train[, 2:length(train)], y=train$classes, method = "svmLinear2", tuneLength=15, 
-                   preProc = c("center", "scale"), trControl = controlObject)
+                   preProc = c("center", "scale"), trControl = controlObject, verbose = TRUE)
   
   # predict
   svm.pred <- predict(svmClas, test[,2:length(train)])
@@ -195,7 +197,7 @@ tunningModels <- function(classes, spectra, wl=NA){
 ##                                                                            ##
 ##----------------------------------------------------------------------------##
 
-BootsClassification <- function(data, en, Site, rasterPlots, boots=100, outDir, modelTag){  
+BootsClassification <- function(classes, spectra, en, rasterPlots, boots=100, outDir, modelTag){  
   
   library(raster)
   library(rgdal)
@@ -206,9 +208,6 @@ BootsClassification <- function(data, en, Site, rasterPlots, boots=100, outDir, 
   library(doParallel)
   
   # extract the data from the classification Ensamble function
-  x = grep(Site, data$Site) 
-  x1 <- data[x, ]
-  x1$Species <- factor(x1$Species)
   
   data2 <- data.frame(classes = x1$Species, x1[, 3:length(x1)])
   data2 <- na.omit(data2)
@@ -231,7 +230,7 @@ BootsClassification <- function(data, en, Site, rasterPlots, boots=100, outDir, 
   OA.PLS    <- list()
   kappa.PLS <- list()
   predict.PLS <- list()
- 
+  
   PA.RF    <- list()
   UA.RF    <- list()
   OA.RF    <- list()
