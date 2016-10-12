@@ -51,7 +51,7 @@ ApplyModels <- function(valData, potVal, rf, rasterList, wl, modelTag, boots){
                                 spectra = data_potVal[, 3:length( data_potVal )],
                                 wl = wl)
     
-    print("Tunning rip it off model")
+    print("Tunning rip-it-off model")
     print("")
     
     fit_rf     <- tunningModels(classes = data_rf$Species, 
