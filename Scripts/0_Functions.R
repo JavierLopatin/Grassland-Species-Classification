@@ -12,14 +12,14 @@
 ################################################################################
 
 
-ApplyModels <- function(valData, potVal, rf, rasterList, wl, modelTag, boots){
+ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
   
-  for (i in 6:length(rasterList)){ 
+  for (i in 7:length(raster_List)){ 
     
     # obtain the validation data per plot
-    raster = rasterList[[i]]
+    raster = raster_List[[i]]
     names(raster) <- paste0( rep("B", nlayers(raster)), seq(1, nlayers(raster), 1) )
-    plot = unique(na.omit(as.numeric(unlist(strsplit( names( rasterList )[[i]], "[^0-9]+")))))
+    plot = unique(na.omit(as.numeric(unlist(strsplit( names( raster_List )[[i]], "[^0-9]+")))))
     plot_name = paste0("plot_", plot)  
     
     x = grep( plot, valData$Plot )  
@@ -410,7 +410,6 @@ BootsClassification <- function(classes, spectra, en, raster, boots,
  
   # progress bar
   print(paste0(plotName, " ", modelTag))
-  print("")
   pb <- txtProgressBar(min = 0, max = boots, style = 3)
 
   for (i in 1:boots){
@@ -630,11 +629,11 @@ obstainCovers <- function(ObservedSpecies, rasterDir, subplotDir, shpMaskName,
   
   # make a rasterlist from the rasterDir folder
   rstLisr <- rasterList(fileExtantion = ".tif", folder = ".", dir = rasterDir, select=NULL)
-  levs = levels(rstLisr[[1]])
-  levelsNumber = length( levs[[1]][,1] ) - 1
-  levels_plot = levs[[1]][2:length(levs[[1]][,1]),2]
-  levels_plot = factor(levels_plot)
+  levs <- levels(rstLisr[[1]])
+  levelsNumber <- length( levs[[1]][,1] ) 
+  levels_plot <- levs[[1]][2:length(levs[[1]][,1]), 2]
   
+   
   # load subplots from to copy the extation
   subplots <- rasterList(fileExtantion = ".tif", folder = "subplots", dir = home)
   x = grep(plotNumber, names( subplots ))  
@@ -686,6 +685,7 @@ obstainCovers <- function(ObservedSpecies, rasterDir, subplotDir, shpMaskName,
       
     }
     
+    store_areas$Species <- factor(store_areas$Species) 
     areasList [[i]] <- store_areas
   }
   
@@ -698,10 +698,10 @@ obstainCovers <- function(ObservedSpecies, rasterDir, subplotDir, shpMaskName,
   dummy_matrix[,1] <- as.character( areasList[[1]][,1] )
   dummy_matrix[,2] <- areasList[[1]][,2]
   
-  for (i in 1:(levelsNumber-1)){
+  for (i in 1:length( unique(areasList[[1]]$Species) )){#(levelsNumber-1)
     x = grep(areasList[[1]]$Species[i], areasPlots$Species)
     sp = areasPlots[x, ]
-    for (i2 in 1:16){
+    for (i2 in 1:15){
       y = sp[,i2+2]
       y = na.omit(y)
       med = median(y) 
