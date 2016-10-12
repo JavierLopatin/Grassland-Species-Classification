@@ -11,6 +11,165 @@
 ##                                                                            ##
 ################################################################################
 
+
+ApplyModels <- function(valData, potVal, rf, rasterList, wl, modelTag, boots){
+  
+  for (i in 1:length(rasterList)){ 
+    
+    # obtain the validation data per plot
+    raster = rasterList[[i]]
+    names(raster) <- paste0( rep("B", nlayers(raster)), seq(1, nlayers(raster), 1) )
+    plot = unique(na.omit(as.numeric(unlist(strsplit( names( rasterList )[[i]], "[^0-9]+")))))
+    plot_name = paste0("plot_", plot)  
+    
+    x = grep( plot, valData$Plot )  
+    data = valData[x, ] 
+    data$Species <- factor( data$Species ) # reset species Levels
+    # get species to classify in the plot
+    classes = unique( data$Species )
+    
+    # obtain subset of data of potVal and rf that include these species
+    x = grep( paste(classes, collapse = "|") , potVal$Species )
+    data_potVal = potVal[x, ]
+    data_potVal$Species <- factor(data_potVal$Species) 
+    
+    x = grep( paste(classes, collapse = "|") , rf$Species )
+    data_rf = rf[x, ]
+    data_rf$Species <- factor(data_rf$Species) 
+    
+    ####################################
+    ### Apply tunningModels function ###
+    ####################################
+    
+    print(paste("### Tuning", plot_name, modelTag, "###"))
+    print("")
+    
+    print("Tunning pot Validation model")
+    print("")
+    
+    fit_potVal <- tunningModels(classes = data_potVal$Species, 
+                                spectra = data_potVal[, 3:length( data_potVal )],
+                                wl = wl)
+    
+    print("Tunning rip it off model")
+    print("")
+    
+    fit_rf     <- tunningModels(classes = data_rf$Species, 
+                                spectra = data_rf[, 3:length( data_rf )],
+                                wl = wl)
+    # save tunning models
+    dir.create(file.path(home, "tunningOutputs"), showWarnings = FALSE)
+    
+    save(fit_potVal, file=paste0(home,  "/tunningOutputs/", "potVal_", plot_name, ".RData"))
+    save(fit_rf,     file=paste0(home,  "/tunningOutputs/", "rf_", plot_name, ".RData"))
+    
+    print("Done!")
+    print("")
+    
+    #################################
+    ### Apply BootsClassification ###
+    #################################
+    
+    dir.create(file.path(home, "BootsClass_out"), showWarnings = FALSE)
+    
+    print("### Starting bootstrap predictions ###")
+    print("")
+    
+    BootsClassification(classes = data_potVal$Species, 
+                        spectra = data_potVal[, 3:length( data_potVal )],
+                        en = fit_potVal, 
+                        raster = raster, 
+                        boots = boots, 
+                        outDir = file.path(home, "BootsClass_out"), 
+                        modelTag = paste0("potVal_", modelTag),
+                        plotName = plot_name)
+    
+    BootsClassification(classes = data_rf$Species, 
+                        spectra = data_rf[, 3:length( data_potVal )],
+                        en = fit_rf, 
+                        raster = raster, 
+                        boots = boots, 
+                        outDir = file.path(home, "BootsClass_out"), 
+                        modelTag = paste0("rf_", modelTag),
+                        plotName = plot_name)
+    
+    print("Done!")
+    print("")
+    
+    #####################################
+    ### Apply obstainCovers function ####
+    #####################################
+    
+    print("### Starting Cover estimation ###")
+    print("")
+    
+    # for PLS-DA potVal
+    obstainCovers(ObservedSpecies = valData, 
+                  rasterDir =  paste0( home, "/BootsClass_out/", plotName, "_PLS_",  
+                                       paste0("potVal_", modelTag) ), 
+                  subplotDir = subplotDir, 
+                  shpMaskName = plot_name, 
+                  plotNumber = plot, 
+                  Iter = boots,
+                  algorithm = "PLS_potVal")
+    
+    # for PLS-DA rf
+    obstainCovers(ObservedSpecies = valData, 
+                  rasterDir =  paste0( home, "/BootsClass_out/", plotName, "_PLS_", 
+                                       paste0("rf_", modelTag) ), 
+                  subplotDir = subplotDir, 
+                  shpMaskName = plot_name, 
+                  plotNumber = plot, 
+                  Iter = boots,
+                  algorithm = "PLS_rf")
+    
+    # for RF potVal
+    obstainCovers(ObservedSpecies = valData, 
+                  rasterDir =  paste0( home, "/BootsClass_out/", plotName, "_RF_",  
+                                       paste0("potVal_", modelTag) ), 
+                  subplotDir = subplotDir, 
+                  shpMaskName = plot_name, 
+                  plotNumber = plot, 
+                  Iter = boots,
+                  algorithm = "RF_potVal")
+    
+    # for RF rf
+    obstainCovers(ObservedSpecies = valData, 
+                  rasterDir =  paste0( home, "/BootsClass_out/", plotName, "_RF_",  
+                                       paste0("rf_", modelTag) ), 
+                  subplotDir = subplotDir, 
+                  shpMaskName = plot_name, 
+                  plotNumber = plot, 
+                  Iter = boots,
+                  algorithm = "RF_rf")
+    
+    # for SVM potVal
+    obstainCovers(ObservedSpecies = valData, 
+                  rasterDir =  paste0( home, "/BootsClass_out/", plotName, "_SVM_",  
+                                       paste0("potVal_", modelTag) ), 
+                  subplotDir = subplotDir, 
+                  shpMaskName = plot_name, 
+                  plotNumber = plot, 
+                  Iter = boots,
+                  algorithm = "SVM_potVal")
+    
+    # for SVM rf potVal
+    obstainCovers(ObservedSpecies = valData, 
+                  rasterDir =  paste0( home, "/BootsClass_out/", plotName, "_SVM_",  
+                                       paste0("rf_", modelTag) ), 
+                  subplotDir = subplotDir, 
+                  shpMaskName = plot_name, 
+                  plotNumber = plot, 
+                  Iter = boots,
+                  algorithm = "SVM_rf")
+   
+     print("Done!")
+    print("")
+    
+  }
+}
+
+
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
 ## tunningModels and  Multi-method ensemble selection of spectral bands       ##
@@ -26,7 +185,7 @@
 ## - y      Numeric vector containing the response variable                   ##
 ## - wl     Numeric vector containing the wavelength information of the bands ##
 ##                                                                            ##
-## variable importance based on the paper:                                    ##
+## Variable importance based on the paper:                                    ##
 ## Feilhauer, H., Asner, G.P., & Martin, R.E. (2015). Multi-method ensemble   ##
 ## selection of spectral bands related to leaf biochemistry. Remote Sensing   ## 
 ## of Environment, 164, 57-65. http://doi.org/10.1016/j.rse.2015.03.033       ##
@@ -36,7 +195,7 @@
 tunningModels <- function(classes, spectra, wl=NA){
   
   ## load required libraries
-  library (caret)
+  library(caret)
   library(e1071)
   library(doParallel)
   
@@ -52,8 +211,8 @@ tunningModels <- function(classes, spectra, wl=NA){
   test<- data2 [-forTraining,]
   
   # Each model used 5 repeated 10-fold cross-validation. Use AUC to pick the best model
-  controlObject <- trainControl(method = "cv", number = 10,  repeats=10, classProbs=TRUE, 
-                                allowParallel = TRUE, verboseIter = T)
+  controlObject <- trainControl(method = "cv", number = 5, classProbs=TRUE, 
+                                allowParallel = TRUE, seeds = set.seed(123))
   
   # initialize parallel processing
   cl <- makeCluster(detectCores())
@@ -64,11 +223,11 @@ tunningModels <- function(classes, spectra, wl=NA){
   #############################
   
   print("Tunning PLS-DA Model...")
-  
+
   # apply classification
   set.seed(123)
-  plsClas <- train(x=train[, 2:length(train)], y=train$classes, method = "pls", tuneLength=20, 
-                   preProc = c("center", "scale"), trControl = controlObject, verbose = TRUE)
+  plsClas <- train(x=train[, 2:length(train)], y=make.names( train$classes ), method = "pls", 
+                   tuneLength=20, preProc = c("center", "scale"), trControl = controlObject)
   
   # predict
   pls.pred <- predict(plsClas, test[, 2:length(train)])
@@ -97,11 +256,11 @@ tunningModels <- function(classes, spectra, wl=NA){
   ### RF classification ###
   #########################
   
-  print("Tunning RF Model...")
-  
+  print("Tunning RF model...")
+
   set.seed(123)
-  rfClas <- train(x=train[, 2:length(train)], y=train$classes, method = "rf", tuneLength=15, 
-                  trControl = controlObject, verbose = TRUE)
+  rfClas <- train(x=train[, 2:length(train)], y=make.names( train$classes ), method = "rf", 
+                  tuneLength=15, trControl = controlObject)
   
   # predict
   rf.pred <- predict(rfClas, test[,2:length(train)])
@@ -126,10 +285,10 @@ tunningModels <- function(classes, spectra, wl=NA){
   ##########################
   
   print("Tunning SVM Model...")
-  
+
   set.seed(123)
-  svmClas <- train(x=train[, 2:length(train)], y=train$classes, method = "svmLinear2", tuneLength=15, 
-                   preProc = c("center", "scale"), trControl = controlObject, verbose = TRUE)
+  svmClas <- train(x=train[, 2:length(train)], y=make.names( train$classes ), method = "svmLinear2", 
+                   tuneLength=10, preProc = c("center", "scale"), trControl = controlObject)
   
   # predict
   svm.pred <- predict(svmClas, test[,2:length(train)])
@@ -148,12 +307,16 @@ tunningModels <- function(classes, spectra, wl=NA){
   svr.alpha <- colMeans(svr.alpha)
   svr.index <-  svmClas$finalModel$index ## extract alpha index
   ## calculate pseudo-regression coefficients from the alpha vector
-  svrcf <- numeric (ncol (spec))
-  for(i in 1:ncol(spec))
-    svrcf[i] <- svr.alpha %*% spec[svr.index, i]
+  svrcf <- numeric (ncol (spectra))
+  for(i in 1:ncol(spectra))
+    svrcf[i] <- svr.alpha %*% spectra[svr.index, i]
   svrcf <- svrcf / sd (svrcf) ## scale pseudo-coefficients
   
   print("Done!")
+  print("")
+  
+  # stop parallel process
+  stopCluster(cl) 
   
   #####################################################################    
   ### get ensemble from all models and identify important variables ###
@@ -163,16 +326,13 @@ tunningModels <- function(classes, spectra, wl=NA){
   ensemblecf <- abs(plscf) * OA.pls + abs(rfcf) * OA.rf + abs(svrcf) * OA.svm 
   th <- mean(ensemblecf) + sd(ensemblecf) ## calculate threshold
   selbands <- ensemblecf > th ## apply threshold
-  
-  # stop parallel process
-  stopCluster(cl)
-  
+
   ######################
   ### prepare output ###
   ######################
   
   cf <- rbind (wl, plscf, rfcf, svrcf, ensemblecf, selbands)
-  colnames(cf) <- colnames(spec)
+  colnames(cf) <- colnames(spectra)
   
   fit <- c (OA.pls, OA.rf, OA.svm)
   names (fit) <- c ("PLS-DA OA", "RF OA", "SVR OA")
@@ -197,7 +357,8 @@ tunningModels <- function(classes, spectra, wl=NA){
 ##                                                                            ##
 ##----------------------------------------------------------------------------##
 
-BootsClassification <- function(classes, spectra, en, rasterPlots, boots=100, outDir, modelTag){  
+BootsClassification <- function(classes, spectra, en, raster, boots, 
+                                outDir, modelTag, plotName){  
   
   library(raster)
   library(rgdal)
@@ -208,20 +369,18 @@ BootsClassification <- function(classes, spectra, en, rasterPlots, boots=100, ou
   library(doParallel)
   
   # extract the data from the classification Ensamble function
-  
-  data2 <- data.frame(classes = x1$Species, x1[, 3:length(x1)])
+  data2 <- data.frame(classes = classes, spectra)
   data2 <- na.omit(data2)
   
-  ncomp = en$PLS$finalModel$ncomp
+  ncomp      = en$PLS$finalModel$ncomp
   probMethod = en$PLS$finalModel$probMethod
   
   bestNtree = en$RF$finalModel$ntree
-  bestMtry = en$RF$finalModel$mtry
+  bestMtry  = en$RF$finalModel$mtry
   
-  bestCost <- en$SVM$finalModel$cost
-  bestGamma <- en$SVM$finalModel$gamma
+  bestCost  = en$SVM$finalModel$cost
+  bestGamma = en$SVM$finalModel$gamma
   
-
   ## apply funtion to predict species cover with SVM
   
   # list of accuracies
@@ -250,7 +409,8 @@ BootsClassification <- function(classes, spectra, en, rasterPlots, boots=100, ou
   registerDoParallel(cl)
  
   # progress bar
-  print(paste0(modelTag, "_", Site))
+  print(paste0(plotName, " ", modelTag))
+  print("")
   pb <- txtProgressBar(min = 0, max = boots, style = 3)
 
   for (i in 1:boots){
@@ -275,7 +435,7 @@ BootsClassification <- function(classes, spectra, en, rasterPlots, boots=100, ou
     ### Apply PLS ###
     #################
     
-    PLS  <- plsda(x =  train[,2:length(train)], y = as.factor( train$classes ), ncomp = ncomp, 
+    PLS  <- plsda(x =  train[,2:length(train)], y = make.names( train$classes ), ncomp = ncomp, 
                   probMethod = probMethod)
     
     # predict
@@ -295,7 +455,7 @@ BootsClassification <- function(classes, spectra, en, rasterPlots, boots=100, ou
     ### Apply SVM ###
     #################
     
-    RF  <- randomForest( y = factor( train$classes ), x = train[,2:length(train)],
+    RF  <- randomForest( y = make.names( train$classes ), x = train[,2:length(train)],
                          ntree= bestNtree, mtry = bestMtry)
 
     # predict
@@ -315,7 +475,7 @@ BootsClassification <- function(classes, spectra, en, rasterPlots, boots=100, ou
     ### Apply SVM ###
     #################
     
-    SVM  <- svm(train[,2:length(train)], train$classes, kernel = "linear",
+    SVM  <- svm(train[,2:length(train)], make.names( train$classes ), kernel = "linear",
                 gamma = bestGamma, cost = bestCost, probability = TRUE)
 
     # predict
@@ -336,59 +496,58 @@ BootsClassification <- function(classes, spectra, en, rasterPlots, boots=100, ou
     ### Apply models to raster ### 
     ##############################
     
-    for (j in 1:length(rasterPlots)){
-      raster = rasterPlots[[j]]
-      if ( nlayers(raster)==61 ){ 
-        names(raster) <- paste( rep("B", 61), seq(1,61,1),  sep="" )
-        # mask out raster zones with NDVI below 0.3
-        red <- raster[[31]]
-        Ired <- raster[[43]]
-        NDVI <- (Ired-red)/(Ired+red)
-        NDVI[NDVI<0.3]<- NA
-        # apply mask
-        raster <- mask(raster, NDVI)
-      }
-      if ( nlayers(raster)==10 ){ 
-        names(raster) <- paste( rep("B", 10), seq(1,10,1),  sep="" )
-      }
-      if ( nlayers(raster)==6 ){ 
-        names(raster) <- paste( rep("B", 6), seq(1,6,1),  sep="" )
-      }
-      ### Predict PLS DA
-      r_PLS  <- predict(raster, PLS, type="class")
-      ### Predict RF
-      r_RF <- predict(raster, RF, type="class")
-      #### Predict SVM
-      r_SVM  <- predict(raster, SVM, type="class")
-      
-      ### export rasters
-      # create a folder per plot to store results
-      plotName_PLS = paste( names(rasterPlots)[j], "_PLS_", modelTag, sep=""  )
-      dir.create(file.path(outDir, plotName_PLS), showWarnings = FALSE)
-      outdir_PLS = file.path(outDir, plotName_PLS)
-      
-      plotName_RF = paste( names(rasterPlots)[j], "_RF_", modelTag, sep=""  )
-      dir.create(file.path(outDir, plotName_RF), showWarnings = FALSE)
-      outdir_RF = file.path(outDir, plotName_RF)
-      
-      plotName_SVM = paste( names(rasterPlots)[j], "_SVM_", modelTag, sep=""  )
-      dir.create(file.path(outDir, plotName_SVM), showWarnings = FALSE)
-      outdir_SVM = file.path(outDir, plotName_SVM)
-      
-      out_PLS = paste( names(rasterPlots)[j], "_PLS_", i, ".tif", sep="" )
-      out_RF  = paste( names(rasterPlots)[j], "_RF_", i, ".tif", sep="" )
-      out_SVM = paste( names(rasterPlots)[j], "_SVM_", i, ".tif", sep="" )
-      
-      out_PLS = file.path(outdir_PLS, out_PLS)
-      out_RF  = file.path(outdir_RF, out_RF)
-      out_SVM = file.path(outdir_SVM, out_SVM)
-      
-      # Export rasters
-      writeRaster(r_PLS, filename=out_PLS, format="GTiff", overwrite = T)
-      writeRaster(r_RF,  filename=out_RF,  format="GTiff", overwrite = T)
-      writeRaster(r_SVM, filename=out_SVM, format="GTiff", overwrite = T)
-      
+    # NDVI mask to spectral images
+    if ( nlayers(raster)==61 ){ 
+      names(raster) <- paste( rep("B", 61), seq(1,61,1),  sep="" )
+      # mask out raster zones with NDVI below 0.3
+      red <- raster[[31]]
+      Ired <- raster[[43]]
+      NDVI <- (Ired-red)/(Ired+red)
+      NDVI[NDVI < 0.3]<- NA
+      # apply mask
+      raster <- mask(raster, NDVI)
     }
+    if ( nlayers(raster)==10 ){ 
+      names(raster) <- paste( rep("B", 10), seq(1,10,1),  sep="" )
+    }
+    if ( nlayers(raster)==6 ){ 
+      names(raster) <- paste( rep("B", 6), seq(1,6,1),  sep="" )
+    }
+    
+    ### Predict PLS DA
+    r_PLS  <- predict(raster, PLS, type="class")
+    ### Predict RF
+    r_RF <- predict(raster, RF, type="class")
+    #### Predict SVM
+    r_SVM  <- predict(raster, SVM, type="class")
+      
+    ### export rasters
+    # create a folder per plot to store results
+    plotName_PLS = paste( plotName, "_PLS_", modelTag, sep=""  )
+    dir.create(file.path(outDir, plotName_PLS), showWarnings = FALSE)
+    outdir_PLS = file.path(outDir, plotName_PLS)
+      
+    plotName_RF = paste(plotName, "_RF_", modelTag, sep=""  )
+    dir.create(file.path(outDir, plotName_RF), showWarnings = FALSE)
+    outdir_RF = file.path(outDir, plotName_RF)
+      
+    plotName_SVM = paste( plotName, "_SVM_", modelTag, sep=""  )
+    dir.create(file.path(outDir, plotName_SVM), showWarnings = FALSE)
+    outdir_SVM = file.path(outDir, plotName_SVM)
+      
+    out_PLS = paste( plotName, "_PLS_", i, ".tif", sep="" )
+    out_RF  = paste( plotName, "_RF_", i, ".tif", sep="" )
+    out_SVM = paste( plotName, "_SVM_", i, ".tif", sep="" )
+    
+    out_PLS = file.path(outdir_PLS, out_PLS)
+    out_RF  = file.path(outdir_RF, out_RF)
+    out_SVM = file.path(outdir_SVM, out_SVM)
+      
+    # Export rasters
+    writeRaster(r_PLS, filename=out_PLS, format="GTiff", overwrite = T)
+    writeRaster(r_RF,  filename=out_RF,  format="GTiff", overwrite = T)
+    writeRaster(r_SVM, filename=out_SVM, format="GTiff", overwrite = T)
+      
   }
 
   # close progress bar
@@ -415,37 +574,12 @@ BootsClassification <- function(classes, spectra, en, rasterPlots, boots=100, ou
   
   ### Export 
   
-  write.table(fits, file = file.path(outDir, paste("Fits_Site_", Site, "_", modelTag, ".txt", sep="")),
+  write.table(fits, file = file.path(outDir, paste("Fits_", plotName, "_", modelTag, ".txt", sep="")),
               row.names = F, col.names = T)
-  write.table(fits_2, file = file.path(outDir, paste("FitsPA_OA_Site_", Site, "_", modelTag, ".txt", sep="")), 
+  write.table(fits_2, file = file.path(outDir, paste("FitsPA_OA_", plotName, "_", modelTag, ".txt", sep="")), 
               row.names = F, col.names = T)
-  write.table(predict_all, file = file.path(outDir, paste("Predicts_Site_", Site, "_", modelTag, ".txt", sep="")), 
+  write.table(predict_all, file = file.path(outDir, paste("Predicts_", plotName, "_", modelTag, ".txt", sep="")), 
               row.names = F, col.names = T)
-  
-  ####################################
-  ### Apply obstainCovers function ###
-  ####################################
-  
-  ObservedSpecies = species
-  shpDir = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp/plot_extent"
-  plotNumber = unique(na.omit(as.numeric(unlist(strsplit(unlist(plotName_PLS), "[^0-9]+")))))
-  shpMaskName = paste0( "plot_",  plotNumber)
-  
-  
-  for (i in 1:length(rasterPlots)){
-    
-    rasterDir_PLS = file.path(outDir, plotName_PLS)
-    rasterDir_RF = file.path(outDir, plotName_RF)
-    rasterDir_SVM = file.path(outDir, plotName_SVM)
-    
-    obstainCovers(ObservedSpecies = ObservedSpecies, rasterDir = rasterDir_PLS, shpDir = shpDir, 
-                  plotNumber = plotNumber, shpMaskName = shpMaskName, Iter=boots)
-    obstainCovers(ObservedSpecies = ObservedSpecies, rasterDir = rasterDir_RF, shpDir = shpDir, 
-                  plotNumber = plotNumber, shpMaskName = shpMaskName, Iter=boots)
-    obstainCovers(ObservedSpecies = ObservedSpecies, rasterDir = rasterDir_SVM, shpDir = shpDir, 
-                  plotNumber = plotNumber, shpMaskName = shpMaskName, Iter=boots)
-    
-  }
   
 }
 
@@ -461,7 +595,8 @@ BootsClassification <- function(classes, spectra, en, rasterPlots, boots=100, ou
 ##                                                                            ##
 ##----------------------------------------------------------------------------##
 
-obstainCovers <- function(ObservedSpecies, rasterDir, shpDir, shpMaskName, plotNumber, Iter){ 
+obstainCovers <- function(ObservedSpecies, rasterDir, subplotDir, shpMaskName,
+                          plotNumber, Iter, algorithm){ 
   
   library(raster)
   library(rgdal)
@@ -471,165 +606,148 @@ obstainCovers <- function(ObservedSpecies, rasterDir, shpDir, shpMaskName, plotN
   #######################################
   
   x = grep(plotNumber, ObservedSpecies$Plot) 
-  y <- ObservedSpecies[x,]
-  y$Species = factor(y$Species) 
+  obs_plot <- ObservedSpecies[x,]
+  obs_plot$Species = factor(obs_plot$Species) 
   
-  store_plot <-  matrix(nrow =  length( levels(y$Species)), ncol = 2)
-  store_plot[,1] <- levels(y$Species)
+  store_plot <-  matrix(nrow = length( levels(obs_plot$Species)), ncol = 2)
+  store_plot[,1] <- levels(obs_plot$Species)
   colnames(store_plot) <- c("Species", "Covers")
   
-  for (i in 1:length( levels(y$Species))){
-    sp = levels(y$Species)[i]
-    z =  grep(sp, y$Species)
-    z <- y[z,]
+  for (i in 1:length( levels(obs_plot$Species))){
+    sp = levels(obs_plot$Species)[i]
+    z =  grep(sp, obs_plot$Species)
+    z <- obs_plot[z,]
     sumCov = sum(z$Cover)
     cov = (sumCov*100)/1600
     store_plot[[i,2]] <- cov
   }
   
   rownames(store_plot) <- store_plot[,1]
-
-  #########################################
-  ### estimate predicted cover per plot ###
-  #########################################
   
-  setwd(rasterDir)
+  ############################################
+  ### estimate predicted cover per subplot ###
+  ############################################
   
   # make a rasterlist from the rasterDir folder
   rstLisr <- rasterList(fileExtantion = ".tif", folder = ".", dir = rasterDir, select=NULL)
-  # load shapefile from to copy the extation
-  shp <- readOGR(dsn = shpDir, layer = shpMaskName)
-  
   levs = levels(rstLisr[[1]])
-  levels = levs[[1]][,2]
-  levels = levels[2:length(levels)]
-  levels = factor(levels)
-  levelsNumber = length(levels)
-
-  store_areas <- matrix(nrow = Iter, ncol = levelsNumber)
-  colnames(store_areas) <- levels
- 
-  for (i in 1:Iter){
-    # clip rasters usung the shapefile
-    clip <- crop(rstLisr[[i]], shp)
-    # count number of pixels
-    area = ncell(clip)
+  levelsNumber = length( levs[[1]][,1] ) - 1
+  levels_plot = levs[[1]][2:length(levs[[1]][,1]),2]
+  levels_plot = factor(levels_plot)
+  
+  # load subplots from to copy the extation
+  subplots <- rasterList(fileExtantion = ".tif", folder = "subplots", dir = home)
+  x = grep(plotNumber, names( subplots ))  
+  subplots <- subplots[x]
+  
+  # subplot names
+  subplotNames <-  c("A1","A2","A3","A4","B1","B2","B3","B4","C1", "C2","C3","C4","D1","D2","D3","D4")
+  
+  ### start loop to obtain covers ###
+  areasList <- list()
+  
+  # loop through the prediction maps 
+  for (i in 1:length( rstLisr )){
+    raster = rstLisr[[i]]
+    #store_areas <- as.data.frame(levs[[1]][2:length(levs[[1]][,1]),])
+    store_areas <- as.data.frame(levs)
+    colnames(store_areas) <- c("ID", "Species")
+    rownames( store_areas ) <-  store_areas$category
     
-    # cover per class
-    for (j in 1:levelsNumber){ 
+    # loop through the subplots
+    for (i2 in 1:16){
+      # get subplot extent
+      ext = extent( subplots[[i2]] )
+      clip <- crop(raster, ext)
+      
+      # count number of pixels
+      area = ncell(clip)
+      
       # count number os of pixels per class
-      count_class = freq(clip, value=j)
+      count_class = freq(clip)
       # estimate area of per class
-      percent = (count_class*100)/area
+      percent = (count_class[[1]][,2]*100)/area
+      percent = data.frame(ID = count_class[[1]][,1], Cover = percent)
+      #percent = data.frame(ID = count_class[[1]][,1]-1, Cover = percent)
+      ## correct the shift
+      #if ( is.na( percent$ID[length(percent[,1])] ) ){
+      #  percent[length(percent[,1]), 1] <- levelsNumber
+      #}
+      
       # add value to store_areas matrix
-      store_areas[[i,j]] <- percent
+      store_areas <- merge(store_areas, percent, by.x = "ID", all = TRUE)
+      
+      ### Merge species with flowers
+      store_areas <- mergeSpecies(store_areas)
+      
+      # aggregate merge
+      store_areas <- aggregate( . ~ Species, data=store_areas, sum, na.action = na.pass)
+      colnames( store_areas )[2+i2] <- subplotNames[i2] 
+      
+    }
+    
+    areasList [[i]] <- store_areas
+  }
+  
+  # unlist 
+  areasPlots <- do.call( "rbind", areasList )
+  
+  # get the median value per specie
+  dummy_matrix <- matrix( ncol = ncol(areasList[[1]]), nrow = nrow(areasList[[1]]) )
+  colnames(dummy_matrix) <- colnames(areasList[[1]])
+  dummy_matrix[,1] <- as.character( areasList[[1]][,1] )
+  dummy_matrix[,2] <- areasList[[1]][,2]
+  
+  for (i in 1:(levelsNumber-1)){
+    x = grep(areasList[[1]]$Species[i], areasPlots$Species)
+    sp = areasPlots[x, ]
+    for (i2 in 1:16){
+      y = sp[,i2+2]
+      y = na.omit(y)
+      med = median(y) 
+      dummy_matrix[i,i2+2] <- as.numeric(med)
     }
   }
   
-  store_areas <- t(store_areas)
-  store_areas <- data.frame(rownames(store_areas), store_areas)
-  colnames(store_areas) <- c("Species", paste0("Cov", seq(1, Iter, 1)))
+  MedianCover = as.data.frame(dummy_matrix)
   
-  ### Merge species with flowers
-  
-  if ( length( grep("Achillea_millefolium_flowers", store_areas$Species) ) > 0 ){
-    x = grep( "Achillea_millefolium_flowers", store_areas$Species )
-    store_areas$Species[x] <- "Achillea_millefolium"
+  # observed subplot covers
+  Species_plot <- as.data.frame(levs)
+  colnames(Species_plot) <- c("ID", "Species")
+  for (i in 1:16){
+    x = grep( subplotNames[i], obs_plot$Subplot )
+    obs_subplot <- obs_plot[x, ]
+    obs_subplot <- obs_subplot[, 4:5]
+    Species_plot <- merge(Species_plot, obs_subplot, by.x = "Species", all = TRUE)
+    colnames( Species_plot )[2+i] <- subplotNames[i2] 
   }
   
-  if ( length( grep("Anagallis_arvensis_flowers", store_areas$Species) ) > 0 ){
-    x = grep( "Anagallis_arvensis_flowers", store_areas$Species )
-    store_areas$Species[x] <- "Anagallis_arvensis"
-  }
-  
-  if ( length( grep("Cichorium_intybus_flowers", store_areas$Species) ) > 0 ){
-    x = grep( "Cichorium_intybus_flowers", store_areas$Species )
-    store_areas$Species[x] <- "Cichorium_intybus"
-  }
-  
-  if ( length( grep("Daucum_carota_flowers", store_areas$Species) ) > 0 ){
-    x = grep( "Daucum_carota_flowers", store_areas$Species )
-    store_areas$Species[x] <- "Daucum_carota"
-  }
-  
-  if ( length( grep("Echium_vulgare_flowers", store_areas$Species) ) > 0 ){
-    x = grep( "Echium_vulgare_flowers", store_areas$Species )
-    store_areas$Species[x] <- "Echium_vulgare"
-  }
-  
-  if ( length( grep("Erigoron_annuus_flowers", store_areas$Species) ) > 0 ){
-    x = grep( "Erigoron_annuus_flowers", store_areas$Species )
-    store_areas$Species[x] <- "Erigoron_annuus"
-  }
-  
-  if ( length( grep("Medicago_lupulina_flowers", store_areas$Species) ) > 0 ){
-    x = grep( "Medicago_lupulina_flowers", store_areas$Species )
-    store_areas$Species[x] <- "Medicago_lupulina"
-  }
-  
-  if ( length( grep("Sp_13_flowers", store_areas$Species) ) > 0 ){
-    x = grep( "Sp_13_flowers", store_areas$Species )
-    store_areas$Species[x] <- "Sp_13"
-  }
-  
-  if ( length( grep("Sp_53_flowers", store_areas$Species) ) > 0 ){
-    x = grep( "Sp_53_flowers", store_areas$Species )
-    store_areas$Species[x] <- "Sp_53"
-  }
-  
-  if ( length( grep("Trifolium_pratense_flowers", store_areas$Species) ) > 0 ){
-    x = grep( "Trifolium_pratense_flowers", store_areas$Species )
-    store_areas$Species[x] <- "Trifolium_pratense"
-  } 
-  
-  if ( length( grep("Verbena_officinalis_flowers", store_areas$Species) ) > 0 ){
-    x = grep( "Verbena_officinalis_flowers", store_areas$Species )
-    store_areas$Species[x] <- "Verbena_officinalis"
-  } 
-  
-  # aggregate merge
-  store_areas <- aggregate( . ~ Species, data=store_areas, sum)
-  
-  # merge observed and estimated covers
-  output = merge(store_plot, store_areas, by.x = "Species")
-  
-  ########################################
-  ### Estimate covers goodness-of-fits ###
-  ########################################
-  
-  r2   <- list()
-  rmse <- list()
-  bias <- list()
-  
-  obs = as.numeric( output$Covers )
-    
-  for ( i in 1:( length(output)-2 ) ){
-    pred <- as.numeric( output[,i+2] )
-    r2[[i]]   <- (cor(pred, obs, method="pearson"))^2
-    rmse[[i]] <- sqrt(mean((obs-pred)^2))
-    lm = lm(pred ~ obs-1)
-    bias[[i]] <-  1-coef(lm)
-  }
-  
-  outputFit <- data.frame( r2=unlist(r2), RMSE=unlist(rmse), bias=unlist(bias) )
+  x =grep("flowers", Species_plot$Species)
+  Species_plot <- Species_plot[-x, ]
+  x = duplicated(Species_plot$Species)
+  Species_plot <- Species_plot[!x,]
   
   ################################
   ### Export results to tables ###
   ################################
   
   # create folder to store results
-  dir.create( file.path(rasterDir, "Covers_results"), showWarnings = FALSE)
+  dir.create( file.path(home, "Covers_results"), showWarnings = FALSE)
   
   # create output names
-  covers = paste0( "Covers_", shpMaskName, ".txt")
-  covers = file.path( rasterDir, "Covers_results", covers )
+  boot_covers = paste0(algorithm, "_Boot_Covers_", shpMaskName, "_", modelTag, ".txt")
+  boot_covers = file.path( home, "Covers_results", boot_covers )
   
-  fits = paste0( "Fits_", shpMaskName, ".txt")
-  fits = file.path( rasterDir, "Covers_results", fits )
+  median_covers = paste0( algorithm, "_Median_Covers_", shpMaskName, "_", modelTag, ".txt")
+  median_covers = file.path( home, "Covers_results", median_covers )
+  
+  observed_covers = paste0( algorithm, "_Obs_covers", shpMaskName, "_", modelTag, ".txt")
+  observed_covers = file.path( home, "Covers_results", observed_covers )
   
   # write results
-  write.table(output, file = covers, sep = " ", row.names = F, col.names = T )
-  write.table(outputFit, file = fits, sep = " ", row.names = F, col.names = T )
+  write.table(areasPlots,   file = boot_covers, sep = " ", row.names = F, col.names = T )
+  write.table(MedianCover,  file = median_covers, sep = " ", row.names = F, col.names = T )
+  write.table(Species_plot, file = observed_covers, sep = " ", row.names = F, col.names = T )
   
 }
 
@@ -865,7 +983,14 @@ GLCM <- function(img){
 ##----------------------------------------------------------------------------##
 
 ## List the names of the rasters in a folder
-rasterListNames <- function(fileExtantion, folder){
+rasterListNames <- function(fileExtantion, folder, dir=NULL){
+  # if dir = NULL, set it to "home" by default
+  if (is.null(dir)){
+    dir = home
+  }
+  
+  setwd(dir)
+  
   # make a list of all fileExtantion files
   rast_list = list.files(folder, pattern = fileExtantion)
   # delete the ".dat" from the name
@@ -881,6 +1006,9 @@ rasterList <- function(fileExtantion, folder, dir=NULL, select=NULL){
   if (is.null(dir)){
     dir = home
   }
+  
+  setwd(dir)
+  
   # make a list of all fileExtantion files
   rast_list = list.files(folder, pattern = fileExtantion)
   x = grep(".tif.aux.xml", rast_list) 
@@ -904,251 +1032,133 @@ rasterList <- function(fileExtantion, folder, dir=NULL, select=NULL){
 }
 
 
-
-
-BootsClassification3 <- function(data, en, rasterPlots, boots=100, outDir, modelTag){  
+mergeSpecies <- function(data){
   
-  library(raster)
-  library(rgdal)
-  library(caret)
-  library(e1071)
-  library(randomForest)
-  library(pls)
-  library(doParallel)
-  
-  # extract the data from the classification Ensamble function
-  
-  data$Species <- factor(data$Species)
-  
-  data2 <- data.frame(classes = data$Species, data[, 3:length(data)])
-  data2 <- na.omit(data2)
-  
-  ncomp = en$PLS$finalModel$ncomp
-  probMethod = en$PLS$finalModel$probMethod
-  
-  bestNtree = en$RF$finalModel$ntree
-  bestMtry = en$RF$finalModel$mtry
-  
-  bestCost <- en$SVM$finalModel$cost
-  bestGamma <- en$SVM$finalModel$gamma
-  
-  
-  ## apply funtion to predict species cover with SVM
-  
-  # list of accuracies
-  PA.PLS    <- list()
-  UA.PLS    <- list()
-  OA.PLS    <- list()
-  kappa.PLS <- list()
-  predict.PLS <- list()
-  
-  PA.RF    <- list()
-  UA.RF    <- list()
-  OA.RF    <- list()
-  kappa.RF <- list()
-  predict.RF <- list()
-  
-  PA.SVM    <- list()
-  UA.SVM    <- list()
-  OA.SVM    <- list()
-  kappa.SVM <- list()
-  predict.SVM <- list()
-  
-  OBS <- list()
-  
-  # initialize parallel processing
-  cl <- makeCluster(detectCores())
-  registerDoParallel(cl)
-  
-  # progress bar
-  print(paste0(modelTag, "_", Site))
-  pb <- txtProgressBar(min = 0, max = boots, style = 3)
-  
-  for (i in 1:boots){
-    
-    # progress bar
-    Sys.sleep(0.1)
-    setTxtProgressBar(pb, i)
-    
-    N = length(data2[,1])
-    
-    # create random numbers with replacement to select samples from each group
-    idx = sample(1:N, N, replace=TRUE)
-    
-    train <- data2[idx,]
-    val <- data2[-idx,]
-    
-    # store and select the observations
-    obs <- val$classes
-    OBS[[i]]<-obs
-    
-    #################
-    ### Apply PLS ###
-    #################
-    
-    PLS  <- plsda(x =  train[,2:length(train)], y = as.factor( train$classes ), ncomp = ncomp, 
-                  probMethod = probMethod)
-    
-    # predict
-    pred_pls    <- predict(PLS, val[,2:length(val)])
-    predict.PLS[[i]] <- pred_pls
-    
-    # confusion matix
-    conf   <- confusionMatrix(pred_pls, val$classes)
-    
-    # get accuracies
-    PA.PLS[[i]]       <- conf$byClass[,3] 
-    UA.PLS[[i]]       <- conf$byClass[,4]
-    OA.PLS[[i]]       <- conf$overall["Accuracy"]
-    kappa.PLS[[i]]    <- conf$overall["Kappa"]
-    
-    #################
-    ### Apply SVM ###
-    #################
-    
-    RF  <- randomForest( y = factor( train$classes ), x = train[,2:length(train)],
-                         ntree= bestNtree, mtry = bestMtry)
-    
-    # predict
-    pred_rf    <- predict(RF, val[,2:length(val)])
-    predict.RF[[i]] <- pred_rf
-    
-    # confusion matix
-    conf   <- confusionMatrix(pred_rf, val$classes)
-    
-    # get accuracies
-    PA.RF[[i]]       <- conf$byClass[,3] 
-    UA.RF[[i]]       <- conf$byClass[,4]
-    OA.RF[[i]]       <- conf$overall["Accuracy"]
-    kappa.RF[[i]]    <- conf$overall["Kappa"]
-    
-    #################
-    ### Apply SVM ###
-    #################
-    
-    SVM  <- svm(train[,2:length(train)], train$classes, kernel = "linear",
-                gamma = bestGamma, cost = bestCost, probability = TRUE)
-    
-    # predict
-    pred_svm    <- predict(SVM, val[,2:length(val)])
-    predict.SVM[[i]] <- pred_svm
-    
-    # confusion matix
-    conf   <- confusionMatrix(pred_svm, val$classes)
-    
-    # get accuracies
-    PA.SVM[[i]]       <- conf$byClass[,3] 
-    UA.SVM[[i]]       <- conf$byClass[,4]
-    OA.SVM[[i]]       <- conf$overall["Accuracy"]
-    kappa.SVM[[i]]    <- conf$overall["Kappa"]
-    
-    
-    ##############################
-    ### Apply models to raster ### 
-    ##############################
-    
-    
-    raster = rasterPlots
-    if ( nlayers(raster)==61 ){ 
-      names(raster) <- paste( rep("B", 61), seq(1,61,1),  sep="" )
-      # mask out raster zones with NDVI below 0.3
-      red <- raster[[31]]
-      Ired <- raster[[43]]
-      NDVI <- (Ired-red)/(Ired+red)
-      NDVI[NDVI<0.3]<- NA
-      # apply mask
-      raster <- mask(raster, NDVI)
-    }
-    if ( nlayers(raster)==10 ){ 
-      names(raster) <- paste( rep("B", 10), seq(1,10,1),  sep="" )
-    }
-    if ( nlayers(raster)==6 ){ 
-      names(raster) <- paste( rep("B", 6), seq(1,6,1),  sep="" )
-    }
-    ### Predict PLS DA
-    r_PLS  <- predict(raster, PLS, type="class")
-    ### Predict RF
-    r_RF <- predict(raster, RF, type="class")
-    #### Predict SVM
-    r_SVM  <- predict(raster, SVM, type="class")
-    
-    ### export rasters
-    # create a folder per plot to store results
-    plotName_PLS = paste( "PLS_", modelTag, sep=""  )
-    dir.create(file.path(outDir, plotName_PLS), showWarnings = FALSE)
-    outdir_PLS = file.path(outDir, plotName_PLS)
-    
-    plotName_RF = paste( "RF_", modelTag, sep=""  )
-    dir.create(file.path(outDir, plotName_RF), showWarnings = FALSE)
-    outdir_RF = file.path(outDir, plotName_RF)
-    
-    plotName_SVM = paste( "SVM_", modelTag, sep=""  )
-    dir.create(file.path(outDir, plotName_SVM), showWarnings = FALSE)
-    outdir_SVM = file.path(outDir, plotName_SVM)
-    
-    out_PLS = paste0(  "PLS_", modelTag, "_", i, ".tif")
-    out_RF  = paste0(  "RF_",  modelTag, "_",  i, ".tif" )
-    out_SVM = paste0( "SVM_",  modelTag, "_", i, "tif" )
-    
-    out_PLS = file.path(outdir_PLS, out_PLS)
-    out_RF  = file.path(outdir_RF, out_RF)
-    out_SVM = file.path(outdir_SVM, out_SVM)
-    
-    # Export rasters
-    writeRaster(r_PLS, filename=out_PLS, format="GTiff", overwrite = T)
-    writeRaster(r_RF,  filename=out_RF,  format="GTiff", overwrite = T)
-    writeRaster(r_SVM, filename=out_SVM, format="GTiff", overwrite = T)
-    
+  if ( length( grep("Achillea_millefolium_flowers", data$Species) ) > 0 ){
+    x = grep( "Achillea_millefolium_flowers", data$Species )
+    data$Species[x] <- "Achillea_millefolium"
   }
   
-  # close progress bar
-  close(pb)
+  if ( length( grep("Anagallis_arvensis_flowers", data$Species) ) > 0 ){
+    x = grep( "Anagallis_arvensis_flowers", data$Species )
+    data$Species[x] <- "Anagallis_arvensis"
+  }
   
-  # stop parallel process
-  stopCluster(cl) 
+  if ( length( grep("Cichorium_intybus_flowers", data$Species) ) > 0 ){
+    x = grep( "Cichorium_intybus_flowers", data$Species )
+    data$Species[x] <- "Cichorium_intybus"
+  }
   
-  ######################
-  ### prepare output ###
-  ######################
+  if ( length( grep("Daucum_carota_flowers", data$Species) ) > 0 ){
+    x = grep( "Daucum_carota_flowers", data$Species )
+    data$Species[x] <- "Daucum_carota"
+  }
   
+  if ( length( grep("Echium_vulgare_flowers", data$Species) ) > 0 ){
+    x = grep( "Echium_vulgare_flowers", data$Species )
+    data$Species[x] <- "Echium_vulgare"
+  }
   
-  fits <- data.frame( unlist(OA.PLS), unlist(OA.RF), unlist(OA.SVM),
-                      unlist(kappa.PLS), unlist(kappa.RF), unlist(kappa.SVM))
-  names(fits) <- c("OA_PLS", "OA_RF", "OA_SVM", "Kappa_PLS", "Kappa_RF", "Kapa_SVM")
+  if ( length( grep("Erigoron_annuus_flowers", data$Species) ) > 0 ){
+    x = grep( "Erigoron_annuus_flowers", data$Species )
+    data$Species[x] <- "Erigoron_annuus"
+  }
   
-  fits_2 <- data.frame( PLS$obsLevels , unlist(PA.PLS), unlist(PA.RF), unlist(PA.SVM), 
-                        unlist(OA.PLS), unlist(OA.RF), unlist(OA.SVM))
-  names(fits_2) <- c("Species", "PA_PLS", "PA_RF", "PA_SVM", "OA_PLS", "OA_RF", "OA_SVM")
+  if ( length( grep("Medicago_lupulina_flowers", data$Species) ) > 0 ){
+    x = grep( "Medicago_lupulina_flowers", data$Species )
+    data$Species[x] <- "Medicago_lupulina"
+  }
   
-  predict_all <- data.frame( unlist(OBS), unlist(predict.PLS), unlist(predict.RF), unlist(predict.SVM) )
-  names(predict_all) <- c("Observed", "PLS", "RF", "SVM")
+  if ( length( grep("Sp_13_flowers", data$Species) ) > 0 ){
+    x = grep( "Sp_13_flowers", data$Species )
+    data$Species[x] <- "Sp_13"
+  }
   
-  ### Export 
+  if ( length( grep("Sp_53_flowers", data$Species) ) > 0 ){
+    x = grep( "Sp_53_flowers", data$Species )
+    data$Species[x] <- "Sp_53"
+  }
   
-  write.table(fits, file = file.path(outDir, paste0("Fits_Site_", modelTag, ".txt")), row.names = F, col.names = T)
-  write.table(fits_2, file = file.path(outDir, paste("PA_OA_Site_", modelTag, ".txt", sep="")), row.names = F, col.names = T)
-  write.table(predict_all, file = file.path(outDir, paste("Predicts_Site_",  modelTag, ".txt", sep="")), row.names = F, col.names = T)
+  if ( length( grep("Trifolium_pratense_flowers", data$Species) ) > 0 ){
+    x = grep( "Trifolium_pratense_flowers", data$Species )
+    data$Species[x] <- "Trifolium_pratense"
+  } 
   
-  ####################################
-  ### Apply obstainCovers function ###
-  ####################################
+  if ( length( grep("Verbena_officinalis_flowers", data$Species) ) > 0 ){
+    x = grep( "Verbena_officinalis_flowers", data$Species )
+    data$Species[x] <- "Verbena_officinalis"
+  } 
   
-  ObservedSpecies = species
-  shpDir = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp/plot_extent"
-  plotNumber = unique(na.omit(as.numeric(unlist(strsplit(modelTag, "[^0-9]+")))))
-  shpMaskName = paste0( "plot_",  plotNumber)
+  if ( length( grep("Crepis_capillaris_flowers", data$Species) ) > 0 ){
+    x = grep( "Crepis_capillaris_flowers", data$Species )
+    data$Species[x] <- "Crepis_capillaris"
+  } 
   
-  
-  rasterDir_PLS = file.path(outDir, plotName_PLS)
-  rasterDir_RF = file.path(outDir, plotName_RF)
-  rasterDir_SVM = file.path(outDir, plotName_SVM)
-  
-  obstainCovers(ObservedSpecies = ObservedSpecies, rasterDir = rasterDir_PLS, shpDir = shpDir, 
-                plotNumber = plotNumber, shpMaskName = shpMaskName, Iter=boots)
-  obstainCovers(ObservedSpecies = ObservedSpecies, rasterDir = rasterDir_RF, shpDir = shpDir, 
-                plotNumber = plotNumber, shpMaskName = shpMaskName, Iter=boots)
-  obstainCovers(ObservedSpecies = ObservedSpecies, rasterDir = rasterDir_SVM, shpDir = shpDir, 
-                plotNumber = plotNumber, shpMaskName = shpMaskName, Iter=boots)
-  
-  
+  data
 }
+
+delFlowers <- function(data){
+  
+  if ( length( grep("Achillea_millefolium_flowers", data$Species) ) > 0 ){
+    x = grep( "Achillea_millefolium_flowers", data$Species )
+    data[-x, ] <- "Achillea_millefolium"
+  }
+  
+  if ( length( grep("Anagallis_arvensis_flowers", data$Species) ) > 0 ){
+    x = grep( "Anagallis_arvensis_flowers", data$Species )
+    data[-x, ] <- "Anagallis_arvensis"
+  }
+  
+  if ( length( grep("Cichorium_intybus_flowers", data$Species) ) > 0 ){
+    x = grep( "Cichorium_intybus_flowers", data$Species )
+    data[-x, ] <- "Cichorium_intybus"
+  }
+  
+  if ( length( grep("Daucum_carota_flowers", data$Species) ) > 0 ){
+    x = grep( "Daucum_carota_flowers", data$Species )
+    data[-x, ] 
+  }
+  
+  if ( length( grep("Echium_vulgare_flowers", data$Species) ) > 0 ){
+    x = grep( "Echium_vulgare_flowers", data$Species )
+    data[-x, ]
+  }
+  
+  if ( length( grep("Erigoron_annuus_flowers", data$Species) ) > 0 ){
+    x = grep( "Erigoron_annuus_flowers", data$Species )
+    data[-x, ] 
+  }
+  
+  if ( length( grep("Medicago_lupulina_flowers", data$Species) ) > 0 ){
+    x = grep( "Medicago_lupulina_flowers", data$Species )
+    data[-x, ] 
+  }
+  
+  if ( length( grep("Sp_13_flowers", data$Species) ) > 0 ){
+    x = grep( "Sp_13_flowers", data$Species )
+    data[-x, ] 
+  }
+  
+  if ( length( grep("Sp_53_flowers", data$Species) ) > 0 ){
+    x = grep( "Sp_53_flowers", data$Species )
+    data[-x, ] 
+  }
+  
+  if ( length( grep("Trifolium_pratense_flowers", data$Species) ) > 0 ){
+    x = grep( "Trifolium_pratense_flowers", data$Species )
+    data[-x, ]
+  } 
+  
+  if ( length( grep("Verbena_officinalis_flowers", data$Species) ) > 0 ){
+    x = grep( "Verbena_officinalis_flowers", data$Species )
+    data[-x, ] 
+  } 
+  
+  if ( length( grep("Crepis_capillaris_flowers", data$Species) ) > 0 ){
+    x = grep( "Crepis_capillaris_flowers", data$Species )
+    data[-x, ] 
+  } 
+  
+  data
+}
+
