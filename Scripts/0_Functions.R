@@ -14,7 +14,7 @@
 
 ApplyModels <- function(valData, potVal, rf, rasterList, wl, modelTag, boots){
   
-  for (i in 1:length(rasterList)){ 
+  for (i in 6:length(rasterList)){ 
     
     # obtain the validation data per plot
     raster = rasterList[[i]]
@@ -435,7 +435,7 @@ BootsClassification <- function(classes, spectra, en, raster, boots,
     ### Apply PLS ###
     #################
     
-    PLS  <- plsda(x =  train[,2:length(train)], y = make.names( train$classes ), ncomp = ncomp, 
+    PLS  <- plsda(x =  train[,2:length(train)], y = train$classes, ncomp = ncomp, 
                   probMethod = probMethod)
     
     # predict
@@ -455,7 +455,7 @@ BootsClassification <- function(classes, spectra, en, raster, boots,
     ### Apply SVM ###
     #################
     
-    RF  <- randomForest( y = make.names( train$classes ), x = train[,2:length(train)],
+    RF  <- randomForest( y = train$classes, x = train[,2:length(train)],
                          ntree= bestNtree, mtry = bestMtry)
 
     # predict
@@ -475,7 +475,7 @@ BootsClassification <- function(classes, spectra, en, raster, boots,
     ### Apply SVM ###
     #################
     
-    SVM  <- svm(train[,2:length(train)], make.names( train$classes ), kernel = "linear",
+    SVM  <- svm(train[,2:length(train)], train$classes, kernel = "linear",
                 gamma = bestGamma, cost = bestCost, probability = TRUE)
 
     # predict
