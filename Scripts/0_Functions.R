@@ -1018,7 +1018,10 @@ stratifySampling <- function(data, classes){
   
 }
 
-## List the names of the rasters in a folder
+###############################################
+## List the names of the rasters in a folder ##
+###############################################
+
 rasterListNames <- function(fileExtantion, folder, dir=NULL){
   # if dir = NULL, set it to "home" by default
   if (is.null(dir)){
@@ -1036,7 +1039,10 @@ rasterListNames <- function(fileExtantion, folder, dir=NULL){
   return(rast_list)
 }
 
-## List and load the rasters contained in a folder
+#####################################################
+## List and load the rasters contained in a folder ##
+#####################################################
+
 rasterList <- function(fileExtantion, folder, dir=NULL, select=NULL){
   # if dir = NULL, set it to "home" by default
   if (is.null(dir)){
@@ -1067,6 +1073,9 @@ rasterList <- function(fileExtantion, folder, dir=NULL, select=NULL){
   return(rasterlist)
 }
 
+###################################################
+## Merge species when flower classes are present ##
+###################################################
 
 mergeSpecies <- function(data){
   
@@ -1132,6 +1141,10 @@ mergeSpecies <- function(data){
   
   data
 }
+
+###########################
+## Delate flower classes ##
+###########################
 
 delFlowers <- function(data){
   
