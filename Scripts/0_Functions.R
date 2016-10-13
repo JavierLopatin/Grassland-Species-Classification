@@ -14,7 +14,7 @@
 
 ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
   
-  for (i in 7:length(raster_List)){ 
+  for (i in 1:length(raster_List)){ 
     
     # obtain the validation data per plot
     raster = raster_List[[i]]
@@ -60,8 +60,10 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
     # save tunning models
     dir.create(file.path(home, "tunningOutputs"), showWarnings = FALSE)
     
-    save(fit_potVal, file=paste0(home,  "/tunningOutputs/", "potVal_", plot_name, ".RData"))
-    save(fit_rf,     file=paste0(home,  "/tunningOutputs/", "rf_", plot_name, ".RData"))
+    save(fit_potVal, file=paste0(home,  "/tunningOutputs/", "potVal_", 
+                                 plot_name, "_", modelTag, ".RData"))
+    save(fit_rf,     file=paste0(home,  "/tunningOutputs/", "rf_",
+                                 plot_name,  "_", modelTag, ".RData"))
     
     print("Done!")
     print("")
@@ -105,7 +107,7 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
     
     # for PLS-DA potVal
     obstainCovers(ObservedSpecies = valData, 
-                  rasterDir =  paste0( home, "/BootsClass_out/", plotName, "_PLS_",  
+                  rasterDir =  paste0( home, "/BootsClass_out/", plot_name, "_PLS_",  
                                        paste0("potVal_", modelTag) ), 
                   subplotDir = subplotDir, 
                   shpMaskName = plot_name, 
@@ -115,7 +117,7 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
     
     # for PLS-DA rf
     obstainCovers(ObservedSpecies = valData, 
-                  rasterDir =  paste0( home, "/BootsClass_out/", plotName, "_PLS_", 
+                  rasterDir =  paste0( home, "/BootsClass_out/", plot_name, "_PLS_", 
                                        paste0("rf_", modelTag) ), 
                   subplotDir = subplotDir, 
                   shpMaskName = plot_name, 
@@ -125,7 +127,7 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
     
     # for RF potVal
     obstainCovers(ObservedSpecies = valData, 
-                  rasterDir =  paste0( home, "/BootsClass_out/", plotName, "_RF_",  
+                  rasterDir =  paste0( home, "/BootsClass_out/", plot_name, "_RF_",  
                                        paste0("potVal_", modelTag) ), 
                   subplotDir = subplotDir, 
                   shpMaskName = plot_name, 
@@ -135,7 +137,7 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
     
     # for RF rf
     obstainCovers(ObservedSpecies = valData, 
-                  rasterDir =  paste0( home, "/BootsClass_out/", plotName, "_RF_",  
+                  rasterDir =  paste0( home, "/BootsClass_out/", plot_name, "_RF_",  
                                        paste0("rf_", modelTag) ), 
                   subplotDir = subplotDir, 
                   shpMaskName = plot_name, 
@@ -145,7 +147,7 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
     
     # for SVM potVal
     obstainCovers(ObservedSpecies = valData, 
-                  rasterDir =  paste0( home, "/BootsClass_out/", plotName, "_SVM_",  
+                  rasterDir =  paste0( home, "/BootsClass_out/", plot_name, "_SVM_",  
                                        paste0("potVal_", modelTag) ), 
                   subplotDir = subplotDir, 
                   shpMaskName = plot_name, 
@@ -155,7 +157,7 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
     
     # for SVM rf potVal
     obstainCovers(ObservedSpecies = valData, 
-                  rasterDir =  paste0( home, "/BootsClass_out/", plotName, "_SVM_",  
+                  rasterDir =  paste0( home, "/BootsClass_out/", plot_name, "_SVM_",  
                                        paste0("rf_", modelTag) ), 
                   subplotDir = subplotDir, 
                   shpMaskName = plot_name, 
