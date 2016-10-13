@@ -373,6 +373,7 @@ BootsClassification <- function(classes, spectra, en, raster, boots,
   # extract the data from the classification Ensamble function
   data2 <- data.frame(classes = classes, spectra)
   data2 <- na.omit(data2)
+  data2$classes <- factor(data2$classes)
   
   ncomp      = en$PLS$finalModel$ncomp
   probMethod = en$PLS$finalModel$probMethod
@@ -383,8 +384,8 @@ BootsClassification <- function(classes, spectra, en, raster, boots,
   bestCost  = en$SVM$finalModel$cost
   bestGamma = en$SVM$finalModel$gamma
   
-  ## apply funtion to predict species cover with SVM
   
+  ## apply funtion to predict species cover with SVM
   # list of accuracies
   PA.PLS    <- list()
   UA.PLS    <- list()
@@ -420,13 +421,11 @@ BootsClassification <- function(classes, spectra, en, raster, boots,
     Sys.sleep(0.1)
     setTxtProgressBar(pb, i)
     
-    N = length(data2[,1])
+    # stratify samplig. All species get selected at least once
+    samp <- stratifySampling(data2, classes)
     
-    # create random numbers with replacement to select samples from each group
-    idx = sample(1:N, N, replace=TRUE)
-    
-    train <- data2[idx,]
-    val <- data2[-idx,]
+    train <- samp$train
+    val <- samp$validation
     
     # store and select the observations
     obs <- val$classes
@@ -436,11 +435,11 @@ BootsClassification <- function(classes, spectra, en, raster, boots,
     ### Apply PLS ###
     #################
     
-    PLS  <- plsda(x =  train[,2:length(train)], y = train$classes, ncomp = ncomp, 
+    PLS  <- plsda(x =  train[, 2:length(train)], y = train$classes, ncomp = ncomp, 
                   probMethod = probMethod)
     
     # predict
-    pred_pls    <- predict(PLS, val[,2:length(val)])
+    pred_pls    <- predict(PLS, val[, 2:length(val)])
     predict.PLS[[i]] <- pred_pls
     
     # confusion matix
@@ -456,11 +455,11 @@ BootsClassification <- function(classes, spectra, en, raster, boots,
     ### Apply SVM ###
     #################
     
-    RF  <- randomForest( y = train$classes, x = train[,2:length(train)],
+    RF  <- randomForest( y = train$classes, x = train[, 2:length(train)],
                          ntree= bestNtree, mtry = bestMtry)
 
     # predict
-    pred_rf    <- predict(RF, val[,2:length(val)])
+    pred_rf    <- predict(RF, val[, 2:length(val)])
     predict.RF[[i]] <- pred_rf
     
     # confusion matix
@@ -476,15 +475,15 @@ BootsClassification <- function(classes, spectra, en, raster, boots,
     ### Apply SVM ###
     #################
     
-    SVM  <- svm(train[,2:length(train)], train$classes, kernel = "linear",
+    SVM  <- svm(train[, 2:length(train)], train$classes, kernel = "linear",
                 gamma = bestGamma, cost = bestCost, probability = TRUE)
 
     # predict
-    pred_svm    <- predict(SVM, val[,2:length(val)])
+    pred_svm    <- predict(SVM, val[, 2:length(val)])
     predict.SVM[[i]] <- pred_svm
     
     # confusion matix
-    conf   <- confusionMatrix(pred_svm, val$classes)
+    conf <- confusionMatrix(pred_svm, val$classes)
     
     # get accuracies
     PA.SVM[[i]]       <- conf$byClass[,3] 
@@ -983,6 +982,41 @@ GLCM <- function(img){
 ##                                                                            ##
 ##                                                                            ##
 ##----------------------------------------------------------------------------##
+
+###############################################
+## stratified bootstrap selection of samples ##
+###############################################
+
+# So each species get selected for training and validation 
+stratifySampling <- function(data, classes){
+  TRAIN <- list()
+  VAL <- list()
+  
+  for (i in 1:length( levels(data$classes ))){
+    x = grep( levels(data$classes)[i], data$classes  )
+    x <- data[x, ]
+    # sampling with repleacement 
+    if ( length(x[, 1])==1 ){
+      TRAIN[[i]] <- x
+      VAL[[i]] <- x
+    }
+    else {
+      idx = sample(1:length(x[,1]), length(x[,1]), replace=TRUE)
+      TRAIN[[i]] <- x[idx, ]
+      VAL[[i]] <- x[-idx, ]
+    }
+  }
+  
+  # unlist
+  TRAIN2 <- do.call("rbind", TRAIN)
+  VAL2   <- do.call("rbind", VAL)
+  
+  # prepare exit
+  output <- list(TRAIN2, VAL2)
+  names(output) <- c("train", "validation")
+  output
+  
+}
 
 ## List the names of the rasters in a folder
 rasterListNames <- function(fileExtantion, folder, dir=NULL){
