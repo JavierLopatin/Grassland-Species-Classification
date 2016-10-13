@@ -51,15 +51,15 @@ source_github("https://raw.githubusercontent.com/JavierLopatin/Herbaceous-Specie
 
 
 ## load plot images 
-raster_spec <-  rasterList(fileExtantion = ".tif", folder = "Plots/Plots_spec", dir=home)
+raster_spec <-  raster_List(fileExtantion = ".tif", folder = "Plots/Plots_spec", dir=home)
 r <- stack( paste0(home, "/Plots/Plots_spec/plot_17.dat") )
 raster_spec[[11]] <- r; names(raster_spec) <- c("plot_10", "plot_11", "plot_12", "plot_13", "plot_14", "plot_15", "plot_16", "plot_18", "plot_19", "plot_9", "plot_17")
 
-raster_spec_BN <-  rasterList(fileExtantion = ".tif", folder = "Plots/Plots_spec_BN", dir=home)
-raster_MNF     <-  rasterList(fileExtantion = ".tif", folder = "Plots/Plots_MNF", dir=home)
-raster_MNF_BN  <-  rasterList(fileExtantion = ".tif", folder = "Plots/Plots_MNF_BN", dir=home)
-raster_GLCM    <-  rasterList(fileExtantion = ".tif", folder = "Plots/Plots_GLCM", dir=home)
-raster_GLCM_BN <-  rasterList(fileExtantion = ".tif", folder = "Plots/Plots_GLCM_BN", dir=home)
+raster_spec_BN <-  raster_List(fileExtantion = ".tif", folder = "Plots/Plots_spec_BN", dir=home)
+raster_MNF     <-  raster_List(fileExtantion = ".tif", folder = "Plots/Plots_MNF", dir=home)
+raster_MNF_BN  <-  raster_List(fileExtantion = ".tif", folder = "Plots/Plots_MNF_BN", dir=home)
+raster_GLCM    <-  raster_List(fileExtantion = ".tif", folder = "Plots/Plots_GLCM", dir=home)
+raster_GLCM_BN <-  raster_List(fileExtantion = ".tif", folder = "Plots/Plots_GLCM_BN", dir=home)
 
 
 ##########################
@@ -79,7 +79,7 @@ subplotDir = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_
 ApplyModels(valData = species, 
             potVal = potVal_spec, 
             rf = rf_spec, 
-            rasterList = raster_spec, 
+            raster_List = raster_spec, 
             wl = wl, 
             modelTag = "spect",
             boots = 10)
@@ -91,7 +91,7 @@ ApplyModels(valData = species,
 ApplyModels(valData = species, 
             potVal = potVal_spec_BN, 
             rf = rf_spec_BN, 
-            rasterList = raster_spec_BN, 
+            raster_List = raster_spec_BN, 
             wl = wl, 
             modelTag = "spect_BN",
             boots = 10)
@@ -103,7 +103,7 @@ ApplyModels(valData = species,
 ApplyModels(valData = species, 
             potVal = potVal_MNF, 
             rf = rf_MNF, 
-            rasterList = raster_MNF, 
+            raster_List = raster_MNF, 
             wl = wl, 
             modelTag = "MNF",
             boots = 10)
@@ -115,7 +115,7 @@ ApplyModels(valData = species,
 ApplyModels(valData = species, 
             potVal = potVal_MNF_BN, 
             rf = rf_MNF_BN, 
-            rasterList = raster_MNF_BN, 
+            raster_List = raster_MNF_BN, 
             wl = wl, 
             modelTag = "MNF_BN",
             boots = 10)
@@ -127,7 +127,7 @@ ApplyModels(valData = species,
 ApplyModels(valData = species, 
             potVal = potVal_GLCM, 
             rf = rf_GLCM, 
-            rasterList = raster_GLCM, 
+            raster_List = raster_GLCM, 
             wl = wl, 
             modelTag = "GLCM",
             boots = 10)
@@ -139,7 +139,7 @@ ApplyModels(valData = species,
 ApplyModels(valData = species, 
             potVal = potVal_GLCM_BN, 
             rf = rf_GLCM_BN, 
-            rasterList = raster_GLCM_BN, 
+            raster_List = raster_GLCM_BN, 
             wl = wl, 
             modelTag = "GLCM_BN",
             boots = 10)
