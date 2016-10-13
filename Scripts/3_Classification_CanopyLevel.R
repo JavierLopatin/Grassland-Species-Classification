@@ -90,7 +90,7 @@ ApplyModels(valData = species,
 
 ApplyModels(valData = species, 
             potVal = potVal_spec_BN, 
-            rf = rf_spec_BN, 
+            rf = rf_spec_BN,
             raster_List = raster_spec_BN, 
             wl = wl, 
             modelTag = "spect_BN",
