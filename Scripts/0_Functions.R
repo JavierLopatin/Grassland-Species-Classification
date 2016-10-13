@@ -174,7 +174,7 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
 
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
-## tunningModels and  Multi-method ensemble selection of spectral bands       ##
+## tunningModels and Multi-method ensemble selection of spectral bands        ##
 ##                                                                            ##
 ## This function performs a tunning procidure on the models and               ##
 ## a band selection based on a multi-method ensemble                          ##
