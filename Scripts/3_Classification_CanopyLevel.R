@@ -104,7 +104,7 @@ ApplyModels(valData = species,
             potVal = potVal_MNF, 
             rf = rf_MNF, 
             raster_List = raster_MNF, 
-            wl = wl, 
+            wl = seq(1,10,1), 
             modelTag = "MNF",
             boots = 10)
 
@@ -116,7 +116,7 @@ ApplyModels(valData = species,
             potVal = potVal_MNF_BN, 
             rf = rf_MNF_BN, 
             raster_List = raster_MNF_BN, 
-            wl = wl, 
+            wl =  seq(1,10,1), 
             modelTag = "MNF_BN",
             boots = 10)
 
@@ -128,7 +128,7 @@ ApplyModels(valData = species,
             potVal = potVal_GLCM, 
             rf = rf_GLCM, 
             raster_List = raster_GLCM, 
-            wl = wl, 
+            wl =  seq(1,6,1), 
             modelTag = "GLCM",
             boots = 10)
 
@@ -140,6 +140,6 @@ ApplyModels(valData = species,
             potVal = potVal_GLCM_BN, 
             rf = rf_GLCM_BN, 
             raster_List = raster_GLCM_BN, 
-            wl = wl, 
+            wl =  seq(1,6,1), 
             modelTag = "GLCM_BN",
             boots = 10)
