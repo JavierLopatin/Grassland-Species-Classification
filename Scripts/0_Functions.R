@@ -44,20 +44,20 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
     print(paste("### Tuning", plot_name, modelTag, "###"))
     print("")
     
-    print("Tunning pot Validation model")
+    print("Tuning pot Validation model")
     print("")
     
     fit_potVal <- tunningModels(classes = data_potVal$Species, 
                                 spectra = data_potVal[, 3:length( data_potVal )],
                                 wl = wl)
     
-    print("Tunning rip-it-off model")
+    print("Tuning rip-it-off model")
     print("")
     
     fit_rf     <- tunningModels(classes = data_rf$Species, 
                                 spectra = data_rf[, 3:length( data_rf )],
                                 wl = wl)
-    # save tunning models
+    # save tuning models
     dir.create(file.path(home, "tunningOutputs"), showWarnings = FALSE)
     
     save(fit_potVal, file=paste0(home,  "/tunningOutputs/", "potVal_", 
@@ -125,6 +125,8 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
                   Iter = boots,
                   algorithm = "PLS_rf")
     
+    print("PLS-DA done!")
+    
     # for RF potVal
     obstainCovers(ObservedSpecies = valData, 
                   rasterDir =  paste0( home, "/BootsClass_out/", plot_name, "_RF_",  
@@ -145,6 +147,8 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
                   Iter = boots,
                   algorithm = "RF_rf")
     
+    print("RF done!")
+    
     # for SVM potVal
     obstainCovers(ObservedSpecies = valData, 
                   rasterDir =  paste0( home, "/BootsClass_out/", plot_name, "_SVM_",  
@@ -164,8 +168,8 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
                   plotNumber = plot, 
                   Iter = boots,
                   algorithm = "SVM_rf")
-   
-     print("Done!")
+    
+    print("SVM done!")
     print("")
     
   }
@@ -992,7 +996,7 @@ stratifySampling <- function(data, classes){
   TRAIN <- list()
   VAL <- list()
   
-  for (i in 1:length( levels(data$classes ))){
+ for (i in 1:length( levels(data$classes ))){
     x = grep( levels(data$classes)[i], data$classes  )
     x <- data[x, ]
     # sampling with repleacement 
