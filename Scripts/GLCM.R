@@ -9,11 +9,22 @@ library(doParallel)
 
 # set working direction
 #home = "/media/javier/JavierLopatin/Sp_Images/Site1/Raw/"
-home = "F:/Sp_Images/Site4/Raw"
+home = "F:/Sp_Images/Site3/Raw"
 setwd(home)
 
 processingFolder = "BN_MNF"
 bandName = paste("MNF_", seq(1,10,1), sep="")
+
+#### Source Functions from GitHub
+source_github <- function(u) {
+  # load package
+  require(RCurl)
+  # read script lines from website and evaluate
+  script <- getURL(u, ssl.verifypeer = FALSE)
+  eval(parse(text = script), envir=.GlobalEnv)
+  detach("package:RCurl", unload=TRUE)
+} 
+source_github("https://raw.githubusercontent.com/JavierLopatin/Herbaceous-Species-Classification/master/Scripts/Functions.R")
 
 rasterNames <- rasterListNames(fileExtantion = ".tif", folder = processingFolder)
 rasterlist <- rasterList(fileExtantion = ".tif", folder = processingFolder, rasterNames = bandName)

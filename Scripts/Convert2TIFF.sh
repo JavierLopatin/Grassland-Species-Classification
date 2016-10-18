@@ -14,7 +14,7 @@ for f in $FILES
 do
   echo "Processing $f file..."
   filename=`basename ${f} .${3}`
-  echo "Output: ${2}/${filename}.kea"
+  echo "Output: ${2}/${filename}.tif"
   gdal_translate -of GTiff ${f} ${2}/${filename}.tif
-  gdalcalcstats ${2}/${filename}.kea -ignore 0
+  gdalcalcstats ${2}/${filename}.tif -ignore 0
 done
