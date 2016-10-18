@@ -160,7 +160,7 @@ for (i in 1:length(spList)){
   out[,6] <- rep( c(rep("spectra", 3), rep("spectra_BN",3), rep("MNF", 3), rep("MNF_BN", 3 ) ), 2 )
   out[,7] <- c( rep("potVal", 12), rep("rf", 12) )
   
-  # r²
+  # rÂ²
   # pot Val
   out[1,2] <- (cor(pv_spect_PLS$Predicted, pv_spect_PLS$Observed, method="pearson"))^2
   out[2,2]  <- (cor(pv_spect_RF$Predicted,  pv_spect_RF$Observed, method="pearson"))^2
@@ -169,7 +169,7 @@ for (i in 1:length(spList)){
   out[4,2] <- (cor(pv_spect_BN_PLS$Predicted, pv_spect_BN_PLS$Observed, method="pearson"))^2
   out[5,2] <- (cor(pv_spect_BN_RF$Predicted, pv_spect_BN_RF$Observed, method="pearson"))^2
   out[6,2] <- (cor(pv_spect_BN_SVM$Predicted, pv_spect_BN_SVM$Observed, method="pearson"))^2
- 
+  
   out[7,2] <- (cor(pv_MNF_PLS$Predicted, pv_MNF_PLS$Observed, method="pearson"))^2
   out[8,2] <- (cor(pv_MNF_RF$Predicted,  pv_MNF_RF$Observed, method="pearson"))^2
   out[9,2] <- (cor(pv_MNF_SVM$Predicted, pv_MNF_SVM$Observed, method="pearson"))^2
@@ -217,7 +217,7 @@ for (i in 1:length(spList)){
   out[13,3] <- sqrt(mean((rf_spect_PLS$Observed- rf_spect_PLS$Predicted)^2))
   out[14,3]  <- sqrt(mean((rf_spect_RF$Observed- rf_spect_RF$Predicted)^2))
   out[15,3] <- sqrt(mean((rf_spect_SVM$Observed- rf_spect_SVM$Predicted)^2))
-
+  
   out[16,3] <- sqrt(mean((rf_spect_BN_PLS$Observed- rf_spect_BN_PLS$Predicted)^2))
   out[17,3]  <- sqrt(mean((rf_spect_BN_RF$Observed- rf_spect_BN_RF$Predicted)^2))
   out[18,3] <- sqrt(mean((rf_spect_BN_SVM$Observed- rf_spect_BN_SVM$Predicted)^2))
@@ -252,7 +252,7 @@ for (i in 1:length(spList)){
   out[13,4] <- 1 - coef( lm(rf_spect_PLS$Predicted~ rf_spect_PLS$Observed - 1) )
   out[14,4]  <- 1 - coef( lm(rf_spect_RF$Predicted~ rf_spect_RF$Observed - 1) )
   out[15,4] <- 1 - coef( lm(rf_spect_SVM$Predicted~ rf_spect_SVM$Observed - 1) )
-
+  
   out[16,4] <- 1 - coef( lm(rf_spect_BN_PLS$Predicted~ rf_spect_BN_PLS$Observed - 1) )
   out[17,4]  <- 1 - coef( lm(rf_spect_BN_RF$Predicted~ rf_spect_BN_RF$Observed - 1) )
   out[18,4] <- 1 - coef( lm(rf_spect_BN_SVM$Predicted~ rf_spect_BN_SVM$Observed - 1) )
@@ -325,25 +325,32 @@ data_summary <- function(x) {
   ymax <- m+sd(x)
   return(c(y=m,ymin=ymin,ymax=ymax))
 }
+# Add a common legend for multiple ggplot2 graphs
+get_legend<-function(myggplot){
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
 
 ## Overall accuracy
 plot_potVal <- ggplot(data = fit_potVal, mapping = aes(x = Models, y = OA, fill = factor(Normalization))) +
-   geom_violin(mapping=aes(ymin = OA, ymax = OA), position = position_dodge(width = 0.6), size = 0.5) +
-   stat_summary(fun.data=data_summary, position = position_dodge(width = 0.6)) +
-   scale_y_continuous(limits = c(0,1), breaks = seq(0,1,0.2)) + # fixt ylim
-   ylab("Accuracy [0-1]") + xlab("Models") + guides(fill=FALSE) + # legend off
-   theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(),
-                                  axis.text.x = element_blank(),
-                                  axis.ticks.x = element_blank(), 
-                                  axis.title.x = element_blank()) +
-   geom_vline(xintercept = c(1.5, 2.5), colour = "gray") +
-   ggtitle("Pot validation method")
+  geom_violin(mapping=aes(ymin = OA, ymax = OA), position = position_dodge(width = 0.6), size = 0.5) +
+  stat_summary(fun.data=data_summary, position = position_dodge(width = 0.6)) +
+  scale_y_continuous(limits = c(0,1), breaks = seq(0,1,0.2)) + # fixt ylim
+  ylab("Accuracy [0-1]") + guides(fill=FALSE) + # legend off
+  theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(),
+                                 axis.text.x = element_blank(),
+                                 axis.ticks.x = element_blank(), 
+                                 axis.title.x = element_blank()) +
+  geom_vline(xintercept = c(1.5, 2.5), colour = "gray") +
+  ggtitle("Pot validation method")
 
 plot_rf <- ggplot(data = fit_rf, mapping = aes(x = Models, y = OA, fill = factor(Normalization))) +
   geom_violin(mapping=aes(ymin = OA, ymax = OA), position = position_dodge(width = 0.6), size = 0.5) +
   stat_summary(fun.data=data_summary, position = position_dodge(width = 0.6)) +
   scale_y_continuous(limits = c(0,1), breaks = seq(0,1,0.2)) + 
-  ylab("") + xlab("Models") + labs(fill="") +
+  ylab("") + guides(fill=FALSE) +
   theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), legend.key = element_blank(),
                                  axis.text.y = element_blank(),
                                  axis.ticks.y = element_blank(), 
@@ -354,14 +361,14 @@ plot_rf <- ggplot(data = fit_rf, mapping = aes(x = Models, y = OA, fill = factor
   geom_vline(xintercept = c(1.5, 2.5), colour = "gray") +
   ggtitle("Rip-it-of validation method")
 
-### R²
+### RÂ²
 ggmodelR2 <- na.omit( data.frame(r2=as.numeric(as.character(gof_pv$r2)), Models=gof_pv$Models, Normalization=gof_pv$Normalization) )
 
 r2_potVal <- ggplot(data = ggmodelR2, mapping = aes(x = Models, y = r2, fill = factor(Normalization))) +
   geom_violin(mapping=aes(ymin = r2, ymax = r2), position = position_dodge(width = 0.6), size = 0.5) +
   stat_summary(fun.data=data_summary, position = position_dodge(width = 0.6)) +
   scale_y_continuous(limits = c(0,1), breaks = seq(0,1,0.2)) + # fixt ylim
-  ylab(expression(r^2)) + xlab("Models") + guides(fill=FALSE) + # legend off
+  ylab(expression(r^2)) + guides(fill=FALSE) + # legend off
   theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(),
                                  axis.text.x = element_blank(),
                                  axis.ticks.x = element_blank(), 
@@ -374,7 +381,7 @@ r2_rf <- ggplot(data = ggmodelR2, mapping = aes(x = Models, y = r2, fill = facto
   geom_violin(mapping=aes(ymin = r2, ymax = r2), position = position_dodge(width = 0.6), size = 0.5) +
   stat_summary(fun.data=data_summary, position = position_dodge(width = 0.6)) +
   scale_y_continuous(limits = c(0,1), breaks = seq(0,1,0.2)) + 
-  ylab("") + xlab("Models") + labs(fill="") +
+  ylab("")  + guides(fill=FALSE) +
   theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), legend.key = element_blank(),
                                  axis.text.y = element_blank(),
                                  axis.ticks.y = element_blank(), 
@@ -404,7 +411,7 @@ RMSE_rf <- ggplot(data = ggmodelRMSE, mapping = aes(x = Models, y = RMSE, fill =
   geom_violin(mapping=aes(ymin = RMSE, ymax = RMSE), position = position_dodge(width = 0.6), size = 0.5) +
   stat_summary(fun.data=data_summary, position = position_dodge(width = 0.6)) +
   scale_y_continuous(limits = c(0,100), breaks = seq(0,100,20)) + 
-  ylab("RMSE [%]") + xlab("Models") + labs(fill="") +
+  ylab("RMSE [%]") + guides(fill=FALSE) +
   theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), legend.key = element_blank(),
                                  axis.text.y = element_blank(),
                                  axis.ticks.y = element_blank(), 
@@ -440,11 +447,15 @@ bias_rf <- ggplot(data = ggmodelbias, mapping = aes(x = Models, y = bias, fill =
   geom_vline(xintercept = c(1.5, 2.5), colour = "gray") +
   geom_hline(yintercept = 0, lty = 2)
 
+Legend <- get_legend(bias_rf)
 
-plot_OA <- grid.arrange(plot_potVal, plot_rf, r2_potVal, r2_rf, 
-                        RMSE_potVal, RMSE_rf, ncol=2, bias_potVal, bias_rf, 
-                        nrow=4#, 
-                        #widths = c(5, 6), heights = c(5,6) 
-                        )
+# 3. Remove the legend from the box plot
+bias_rf <- bias_rf + theme(legend.position="none")
 
- 
+plot_fits <- grid.arrange(plot_potVal, plot_rf, r2_potVal, r2_rf, 
+                        RMSE_potVal, RMSE_rf, bias_potVal, bias_rf, Legend,
+                        nrow=4, ncol=3, layout_matrix = rbind(c(1,2,9), 
+                                                              c(3,4,9),
+                                                              c(5,6,9),
+                                                              c(7,8,9)), 
+                        heights = c(6,5,5,6), widths = c(5,5,1.5))
