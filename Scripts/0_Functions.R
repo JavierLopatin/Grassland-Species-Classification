@@ -1215,3 +1215,64 @@ delFlowers <- function(data){
   data
 }
 
+###############################################
+## Obtain cover summay per validation method ##
+###############################################
+
+coverSummary <- function(validation){ 
+  
+  modelTag = c("PLS", "RF", "SVM")
+  Normalization = c("spect", "spect_BN", "MNF", "MNF_BN")
+  
+  output <- data.frame( Species=character(), Obserced=double(),Predicted=double(),	
+                        Model=character(), Normalization=character(), plot=integer() )
+  
+  for (i in 1:4){ # Normalization 
+    
+    for (i2 in 1:3){ # modelTag
+      
+      for (i3 in 1:11){ # plots 
+        
+        obs <- read.table( paste0( "Covers_results/", modelTag[i2], "_", validation, "_Obs_coversplot_", seq(9,19,1)[i3], "_", Normalization[i], ".txt"), header = T)
+        pred <-  read.table( paste0( "Covers_results/", modelTag[i2], "_", validation, "_Median_Covers_plot_", seq(9,19,1)[i3], "_", Normalization[i], ".txt"), header = T)
+        
+        for (i4 in 1:16){ #subplots
+          
+          sp <- obs$Species
+          OBS <- obs[, i4+2]
+          PRED <- pred[, i4+2]  
+          
+          if (nrow(pred) != nrow(obs)){
+            minim = min(c(nrow(pred), nrow(obs)))
+            df <- data.frame(Species=sp[1:minim], Observed=OBS[1:minim], Predicted=PRED[1:minim],
+                             Model=modelTag[i2], Normalization=Normalization[i], Plot=seq(9,19,1)[i3])
+          }
+          if (nrow(pred) == nrow(obs)){
+            df <- data.frame(Species=sp, Observed=OBS, Predicted=PRED,
+                             Model=modelTag[i2], Normalization=Normalization[i], Plot=seq(9,19,1)[i3])
+          }
+          
+          # eliminate rows when OBS= NA and PRED = NA 
+          df <- df[rowSums(is.na(df)) != 2, ]
+          # replace NA for zeros
+          df[is.na(df)] <- 0
+          
+          if (length(output[,1])==0){
+            output = df
+          }
+          
+          if (length(output[,1])!=0) { 
+            output <-  merge(output, df, by = intersect(names(output), names(df)), all = TRUE)
+          }
+          
+        }
+        
+      }
+      
+    }
+    
+  }
+  
+  output
+  
+}
