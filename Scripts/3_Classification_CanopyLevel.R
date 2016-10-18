@@ -12,7 +12,7 @@ home = "D:/Sp_Images"
 
 setwd(home)
 
-load("Class_Canopy.RData")
+#load("Class_Canopy.RData")
 
 ## load the data
 potVal_spec    <- read.table("Data/potVal_spec.csv", sep = ",", header = T)
@@ -23,7 +23,7 @@ potVal_MNF     <- read.table("Data/potVal_MNF.csv", sep = ",", header = T)
 rf_MNF         <- read.table("Data/rf_MNF.csv", sep = ",", header = T)
 potVal_MNF_BN  <- read.table("Data/potVal_MNF_BN.csv", sep = ",", header = T)
 rf_MNF_BN      <- read.table("Data/rf_MNF_BN.csv", sep = ",", header = T)
-potVal_GLCM    <- read.table("Data/potVal_GLCM_all.csv", sep = ",", header = T)
+potVal_GLCM    <- read.table("Data/potVal_GLCM.csv", sep = ",", header = T)
 rf_GLCM        <- read.table("Data/rf_GLCM.csv", sep = ",", header = T)
 potVal_GLCM_BN <- read.table("Data/potVal_GLCM_BN.csv", sep = ",", header = T)
 rf_GLCM_BN     <- read.table("Data/rf_GLCM_BN.csv", sep = ",", header = T)
@@ -51,15 +51,15 @@ source_github("https://raw.githubusercontent.com/JavierLopatin/Herbaceous-Specie
 
 
 ## load plot images 
-raster_spec <-  raster_List(fileExtantion = ".tif", folder = "Plots/Plots_spec", dir=home)
+raster_spec <-  rasterList(fileExtantion = ".tif", folder = "Plots/Plots_spec", dir=home)
 r <- stack( paste0(home, "/Plots/Plots_spec/plot_17.dat") )
 raster_spec[[11]] <- r; names(raster_spec) <- c("plot_10", "plot_11", "plot_12", "plot_13", "plot_14", "plot_15", "plot_16", "plot_18", "plot_19", "plot_9", "plot_17")
 
-raster_spec_BN <-  raster_List(fileExtantion = ".tif", folder = "Plots/Plots_spec_BN", dir=home)
-raster_MNF     <-  raster_List(fileExtantion = ".tif", folder = "Plots/Plots_MNF", dir=home)
-raster_MNF_BN  <-  raster_List(fileExtantion = ".tif", folder = "Plots/Plots_MNF_BN", dir=home)
-raster_GLCM    <-  raster_List(fileExtantion = ".tif", folder = "Plots/Plots_GLCM", dir=home)
-raster_GLCM_BN <-  raster_List(fileExtantion = ".tif", folder = "Plots/Plots_GLCM_BN", dir=home)
+raster_spec_BN <-  rasterList(fileExtantion = ".tif", folder = "Plots/Plots_spec_BN", dir=home)
+raster_MNF     <-  rasterList(fileExtantion = ".tif", folder = "Plots/Plots_MNF", dir=home)
+raster_MNF_BN  <-  rasterList(fileExtantion = ".tif", folder = "Plots/Plots_MNF_BN", dir=home)
+raster_GLCM    <-  rasterList(fileExtantion = ".tif", folder = "Plots/Plots_GLCM", dir=home)
+raster_GLCM_BN <-  rasterList(fileExtantion = ".tif", folder = "Plots/Plots_GLCM_BN", dir=home)
 
 
 ##########################
