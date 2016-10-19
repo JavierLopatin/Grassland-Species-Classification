@@ -1219,7 +1219,7 @@ delFlowers <- function(data){
 ## Obtain cover summay per validation method ##
 ###############################################
 
-coverSummary <- function(validation){ 
+coverSummary <- function(validation, na.replace = TRUE){ 
   
   modelTag = c("PLS", "RF", "SVM")
   Normalization = c("spect", "spect_BN", "MNF", "MNF_BN")
@@ -1255,8 +1255,9 @@ coverSummary <- function(validation){
           # eliminate rows when OBS= NA and PRED = NA 
           df <- df[rowSums(is.na(df)) != 2, ]
           # replace NA for zeros
-          df[is.na(df)] <- 0
-          
+          if (na.replace == TRUE){ 
+            df[is.na(df)] <- 0
+          }
           if (length(output[,1])==0){
             output = df
           }
@@ -1276,3 +1277,267 @@ coverSummary <- function(validation){
   output
   
 }
+
+#################################################
+### Obtain R2, RMSE and Bias per specie       ###
+### Inputs: are the results from coverSummary ###
+### of both the pot validation and the        ###
+### rip-it-of methods - potVal_cover          ###
+###                   - rf_cover              ###
+#################################################
+
+GOF <- function(potVal_cover, rf_cover){ 
+  
+  spList = factor( unique(potVal_cover$Species) )
+  
+  outputGOF <- data.frame(Species=character(), r2=double(), RMSE=double(),
+                          bias=double(), Models=character(), Normalization=character(),
+                          Validation=character())
+  
+  for (i in 1:length(spList)){
+    tryCatch({
+      x = grep( spList[i], potVal_cover$Species)
+      pv = potVal_cover[x, ]
+      
+      x = grep(spList[i], rf_cover$Species)
+      rf = rf_cover[x, ]
+      
+      #### Pot validation method ####
+      ## Spectral values
+      x = grep("spect", pv$Normalization)
+      pv_spect_all <- pv[x, ]
+      # take care of BN datas
+      x = grep("BN", pv_spect_all$Normalization)
+      pv_spect_BN <- pv_spect_all[x, ]
+      pv_spect <- pv_spect_all[-x, ]
+      
+      ## MNF values
+      x = grep("MNF", pv$Normalization)
+      pv_MNF_all <- pv[x, ]
+      # take care of BN datas
+      x = grep("BN", pv_MNF_all$Normalization)
+      pv_MNF_BN <- pv_MNF_all[x, ]
+      pv_MNF <- pv_MNF_all[-x, ]
+      
+      # PLS
+      x = grep("PLS", pv_spect$Model)
+      pv_spect_PLS <- pv_spect[x, ]
+      
+      x = grep("PLS", pv_spect_BN$Model)
+      pv_spect_BN_PLS <- pv_spect_BN[x, ]
+      
+      x = grep("PLS", pv_MNF$Model)
+      pv_MNF_PLS <- pv_MNF[x, ]
+      
+      x = grep("PLS", pv_MNF_BN$Model)
+      pv_MNF_BN_PLS <- pv_MNF_BN[x, ]
+      
+      # RF
+      x = grep("RF", pv_spect$Model)
+      pv_spect_RF <- pv_spect[x, ]
+      
+      x = grep("RF", pv_spect_BN$Model)
+      pv_spect_BN_RF <- pv_spect_BN[x, ]
+      
+      x = grep("RF", pv_MNF$Model)
+      pv_MNF_RF <- pv_MNF[x, ]
+      
+      x = grep("RF", pv_MNF_BN$Model)
+      pv_MNF_BN_RF <- pv_MNF_BN[x, ]
+      
+      # SVM
+      x = grep("SVM", pv_spect$Model)
+      pv_spect_SVM <- pv_spect[x, ]
+      
+      x = grep("SVM", pv_spect_BN$Model)
+      pv_spect_BN_SVM <- pv_spect_BN[x, ]
+      
+      x = grep("SVM", pv_MNF$Model)
+      pv_MNF_SVM <- pv_MNF[x, ]
+      
+      x = grep("SVM", pv_MNF_BN$Model)
+      pv_MNF_BN_SVM <- pv_MNF_BN[x, ]
+      
+      #### rip-it-off validation method ####
+      ## Spectral values
+      x = grep("spect", rf$Normalization)
+      rf_spect_all <- rf[x, ]
+      # take care of BN datas
+      x = grep("BN", rf_spect_all$Normalization)
+      rf_spect_BN <- rf_spect_all[x, ]
+      rf_spect <- rf_spect_all[-x, ]
+      
+      ## MNF values
+      x = grep("MNF", rf$Normalization)
+      rf_MNF_all <- rf[x, ]
+      # take care of BN datas
+      x = grep("BN", rf_MNF_all$Normalization)
+      rf_MNF_BN <- rf_MNF_all[x, ]
+      rf_MNF <- rf_MNF_all[-x, ]
+      
+      # PLS
+      x = grep("PLS", rf_spect$Model)
+      rf_spect_PLS <- rf_spect[x, ]
+      
+      x = grep("PLS", rf_spect_BN$Model)
+      rf_spect_BN_PLS <- rf_spect_BN[x, ]
+      
+      x = grep("PLS", rf_MNF$Model)
+      rf_MNF_PLS <- rf_MNF[x, ]
+      
+      x = grep("PLS", rf_MNF_BN$Model)
+      rf_MNF_BN_PLS <- rf_MNF_BN[x, ]
+      
+      # RF
+      x = grep("RF", rf_spect$Model)
+      rf_spect_RF <- rf_spect[x, ]
+      
+      x = grep("RF", rf_spect_BN$Model)
+      rf_spect_BN_RF <- rf_spect_BN[x, ]
+      
+      x = grep("RF", rf_MNF$Model)
+      rf_MNF_RF <- rf_MNF[x, ]
+      
+      x = grep("RF", rf_MNF_BN$Model)
+      rf_MNF_BN_RF <- rf_MNF_BN[x, ]
+      
+      # SVM
+      x = grep("SVM", rf_spect$Model)
+      rf_spect_SVM <- rf_spect[x, ]
+      
+      x = grep("SVM", rf_spect_BN$Model)
+      rf_spect_BN_SVM <- rf_spect_BN[x, ]
+      
+      x = grep("SVM", rf_MNF$Model)
+      rf_MNF_SVM <- rf_MNF[x, ]
+      
+      x = grep("SVM", rf_MNF_BN$Model)
+      rf_MNF_BN_SVM <- rf_MNF_BN[x, ]
+      
+      ## Goodness-of-fits
+      out <- matrix(nrow = 24, ncol = 7)
+      colnames(out) <- c("Species", "r2", "RMSE", "bias", "Models", "Normalization", "Validation")
+      
+      out[,1] <- as.character(spList[i])
+      out[,5] <- rep(c("PLS", "RF", "SVM"), 8)
+      out[,6] <- rep( c(rep("spectra", 3), rep("spectra_BN",3), rep("MNF", 3), rep("MNF_BN", 3)), 2 )
+      out[,7] <- c( rep("potVal", 12), rep("rf", 12) )
+      
+      # r2
+      # pot Val
+      out[1,2] <- (cor(pv_spect_PLS$Predicted, pv_spect_PLS$Observed, method="pearson"))^2
+      out[2,2]  <- (cor(pv_spect_RF$Predicted,  pv_spect_RF$Observed, method="pearson"))^2
+      out[3,2] <- (cor(pv_spect_SVM$Predicted, pv_spect_SVM$Observed, method="pearson"))^2
+      
+      out[4,2] <- (cor(pv_spect_BN_PLS$Predicted, pv_spect_BN_PLS$Observed, method="pearson"))^2
+      out[5,2] <- (cor(pv_spect_BN_RF$Predicted, pv_spect_BN_RF$Observed, method="pearson"))^2
+      out[6,2] <- (cor(pv_spect_BN_SVM$Predicted, pv_spect_BN_SVM$Observed, method="pearson"))^2
+      
+      out[7,2] <- (cor(pv_MNF_PLS$Predicted, pv_MNF_PLS$Observed, method="pearson"))^2
+      out[8,2] <- (cor(pv_MNF_RF$Predicted,  pv_MNF_RF$Observed, method="pearson"))^2
+      out[9,2] <- (cor(pv_MNF_SVM$Predicted, pv_MNF_SVM$Observed, method="pearson"))^2
+      
+      out[10,2] <- (cor(pv_MNF_BN_PLS$Predicted, pv_MNF_BN_PLS$Observed, method="pearson"))^2
+      out[11,2] <- (cor(pv_MNF_BN_RF$Predicted,  pv_MNF_BN_RF$Observed, method="pearson"))^2
+      out[12,2] <- (cor(pv_MNF_BN_SVM$Predicted, pv_MNF_BN_SVM$Observed, method="pearson"))^2
+      
+      # rf
+      out[13,2] <- (cor(rf_spect_PLS$Predicted, rf_spect_PLS$Observed, method="pearson"))^2
+      out[14,2]  <- (cor(rf_spect_RF$Predicted, rf_spect_RF$Observed, method="pearson"))^2
+      out[15,2] <- (cor(rf_spect_SVM$Predicted, rf_spect_SVM$Observed, method="pearson"))^2
+      
+      out[16,2] <- (cor(rf_spect_BN_PLS$Predicted, rf_spect_BN_PLS$Observed, method="pearson"))^2
+      out[17,2]  <- (cor(rf_spect_BN_RF$Predicted, rf_spect_BN_RF$Observed, method="pearson"))^2
+      out[18,2] <- (cor(rf_spect_BN_SVM$Predicted, rf_spect_BN_SVM$Observed, method="pearson"))^2
+      
+      out[19,2] <- (cor(rf_MNF_PLS$Predicted, rf_MNF_PLS$Observed, method="pearson"))^2
+      out[20,2]  <- (cor(rf_MNF_RF$Predicted, rf_MNF_RF$Observed, method="pearson"))^2
+      out[21,2] <- (cor(rf_MNF_SVM$Predicted, rf_MNF_SVM$Observed, method="pearson"))^2
+      
+      out[22,2] <- (cor(rf_spect_PLS$Predicted, rf_spect_PLS$Observed, method="pearson"))^2
+      out[23,2]  <- (cor(rf_spect_RF$Predicted, rf_spect_RF$Observed, method="pearson"))^2
+      out[24,2] <- (cor(rf_spect_SVM$Predicted, rf_spect_SVM$Observed, method="pearson"))^2
+      
+      # RMSE
+      # pot Val
+      out[1,3] <- sqrt(mean((pv_spect_PLS$Observed - pv_spect_PLS$Predicted)^2))
+      out[2,3]  <- sqrt(mean((pv_spect_RF$Observed- pv_spect_RF$Predicted)^2))
+      out[3,3] <- sqrt(mean((pv_spect_SVM$Observed- pv_spect_SVM$Predicted)^2))
+      
+      out[4,3] <- sqrt(mean((pv_spect_BN_PLS$Observed- pv_spect_BN_PLS$Predicted)^2))
+      out[5,3]  <- sqrt(mean((pv_spect_BN_RF$Observed- pv_spect_BN_RF$Predicted)^2))
+      out[6,3] <- sqrt(mean((pv_spect_BN_SVM$Observed- pv_spect_BN_SVM$Predicted)^2))
+      
+      out[7,3] <- sqrt(mean((pv_MNF_PLS$Observed- pv_MNF_PLS$Predicted)^2))
+      out[8,3]  <- sqrt(mean((pv_MNF_RF$Observed- pv_MNF_RF$Predicted)^2))
+      out[9,3] <- sqrt(mean((pv_MNF_SVM$Observed- pv_MNF_SVM$Predicted)^2))
+      
+      out[10,3] <- sqrt(mean((pv_MNF_BN_PLS$Observed- pv_MNF_BN_PLS$Predicted)^2))
+      out[11,3]  <- sqrt(mean((pv_MNF_BN_RF$Observed- pv_MNF_BN_RF$Predicted)^2))
+      out[12,3] <- sqrt(mean((pv_MNF_BN_SVM$Observed- pv_MNF_BN_SVM$Predicted)^2))
+      
+      # rf
+      out[13,3] <- sqrt(mean((rf_spect_PLS$Observed- rf_spect_PLS$Predicted)^2))
+      out[14,3]  <- sqrt(mean((rf_spect_RF$Observed- rf_spect_RF$Predicted)^2))
+      out[15,3] <- sqrt(mean((rf_spect_SVM$Observed- rf_spect_SVM$Predicted)^2))
+      
+      out[16,3] <- sqrt(mean((rf_spect_BN_PLS$Observed- rf_spect_BN_PLS$Predicted)^2))
+      out[17,3]  <- sqrt(mean((rf_spect_BN_RF$Observed- rf_spect_BN_RF$Predicted)^2))
+      out[18,3] <- sqrt(mean((rf_spect_BN_SVM$Observed- rf_spect_BN_SVM$Predicted)^2))
+      
+      out[19,3] <- sqrt(mean((rf_MNF_PLS$Observed- rf_MNF_PLS$Predicted)^2))
+      out[20,3]  <- sqrt(mean((rf_MNF_RF$Observed- rf_MNF_RF$Predicted)^2))
+      out[21,3] <- sqrt(mean((rf_MNF_SVM$Observed- rf_MNF_SVM$Predicted)^2))
+      
+      out[22,3] <- sqrt(mean((rf_MNF_BN_PLS$Observed- rf_MNF_BN_PLS$Predicted)^2))
+      out[23,3]  <- sqrt(mean((rf_MNF_BN_RF$Observed- rf_MNF_BN_RF$Predicted)^2))
+      out[24,3] <- sqrt(mean((rf_MNF_BN_SVM$Observed- rf_MNF_BN_SVM$Predicted)^2))
+      
+      # bias
+      # pot Val
+      out[1,4] <- 1 - coef( lm(pv_spect_PLS$Predicted~ pv_spect_PLS$Observed - 1) )
+      out[2,4]  <- 1 - coef( lm(pv_spect_RF$Predicted~ pv_spect_RF$Observed - 1) )
+      out[3,4] <- 1 - coef( lm(pv_spect_SVM$Predicted~ pv_spect_SVM$Observed - 1) )
+      
+      out[4,4] <- 1 - coef( lm(pv_spect_BN_PLS$Predicted~ pv_spect_BN_PLS$Observed - 1) )
+      out[5,4]  <- 1 - coef( lm(pv_spect_BN_RF$Predicted~ pv_spect_BN_RF$Observed - 1) )
+      out[6,4] <- 1 - coef( lm(pv_spect_BN_SVM$Predicted~ pv_spect_BN_SVM$Observed - 1) )
+      
+      out[7,4] <- 1 - coef( lm(pv_MNF_PLS$Predicted~ pv_MNF_PLS$Observed - 1) )
+      out[8,4]  <- 1 - coef( lm(pv_MNF_RF$Predicted~ pv_MNF_RF$Observed - 1) )
+      out[9,4] <- 1 - coef( lm(pv_MNF_SVM$Predicted~ pv_MNF_SVM$Observed - 1) )
+      
+      out[10,4] <- 1 - coef( lm(pv_MNF_BN_PLS$Predicted~ pv_MNF_BN_PLS$Observed - 1) )
+      out[11,4] <- 1 - coef( lm(pv_MNF_BN_RF$Predicted~ pv_MNF_BN_RF$Observed - 1) )
+      out[12,4] <- 1 - coef( lm(pv_MNF_BN_SVM$Predicted~ pv_MNF_BN_SVM$Observed - 1) )
+      
+      # rf
+      out[13,4] <- 1 - coef( lm(rf_spect_PLS$Predicted~ rf_spect_PLS$Observed - 1) )
+      out[14,4]  <- 1 - coef( lm(rf_spect_RF$Predicted~ rf_spect_RF$Observed - 1) )
+      out[15,4] <- 1 - coef( lm(rf_spect_SVM$Predicted~ rf_spect_SVM$Observed - 1) )
+      
+      out[16,4] <- 1 - coef( lm(rf_spect_BN_PLS$Predicted~ rf_spect_BN_PLS$Observed - 1) )
+      out[17,4]  <- 1 - coef( lm(rf_spect_BN_RF$Predicted~ rf_spect_BN_RF$Observed - 1) )
+      out[18,4] <- 1 - coef( lm(rf_spect_BN_SVM$Predicted~ rf_spect_BN_SVM$Observed - 1) )
+      
+      out[19,4] <- 1 - coef( lm(rf_MNF_PLS$Predicted~ rf_MNF_PLS$Observed - 1) )
+      out[20,4]  <- 1 - coef( lm(rf_MNF_RF$Predicted~ rf_MNF_RF$Observed - 1) )
+      out[21,4] <- 1 - coef( lm(rf_MNF_SVM$Predicted~ rf_MNF_SVM$Observed - 1) )
+      
+      out[22,4] <- 1 - coef( lm(rf_MNF_BN_PLS$Predicted~ rf_MNF_BN_PLS$Observed - 1) )
+      out[23,4]  <- 1 - coef( lm(rf_MNF_BN_RF$Predicted~ rf_MNF_BN_RF$Observed - 1) )
+      out[24,4] <- 1 - coef( lm(rf_MNF_BN_SVM$Predicted~ rf_MNF_BN_SVM$Observed - 1) )
+      
+      if ( length(outputGOF[,1])==0 ){
+        outputGOF <- as.data.frame(out)
+      }
+      if ( length(outputGOF[,1])!=0 ){
+        outputGOF <- merge(outputGOF, as.data.frame(out), by = intersect(colnames(outputGOF), colnames(out)), all = TRUE)
+      }
+      }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})  
+  }
+  
+  outputGOF
+  
+}
+
