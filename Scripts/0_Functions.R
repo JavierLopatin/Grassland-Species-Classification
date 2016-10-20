@@ -588,6 +588,133 @@ BootsClassification <- function(classes, spectra, en, raster, boots,
 }
 
 
+BootsClassificationBest <- function(classes, spectra, en, raster, boots, 
+                                outDir, modelTag, plotName){  
+  
+  library(raster)
+  library(rgdal)
+  library(caret)
+  library(e1071)
+  library(randomForest)
+  library(pls)
+  library(doParallel)
+  
+  # extract the data from the classification Ensamble function
+  data2 <- data.frame(classes = classes, spectra)
+  data2 <- na.omit(data2)
+  data2$classes <- factor(data2$classes)
+  
+  bestNtree = en$RF$finalModel$ntree
+  bestMtry  = en$RF$finalModel$mtry
+  
+  ## apply funtion to predict species cover with SVM
+  # list of accuracies
+  PA.RF    <- list()
+  UA.RF    <- list()
+  OA.RF    <- list()
+  kappa.RF <- list()
+  predict.RF <- list()
+  
+  OBS <- list()
+  
+  # initialize parallel processing
+  cl <- makeCluster(detectCores())
+  registerDoParallel(cl)
+  
+  # progress bar
+  print(paste0(plotName, " ", modelTag))
+  pb <- txtProgressBar(min = 0, max = boots, style = 3)
+  
+  for (i in 1:boots){
+    
+    # progress bar
+    Sys.sleep(0.1)
+    setTxtProgressBar(pb, i)
+    
+    # stratify samplig. All species get selected at least once
+    samp <- stratifySampling(data2, classes)
+    
+    train <- samp$train
+    val <- samp$validation
+    
+    # store and select the observations
+    obs <- val$classes
+    OBS[[i]]<-obs
+    
+    #################
+    ### Apply RF  ###
+    #################
+    
+    RF  <- randomForest( y = train$classes, x = train[, 2:length(train)],
+                         ntree= bestNtree, mtry = bestMtry)
+    
+    # predict
+    pred_rf    <- predict(RF, val[, 2:length(val)])
+    predict.RF[[i]] <- pred_rf
+    
+    # confusion matix
+    conf   <- confusionMatrix(pred_rf, val$classes)
+    
+    # get accuracies
+    PA.RF[[i]]       <- conf$byClass[,3] 
+    UA.RF[[i]]       <- conf$byClass[,4]
+    OA.RF[[i]]       <- conf$overall["Accuracy"]
+    kappa.RF[[i]]    <- conf$overall["Kappa"]
+    
+    ##############################
+    ### Apply models to raster ### 
+    ##############################
+    
+    names(raster) <- paste( rep("B", 10), seq(1,10,1),  sep="" )
+
+    ### Predict RF
+    r_RF <- predict(raster, RF, type="class")
+
+    ### export rasters
+    # create a folder per plot to store results
+    plotName_RF = paste(plotName, "_RF_", modelTag, sep=""  )
+    dir.create(file.path(outDir, plotName_RF), showWarnings = FALSE)
+    outdir_RF = file.path(outDir, plotName_RF)
+     
+    out_RF  = paste( plotName, "_RF_", i, ".tif", sep="" )
+    out_RF  = file.path(outdir_RF, out_RF)
+  
+    # Export rasters
+    writeRaster(r_RF,  filename=out_RF,  format="GTiff", overwrite = T)
+   
+  }
+  
+  # close progress bar
+  close(pb)
+  
+  # stop parallel process
+  stopCluster(cl) 
+  
+  ######################
+  ### prepare output ###
+  ######################
+  
+  
+  fits <- data.frame(  unlist(OA.RF), unlist(kappa.RF))
+  names(fits) <- c("OA_RF", "Kappa_RF")
+  
+  fits_2 <- data.frame( RF$obsLevels, unlist(PA.RF), unlist(OA.RF))
+  names(fits_2) <- c("Species","PA_RF", "OA_RF")
+  
+  predict_all <- data.frame( unlist(OBS), unlist(predict.PLS), unlist(predict.RF), unlist(predict.SVM) )
+  names(predict_all) <- c("Observed", "RF")
+  
+  ### Export 
+  
+  write.table(fits, file = file.path(outDir, paste("Fits_", plotName, "_", modelTag, ".txt", sep="")),
+              row.names = F, col.names = T)
+  write.table(fits_2, file = file.path(outDir, paste("FitsPA_OA_", plotName, "_", modelTag, ".txt", sep="")), 
+              row.names = F, col.names = T)
+  write.table(predict_all, file = file.path(outDir, paste("Predicts_", plotName, "_", modelTag, ".txt", sep="")), 
+              row.names = F, col.names = T)
+  
+}
+
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
 ## obstainCovers: Obtain the covers prediction valiuos per plot               ##
@@ -1280,29 +1407,23 @@ coverSummary <- function(validation, na.replace = TRUE){
 
 #################################################
 ### Obtain R2, RMSE and Bias per specie       ###
-### Inputs: are the results from coverSummary ###
-### of both the pot validation and the        ###
-### rip-it-of methods - potVal_cover          ###
-###                   - rf_cover              ###
+### Inputs: is a results from coverSummary    ###
+###                                           ###
 #################################################
 
-GOF <- function(potVal_cover, rf_cover){ 
+GOF <- function(data){ 
   
-  spList = factor( unique(potVal_cover$Species) )
+  spList = factor( unique(data$Species) )
   
   outputGOF <- data.frame(Species=character(), r2=double(), RMSE=double(),
-                          bias=double(), Models=character(), Normalization=character(),
-                          Validation=character())
+                          bias=double(), Models=character(), Normalization=character())
   
   for (i in 1:length(spList)){
     tryCatch({
-      x = grep( spList[i], potVal_cover$Species)
-      pv = potVal_cover[x, ]
-      
-      x = grep(spList[i], rf_cover$Species)
-      rf = rf_cover[x, ]
-      
-      #### Pot validation method ####
+  
+      x = grep( spList[i], data$Species)
+      pv = data[x, ]
+
       ## Spectral values
       x = grep("spect", pv$Normalization)
       pv_spect_all <- pv[x, ]
@@ -1358,71 +1479,15 @@ GOF <- function(potVal_cover, rf_cover){
       x = grep("SVM", pv_MNF_BN$Model)
       pv_MNF_BN_SVM <- pv_MNF_BN[x, ]
       
-      #### rip-it-off validation method ####
-      ## Spectral values
-      x = grep("spect", rf$Normalization)
-      rf_spect_all <- rf[x, ]
-      # take care of BN datas
-      x = grep("BN", rf_spect_all$Normalization)
-      rf_spect_BN <- rf_spect_all[x, ]
-      rf_spect <- rf_spect_all[-x, ]
-      
-      ## MNF values
-      x = grep("MNF", rf$Normalization)
-      rf_MNF_all <- rf[x, ]
-      # take care of BN datas
-      x = grep("BN", rf_MNF_all$Normalization)
-      rf_MNF_BN <- rf_MNF_all[x, ]
-      rf_MNF <- rf_MNF_all[-x, ]
-      
-      # PLS
-      x = grep("PLS", rf_spect$Model)
-      rf_spect_PLS <- rf_spect[x, ]
-      
-      x = grep("PLS", rf_spect_BN$Model)
-      rf_spect_BN_PLS <- rf_spect_BN[x, ]
-      
-      x = grep("PLS", rf_MNF$Model)
-      rf_MNF_PLS <- rf_MNF[x, ]
-      
-      x = grep("PLS", rf_MNF_BN$Model)
-      rf_MNF_BN_PLS <- rf_MNF_BN[x, ]
-      
-      # RF
-      x = grep("RF", rf_spect$Model)
-      rf_spect_RF <- rf_spect[x, ]
-      
-      x = grep("RF", rf_spect_BN$Model)
-      rf_spect_BN_RF <- rf_spect_BN[x, ]
-      
-      x = grep("RF", rf_MNF$Model)
-      rf_MNF_RF <- rf_MNF[x, ]
-      
-      x = grep("RF", rf_MNF_BN$Model)
-      rf_MNF_BN_RF <- rf_MNF_BN[x, ]
-      
-      # SVM
-      x = grep("SVM", rf_spect$Model)
-      rf_spect_SVM <- rf_spect[x, ]
-      
-      x = grep("SVM", rf_spect_BN$Model)
-      rf_spect_BN_SVM <- rf_spect_BN[x, ]
-      
-      x = grep("SVM", rf_MNF$Model)
-      rf_MNF_SVM <- rf_MNF[x, ]
-      
-      x = grep("SVM", rf_MNF_BN$Model)
-      rf_MNF_BN_SVM <- rf_MNF_BN[x, ]
       
       ## Goodness-of-fits
-      out <- matrix(nrow = 24, ncol = 7)
-      colnames(out) <- c("Species", "r2", "RMSE", "bias", "Models", "Normalization", "Validation")
+      out <- matrix(nrow = 24, ncol = 6)
+      colnames(out) <- c("Species", "r2", "RMSE", "bias", "Models", "Normalization")
       
       out[,1] <- as.character(spList[i])
       out[,5] <- rep(c("PLS", "RF", "SVM"), 8)
       out[,6] <- rep( c(rep("spectra", 3), rep("spectra_BN",3), rep("MNF", 3), rep("MNF_BN", 3)), 2 )
-      out[,7] <- c( rep("potVal", 12), rep("rf", 12) )
-      
+
       # r2
       # pot Val
       out[1,2] <- (cor(pv_spect_PLS$Predicted, pv_spect_PLS$Observed, method="pearson"))^2
@@ -1537,7 +1602,78 @@ GOF <- function(potVal_cover, rf_cover){
       }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})  
   }
   
+  outputGOF$r2   <- as.numeric(as.character(outputGOF$r2))
+  outputGOF$RMSE <- as.numeric(as.character(outputGOF$RMSE))
+  outputGOF$bias <- as.numeric(as.character(outputGOF$bias))
+  
   outputGOF
   
 }
 
+#################################################
+### same as the GOF function, but only for    ###
+### one model                                 ###
+### Inputs: is a results from coverSummary    ###
+###                                           ###
+#################################################
+
+GOFbest <- function(data, modelTag){ 
+  
+  spList = factor( unique(data$Species) )
+  
+  outputGOF <- data.frame(Species=character(), r2=double(), RMSE=double(),
+                          bias=double())
+  
+  for (i in 1:length(spList)){
+    tryCatch({
+      
+      x = grep( spList[i], data$Species)
+      model = data[x, ]
+      
+      ## Goodness-of-fits
+      out <- matrix(nrow = 1, ncol = 4)
+      colnames(out) <- c("Species", "r2", "RMSE", "bias")
+      
+      out[,1] <- as.character(spList[i])
+       
+      # r2
+      out[1,2] <- (cor(model$Predicted, model$Observed, method="pearson"))^2
+      # RMSE
+      out[1,3] <- sqrt(mean((model$Observed - model$Predicted)^2))
+      # bias
+      out[1,4] <- 1 - coef( lm(model$Predicted ~ model$Observed - 1) )
+ 
+      if ( length(outputGOF[,1])==0 ){
+        outputGOF <- as.data.frame(out)
+      }
+      if ( length(outputGOF[,1])!=0 ){
+        outputGOF <- merge(outputGOF, as.data.frame(out), by = intersect(colnames(outputGOF), colnames(out)), all = TRUE)
+      }
+    }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})  
+  }
+  
+  outputGOF$r2   <- as.numeric(as.character(outputGOF$r2))
+  outputGOF$RMSE <- as.numeric(as.character(outputGOF$RMSE))
+  outputGOF$bias <- as.numeric(as.character(outputGOF$bias))
+  
+  outputGOF
+  
+}
+
+
+ClassPresence <- function(data){
+  data$ClassPresence <- NA
+  
+  for ( i in 1:nrow(data) ){
+    if(data$Observed[i]==0 & data$Predicted[i]!=0){
+      data$ClassPresence[i] <- "Over"
+    }
+    if(data$Observed[i]!=0 & data$Predicted[i]==0){
+      data$ClassPresence[i] <- "Miss"
+    }
+    if(data$Observed[i]!=0 & data$Predicted[i]!=0){
+      data$ClassPresence[i] <- "Well"
+    }
+  }
+  data
+}
