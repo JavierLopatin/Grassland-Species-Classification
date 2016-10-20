@@ -5,11 +5,13 @@
 ## last changes: 
 
 home = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp"
-DDir = "D:/Sp_Images"
+rasterDir = "D:/Sp_Images"
 
 setwd(home)
 
 load("outputGOF.RData")
+load("potVal_cover.RData")
+load("rf_cover.RData")
 
 #### Source Functions from GitHub
 source_github <- function(u) {
@@ -27,7 +29,7 @@ fit_potVal <-  read.table("Data/Fits_potVal.csv", sep = ",", header = T)
 fit_rf     <-  read.table("Data/Fits_rf.csv", sep = ",", header = T)
 
 ## Obtain cover fits
-setwd(DDir)
+setwd(rasterDir)
 
 potVal_cover <- coverSummary("potVal")
 rf_cover     <- coverSummary("rf")
@@ -41,174 +43,131 @@ save(potVal_cover, file="potVal_cover.RData")
 save(rf_cover,     file="rf_cover.RData")
 
 # Obtain R2, RMSE and Bias per species
-outputGOF <- GOF(potVal_cover, rf_cover)
+gof_pv <- GOF(potVal_cover)
+gof_rf <- GOF(rf_cover)
+
 # erase empty "Species"
-# <- outputGOF[- seq(1,24,1),]
-outputGOF$r2 <- as.numeric(as.character(outputGOF$r2))
-outputGOF$RMSE <- as.numeric(as.character(outputGOF$RMSE))
-outputGOF$bias <- as.numeric(as.character(outputGOF$bias))
+# gof_pv <- gof_pv[- seq(1,24,1),]
+# gof_rf <- gof_rf[- seq(1,24,1),]
 
-save(outputGOF, file="outputGOF.RData")
-
+save(gof_pv, file="gof_pv.RData")
+save(gof_rf, file="gof_rf.RData")
 
 # get GOF per model/tag
-x = grep("potVal", outputGOF$Validation)
-gof_pv <- outputGOF[x, ]
+#x = grep("potVal", outputGOF$Validation)
+#gof_pv <- outputGOF[x, ]
+
+#x = grep("rf", outputGOF$Validation)
+#gof_rf <- outputGOF[x, ]
+
+############################
+### Best model rf MNF_BN ###
+############################
+
+x = grep("RF", rf_cover$Model)
+y <- rf_cover[x, ] 
+
+x = grep("MNF_BN", y$Normalization)
+bestModel <- y[x, ]
 
 x = grep("rf", outputGOF$Validation)
-gof_rf <- outputGOF[x, ]
+y <- outputGOF[x, ] 
 
-## plot
-library(ggplot2)
-library(gridExtra)
+x = grep("RF", y$Models)
+y <- y[x, ] 
 
-# Function to produce summary statistics (mean and +/- sd)
-data_summary <- function(x) {
-  m <- mean(x)
-  ymin <- m-sd(x)
-  ymax <- m+sd(x)
-  return(c(y=m,ymin=ymin,ymax=ymax))
-}
-# Add a common legend for multiple ggplot2 graphs
-get_legend<-function(myggplot){
-  tmp <- ggplot_gtable(ggplot_build(myggplot))
-  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
-  legend <- tmp$grobs[[leg]]
-  return(legend)
-}
+x = grep("MNF_BN", y$Normalization)
+gof_best <- y[x, ]
 
-## Overall accuracy
-plot_potVal <- ggplot(data = fit_potVal, mapping = aes(x = Models, y = Kappa, fill = factor(Normalization))) +
-  geom_violin(mapping=aes(ymin = Kappa, ymax = Kappa), position = position_dodge(width = 0.6), size = 0.5) +
-  stat_summary(fun.data=data_summary, position = position_dodge(width = 0.6), aes(shape = factor(Normalization))) +
-  scale_y_continuous(limits = c(0,1), breaks = seq(0,1,0.2)) + # fixt ylim
-  theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(),
-                                 axis.text.x = element_blank(),
-                                 axis.ticks.x = element_blank(), 
-                                 axis.title.x = element_blank()) +
-  geom_vline(xintercept = c(1.5, 2.5), colour = "gray") +  ylab("Kappa [0-1]") + 
-  ggtitle("Pot validation method")
+# count for well, miss and over classifications
+bestModel <- ClassPresence(bestModel)
 
-plot_potVal <- plot_potVal+ theme(legend.position="none")
+### Analysis of architectural complexities
+x = grep(paste0(c(18,19), collapse="|"), bestModel$Plot)
+complex1 <- bestModel[x, ]
 
-plot_rf <-ggplot(data = fit_rf, mapping = aes(x = Models, y = Kappa, fill = factor(Normalization))) +
-  geom_violin(mapping=aes(ymin = Kappa, ymax = Kappa), position = position_dodge(width = 0.6), size = 0.5) +
-  stat_summary(fun.data=data_summary, position = position_dodge(width = 0.6), aes(shape = factor(Normalization))) +
-  scale_y_continuous(limits = c(0,1), breaks = seq(0,1,0.2)) + 
-  theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), legend.key = element_blank(),
-                                 axis.text.y = element_blank(),
-                                 axis.ticks.y = element_blank(), 
-                                 axis.title.y = element_blank(),
-                                 axis.text.x = element_blank(),
-                                 axis.ticks.x = element_blank(), 
-                                 axis.title.x = element_blank()) +
-  geom_vline(xintercept = c(1.5, 2.5), colour = "gray") +   ylab("") + 
-  ggtitle("Rip-it-of validation method")
+x = grep(paste0(c(13,14), collapse="|"), bestModel$Plot)
+complex2 <- bestModel[x, ]
 
-plot_rf <- plot_rf + theme(legend.position="none")
+x = grep(paste0(c(9,10,11,12), collapse="|"), bestModel$Plot)
+complex3 <- bestModel[x, ]
 
-### R2
-ggmodelR2 <- na.omit( gof_pv )
+x = grep(paste0(c(15,16,17), collapse="|"), bestModel$Plot)
+complex4 <- bestModel[x, ]
 
-r2_potVal <- ggplot(data = gof_pv, mapping = aes(x = Models, y = r2, fill = factor(Normalization))) +
-  geom_violin(mapping=aes(ymin = r2, ymax = r2), position = position_dodge(width = 0.6), size = 0.5) +
-  stat_summary(fun.data=data_summary, position = position_dodge(width = 0.6), aes(shape = factor(Normalization))) +
-  scale_y_continuous(limits = c(-0.03,1), breaks = seq(0,1,0.2)) + # fixt ylim
-  theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(),
-                                 axis.text.x = element_blank(),
-                                 axis.ticks.x = element_blank(), 
-                                 axis.title.x = element_blank()) +
-  geom_vline(xintercept = c(1.5, 2.5), colour = "gray") + ylab(expression(r^2)) 
+plot(complex1$Observed, complex1$Predicted, xlim=c(0,100), ylim=c(0,100))
+plot(complex2$Observed, complex2$Predicted, xlim=c(0,100), ylim=c(0,100))
+plot(complex3$Observed, complex3$Predicted, xlim=c(0,100), ylim=c(0,100))
+plot(complex4$Observed, complex4$Predicted, xlim=c(0,100), ylim=c(0,100))
 
-r2_potVal <- r2_potVal+ theme(legend.position="none")
+gof_1 <- GOFbest(complex1)
+gof_1$complex <- "complex1"
+gof_2 <- GOFbest(complex2)
+gof_2$complex <- "complex2"
+gof_3 <- GOFbest(complex3)
+gof_3$complex <- "complex3"
+gof_4 <- GOFbest(complex4)
+gof_4$complex <- "complex4"
 
-###
-ggmodelR2 <- na.omit( data.frame(r2=as.numeric(as.character(gof_rf$r2)), Models=gof_rf$Models, Normalization=gof_rf$Normalization) )
+gof_complex <- rbind(gof_1, gof_2, gof_3, gof_4)
 
-r2_rf <- ggplot(data = ggmodelR2, mapping = aes(x = Models, y = r2, fill = factor(Normalization))) +
-  geom_violin(mapping=aes(ymin = r2, ymax = r2), position = position_dodge(width = 0.6), size = 0.5) +
-  stat_summary(fun.data=data_summary, position = position_dodge(width = 0.6), aes(shape = factor(Normalization))) +
-  scale_y_continuous(limits = c(-0.03,1), breaks = seq(0,1,0.2)) + 
-  theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), legend.key = element_blank(),
-                                 axis.text.y = element_blank(),
-                                 axis.ticks.y = element_blank(), 
-                                 axis.title.y = element_blank(),
-                                 axis.text.x = element_blank(),
-                                 axis.ticks.x = element_blank(), 
-                                 axis.title.x = element_blank()) +
-  geom_vline(xintercept = c(1.5, 2.5), colour = "gray") + ylab("")
+### analysis per cover percentage
+cov1 <- bestModel[bestModel$Observed < 20, ]
+cov2 <- bestModel[bestModel$Observed >= 20 & bestModel$Observed < 40, ]
+cov3 <- bestModel[bestModel$Observed >= 40 & bestModel$Observed < 60, ]
+cov4 <- bestModel[bestModel$Observed >= 60 & bestModel$Observed < 80, ]
+cov5 <- bestModel[bestModel$Observed >= 80 & bestModel$Observed < 100, ]
 
-r2_rf <- r2_rf+ theme(legend.position="none")
+cov1$CoverRange <- "cov1"
+cov2$CoverRange <- "cov2"
+cov3$CoverRange <- "cov3"
+cov4$CoverRange <- "cov4"
+cov5$CoverRange <- "cov5"
 
-### RMSE
-ggmodelRMSE <- na.omit( data.frame(RMSE=as.numeric(as.character(gof_pv$RMSE)), Models=gof_pv$Models, Normalization=gof_pv$Normalization) )
+bestModel <- rbind(cov1, cov2, cov3, cov4, cov5)
 
-RMSE_potVal <- ggplot(data = ggmodelRMSE, mapping = aes(x = Models, y = RMSE, fill = factor(Normalization))) +
-  geom_violin(mapping=aes(ymin = RMSE, ymax = RMSE), position = position_dodge(width = 0.6), size = 0.5) +
-  stat_summary(fun.data=data_summary, position = position_dodge(width = 0.6), aes(shape = factor(Normalization))) +
-  scale_y_continuous(limits = c(-3.5,60), breaks = seq(0,60,20)) + # fixt ylim
-  theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(),
-                                 axis.text.x = element_blank(),
-                                 axis.ticks.x = element_blank(), 
-                                 axis.title.x = element_blank()) +
-  geom_vline(xintercept = c(1.5, 2.5), colour = "gray") + ylab("RMSE [%]")
+### Analysis per PFT
 
-RMSE_potVal <- RMSE_potVal + theme(legend.position="none")
 
-ggmodelRMSE <- na.omit( data.frame(RMSE=as.numeric(as.character(gof_rf$RMSE)), Models=gof_rf$Models, Normalization=gof_rf$Normalization) )
+### Analysis of resolutions
+setwd(rasterDir)
 
-RMSE_rf <- ggplot(data = ggmodelRMSE, mapping = aes(x = Models, y = RMSE, fill = factor(Normalization))) +
-  geom_violin(mapping=aes(ymin = RMSE, ymax = RMSE), position = position_dodge(width = 0.6), size = 0.5) +
-  stat_summary(fun.data=data_summary, position = position_dodge(width = 0.6), aes(shape = factor(Normalization))) +
-  scale_y_continuous(limits = c(-3,60), breaks = seq(0,60,20)) + 
-  theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), legend.key = element_blank(),
-                                 axis.text.y = element_blank(),
-                                 axis.ticks.y = element_blank(), 
-                                 axis.title.y = element_blank(),
-                                 axis.text.x = element_blank(),
-                                 axis.ticks.x = element_blank(), 
-                                 axis.title.x = element_blank()) +
-  geom_vline(xintercept = c(1.5, 2.5), colour = "gray")
+## load the data
+rf_MNF_BN <- read.table("Data/rf_MNF_BN.csv", sep = ",", header = T)
 
-RMSE_rf <- RMSE_rf + theme(legend.position="none")
+# load species cover dataset
+species <- read.table("Data/Plots_Species.csv", header = T, sep=",")
 
-### bias
-ggmodelbias <- na.omit( data.frame(bias=as.numeric(as.character(gof_pv$bias)), Models=gof_pv$Models, Normalization=gof_pv$Normalization) )
+## load plot images 
+# resample done with gdal_translate, as: 
+# Windows --> for %i in (*.tif) do gdal_translate -tr 2 2 %i 2/%i 
+# Linux   --> FILES=inPath/*tif
+#             for f in $FILES
+#             do
+#               gdal_translate gdal_translate -tr 2 2 ${f} 2/${f}
+#             done
 
-bias_potVal <- ggplot(data = ggmodelbias, mapping = aes(x = Models, y = bias, fill = factor(Normalization))) +
-  geom_violin(mapping=aes(ymin = bias, ymax = bias), position = position_dodge(width = 0.6), size = 0.5) +
-  stat_summary(fun.data=data_summary, position = position_dodge(width = 0.6), aes(shape = factor(Normalization))) +
-  scale_y_continuous(limits = c(-0.5,1.05), breaks = seq(-0.4,1,0.2)) + # fixt ylim
-  theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank()) + ylab("Bias") + xlab("Models") +
-  geom_vline(xintercept = c(1.5, 2.5), colour = "gray") +
-  geom_hline(yintercept = 0, lty = 2) 
+raster2 <- rasterList(fileExtantion = ".tif", folder = "Plots/resolution_analysis/2", dir=rasterDir)
+raster4 <- rasterList(fileExtantion = ".tif", folder = "Plots/resolution_analysis/4", dir=rasterDir)
+raster6 <- rasterList(fileExtantion = ".tif", folder = "Plots/resolution_analysis/6", dir=rasterDir)
+raster8 <- rasterList(fileExtantion = ".tif", folder = "Plots/resolution_analysis/8", dir=rasterDir)
+raster10 <- rasterList(fileExtantion = ".tif", folder = "Plots/resolution_analysis/10", dir=rasterDir)
+raster12 <- rasterList(fileExtantion = ".tif", folder = "Plots/resolution_analysis/12", dir=rasterDir)
 
-bias_potVal <- bias_potVal + theme(legend.position="none")
+res2 <- tunningModels(classes = rf_MNF_BN$Species, 
+                      spectra = rf_MNF_BN[, 3:length( rf_MNF_BN )], 
+                      wl=seq(1,10,1))
 
-ggmodelbias <- na.omit( data.frame(bias=as.numeric(as.character(gof_rf$bias)), Models=gof_rf$Models, Normalization=gof_rf$Normalization) )
+BootsClassificationBest(classes = rf_MNF_BN$Species, 
+                        spectra = rf_MNF_BN[, 3:length( rf_MNF_BN )],
+                        en = res2, 
+                        raster = raster2, 
+                        boots = 10, 
+                        outDir = file.path(rasterDir, "2"), 
+                        modelTag = paste0("2_", modelTag),
+                        plotName = plot_name)
 
-bias_rf <- ggplot(data = ggmodelbias, mapping = aes(x = Models, y = bias, fill = factor(Normalization))) +
-  geom_violin(mapping=aes(ymin = bias, ymax = bias), position = position_dodge(width = 0.6), size = 0.5) +
-  stat_summary(fun.data=data_summary, position = position_dodge(width = 0.6)) + aes(shape = factor(Normalization)) + 
-  scale_y_continuous(limits = c(-0.5,1.05), breaks = seq(-0.4,1,0.2)) +
-  theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), legend.key = element_blank(),
-                                 axis.text.y = element_blank(),
-                                 axis.ticks.y = element_blank(), 
-                                 axis.title.y = element_blank()) +
-  geom_vline(xintercept = c(1.5, 2.5), colour = "gray") +  
-  geom_hline(yintercept = 0, lty = 2) 
 
-Legend <- get_legend(bias_rf)
 
-# 3. Remove the legend from the box plot
-bias_rf <- bias_rf + theme(legend.position="none") 
 
-plot_fits <- grid.arrange(plot_potVal, plot_rf, r2_potVal, r2_rf, 
-                        RMSE_potVal, RMSE_rf, bias_potVal, bias_rf, Legend,
-                        nrow=4, ncol=3, layout_matrix = rbind(c(1,2,9), 
-                                                              c(3,4,9),
-                                                              c(5,6,9),
-                                                              c(7,8,9)), 
-                        heights = c(5.8,5,5,6), widths = c(5,5,1.5))
-# Save
-ggsave("Figures/Fits_all.pdf", plot_fits, width = 10, height = 8)
+
