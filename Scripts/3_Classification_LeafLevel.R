@@ -14,10 +14,7 @@
 home = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp"
 setwd(home)
 
-<<<<<<< HEAD
-=======
 # load required libraries
->>>>>>> eff5b174159d94b7b2c90bd8f525b83fbed13a5e
 library(hyperSpec)
 
 # load the data
@@ -71,166 +68,18 @@ source_github <- function(u) {
 } 
 source_github("https://raw.githubusercontent.com/JavierLopatin/Herbaceous-Species-Classification/master/Scripts/Functions.R")
 
-<<<<<<< HEAD
-#########
-classes = data$Species
-wl = hyperAISA@wavelength
-spec = hyperAISA$spc
 
-classificationLeafLevel <- function(classes, spec, wl=NA){
-  
-  if (is.na (wl[1]) | length (wl)!=ncol (classes))
-    wl <- 1:ncol (classes)
-  
-  ## load required libraries
-  library (e1071)
-  library (caret)
-  library(doParallel)
-  
-  # set data
-  data <- data.frame(classes, spec)
-  data <- na.omit(data)
-  
-  # Set the random number seed so we can reproduce the results
-  set.seed(123)
-  # Split data in training and test
-  forTraining <- createDataPartition(data$classes, p = 0.6, list=F)
-  train <- data [ forTraining,]
-  test<- data [-forTraining,]
- 
-  # Each model used 5 repeated 10-fold cross-validation. Use AUC to pick the best model
-  controlObject <- trainControl(method = "repeatedcv", number = 10, repeats = 5,  classProbs=TRUE, allowParallel = TRUE)
-  
-  # initialize parallel processing
-  cl <- makeCluster(detectCores())
-  registerDoParallel(cl)
-  
-  ##########################
-  ### PLS classification ###
-  ##########################
-  
-  ## set tuning paramiters
-  grid <- expand.grid(ncomp = seq(1, 10, by = 1))
-  
-  # apply classification
-  set.seed(123)
-  plsClas <- train(x=train[, 2:length(train)], y=train$classes, method = "pls", tuneLength=10, 
-                   preProc = c("center", "scale"), trControl = controlObject)
-  
-  # predict
-  pls.pred <- predict(plsClas, test[, 2:length(train)])
-  
-  # confusion matix
-  conf.pls <- confusionMatrix(preMatrix(pls.pred, test$classes))
-  
-  # get accuracies
-  PA.pls    <- conf.pls$byClass[,3] 
-  UA.pls    <- conf.pls$byClass[,4]
-  OA.pls    <- conf.pls$overall["Accuracy"]
-  kappa.pls <- conf.pls$overall["Kappa"]
-  
-  ### variable importance
-  plscf <- as.vector (coef (plsClas$finalModel, ncomp=nlv, intercept=F)) ## extract coeff.
-  plscf <- plscf / sd (plscf) ## scale regression coefficients
-  
-  #########################
-  ### RF classification ###
-  #########################
-  
-  set.seed(123)
-  rfClas <- train(x=train[, 2:length(train)], y=train$classes, method = "rf", trControl = controlObject)
-  
-  # predict
-  rf.pred <- predict(rfClas, test[,2:length(train)])
-  
-  # confusion matix
-  conf.rf <- confusionMatrix(preMatrix(rf.pred, test$classes))
-  
-  # get accuracies
-  PA.rf    <- conf.rf$byClass[,3] 
-  UA.rf    <- conf.rf$byClass[,4]
-  OA.rf    <- conf.rf$overall["Accuracy"]
-  kappa.rf <- conf.rf$overall["Kappa"]
-  
-  ### variable importance
-  rfcf <- varImp(rfClas$finalModel)[[1]]
-  rfcf <- as.vector (rfcf / sd(rfcf))
-  
-  ############################
-  ### SVMDA classification ###
-  ############################
-  
-  set.seed(123)
-  svmClas <- train(x=train[, 2:length(train)], y=train$classes, method = "pls", tuneGrid = expand.grid(.ncomp = 1:10),
-                   preProc = c("center","scale"), metric = "ROC", trControl = controlObject)
-  
-  # predict
-  svm.pred <- predict(svmClas, test[,2:length(train)])
-
-  # confusion matix
-  preMatrix <- function(pred, test){ # functionn to prevent caret error for different length
-    u = union(pred, test)
-    t = table(factor(pred, u), factor(test, u))
-    return(t)
-  }  
-  conf.svm <- confusionMatrix(preMatrix(svm.pred, test$classes))
-
-  # get accuracies
-  PA.svm    <- conf.svm$byClass[,3] 
-  UA.svm    <- conf.svm$byClass[,4]
-  OA.svm    <- conf.svm$overall["Accuracy"]
-  kappa.svm <- conf.svm$overall["Kappa"]
-  
-  ### variable importance
-  vr.alpha <- t(svmClas$finalModel$coefs) ## extract alpha vector
-  svr.index <-  svmClas$finalModel$index ## extract alpha index
-  ## calculate pseudo-regression coefficients from the alpha vector
-  svrcf <- numeric (ncol (spec))
-  for(i in 1:ncol(spec)) 
-    svrcf[i] <- svr.alpha %*% spec[svr.index, i]
-  svrcf <- svrcf / sd (svrcf) ## scale pseudo-coefficients
-  
-  #####################################################################    
-  ### get ensemble from all models and identify important variables ###
-  #####################################################################
-  
-  ensemblecf <-  abs (svrcf) * OA.spec 
-  th <- mean (ensemblecf) + sd (ensemblecf) ## calculate threshold
-  selbands <- ensemblecf > th ## apply threshold
-  
-  ######################
-  ### prepare output ###
-  ######################
-  
-  cf <- rbind (wl, svrcf, ensemblecf, selbands)
-  colnames (cf) <- colnames (spec)
-  
-  fit <- c (OA.spec)
-  names (fit) <- c ("SVR OA")
-  output <- list (cf, fit, th, svmClas)
-  names (output) <- c ("selection", "fits", "threshold", "SVM")
-  class (output) <- "ensemble"
-  output
-  
-  # stop parallel process
-  stopCluster(cl)
- }
-
-plot(output)
-
-save.image("ClassLeafLevel.RData")
-=======
 ##########################
 ### Run Classification ###
 ##########################
 
 # With the AISA+ band seting
-fitAISA <- classificationEnsemble(hyperAISA@data$Species, hyperAISA$spc, hyperAISA@wavelength)
+fitAISA <- tunningModels(hyperAISA@data$Species, hyperAISA$spc, hyperAISA@wavelength)
 plot.classificationEnsemble(hyperAISA$spc, fitAISA)
 save(fitAISA, file="fitAISALeaf.Rdata")
 
 # ASD full range
-fitASD <-  classificationEnsemble(hyperASD@data$Species, hyperASD$spc, hyperASD@wavelength)
+fitASD <-  tunningModels(hyperASD@data$Species, hyperASD$spc, hyperASD@wavelength)
 plot.classificationEnsemble(hyperASD$spc, fitASD)
 save(fitASD, file="fitASDLeaf.Rdata")
 
@@ -251,4 +100,5 @@ for(i in 1:2){
   abline(v=0, col=c("black"))
   box()
 }
->>>>>>> eff5b174159d94b7b2c90bd8f525b83fbed13a5e
+
+save.image("ClassLeafLevel.RData")
