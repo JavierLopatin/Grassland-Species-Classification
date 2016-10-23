@@ -166,10 +166,9 @@ p1 <- ggplot(data = well, aes(x = Predicted, y = Observed, shape = factor(comple
   scale_y_continuous(limits = c(0,120), breaks = seq(0, 100, 020)) +
   scale_x_continuous(limits = c(0,120), breaks = seq(0, 100, 020)) +
   theme_bw(base_size=10) + xlab("Predicted [%]") + ylab("Observed [%]") +
-  geom_abline(intercept = 0, lty = 2, lwd = 1.2, color="gray") +
+  geom_abline(intercept = 0, lty = 2, lwd = 1.2) +
   geom_smooth(method = "lm", se=F, fullrange=T, aes(linetype=factor(complex))) +
   geom_point(data = not_well, alpha = 0.5, size = 2) +
-  theme(legend.title=element_blank()) + 
   geom_segment(aes(x=3, y=0, xend=3, yend=95), color = "black", lwd = 1.3) +
   geom_segment(aes(x=3, y=95, xend=0, yend=95), color = "black", lwd = 1.3) +
   geom_segment(aes(x=3, y=0, xend=0, yend=0), color = "black", lwd = 1.3) +
@@ -181,12 +180,19 @@ p1 <- ggplot(data = well, aes(x = Predicted, y = Observed, shape = factor(comple
   geom_segment(aes(x=20, y=100, xend=0, yend=80), color = "black", lwd = 0.8, 
                arrow = arrow()) +
   geom_text(label="Misclassified", x=30, y=108, color="black", check_overlap = TRUE) +
-  geom_text(label="Omitted", x=108, y= 30, color="black", check_overlap = TRUE)
+  geom_text(label="Omitted", x=108, y= 25, color="black", check_overlap = TRUE) +
+  theme(legend.title=element_blank(), panel.grid.major.x = element_blank(), legend.key = element_blank())
 
+p2 <- ggplot(data = complex_all, aes(x = complex, fill = factor(ClassPresence))) +
+  geom_bar() + scale_fill_grey(start = 0, end = .9) +
+  theme(legend.title=element_blank(), panel.grid.major.x = element_blank(), legend.key = element_blank()) +
+  theme_bw(base_size=10) + xlab("Complexity gradient") + ylab("Frequency") + labs(fill="")
+
+p3  <- grid.arrange(p1, p2, nrow=1, ncol=2) 
+                                                                
+ggsave("Figures/ScatterPLot.pdf", p3, width = 12, height = 5)
 
  
-
-
 
   ###########################
   ### Best model analysis ###
