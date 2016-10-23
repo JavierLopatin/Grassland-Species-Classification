@@ -9,6 +9,7 @@ rasterDir = "D:/Sp_Images"
 
 setwd(home)
 
+load("Analysis.RData")
 load("outputGOF.RData")
 load("potVal_cover.RData")
 load("rf_cover.RData")
@@ -82,7 +83,10 @@ gof_best <- y[x, ]
 # count for well, miss and over classifications
 bestModel <- ClassPresence(bestModel)
 
-### Analysis of architectural complexities
+##############################################
+### Analysis of architectural complexities ###
+##############################################
+
 x = grep(paste0(c(18,19), collapse="|"), bestModel$Plot)
 complex1 <- bestModel[x, ]
 
@@ -95,10 +99,12 @@ complex3 <- bestModel[x, ]
 x = grep(paste0(c(15,16,17), collapse="|"), bestModel$Plot)
 complex4 <- bestModel[x, ]
 
-plot(complex1$Observed, complex1$Predicted, xlim=c(0,100), ylim=c(0,100))
-plot(complex2$Observed, complex2$Predicted, xlim=c(0,100), ylim=c(0,100))
-plot(complex3$Observed, complex3$Predicted, xlim=c(0,100), ylim=c(0,100))
-plot(complex4$Observed, complex4$Predicted, xlim=c(0,100), ylim=c(0,100))
+complex1$complex <- 1
+complex2$complex <- 2
+complex3$complex <- 3
+complex4$complex <- 4
+
+complex_all <- rbind(complex1, complex2, complex3, complex4)
 
 gof_1 <- GOFbest(complex1)
 gof_1$complex <- "complex1"
@@ -111,25 +117,75 @@ gof_4$complex <- "complex4"
 
 gof_complex <- rbind(gof_1, gof_2, gof_3, gof_4)
 
-### analysis per cover percentage
+#####################################
+### analysis per cover percentage ###
+#####################################
+
 cov1 <- bestModel[bestModel$Observed < 20, ]
 cov2 <- bestModel[bestModel$Observed >= 20 & bestModel$Observed < 40, ]
 cov3 <- bestModel[bestModel$Observed >= 40 & bestModel$Observed < 60, ]
 cov4 <- bestModel[bestModel$Observed >= 60 & bestModel$Observed < 80, ]
 cov5 <- bestModel[bestModel$Observed >= 80 & bestModel$Observed < 100, ]
 
-cov1$CoverRange <- "cov1"
-cov2$CoverRange <- "cov2"
-cov3$CoverRange <- "cov3"
-cov4$CoverRange <- "cov4"
-cov5$CoverRange <- "cov5"
+gof_cov1 <- GOFbest(cov1)
+gof_cov2 <- GOFbest(cov2)
+gof_cov3 <- GOFbest(cov3)
+gof_cov4 <- GOFbest(cov4)
+gof_cov5 <- GOFbest(cov5)
 
-bestModel <- rbind(cov1, cov2, cov3, cov4, cov5)
+gof_cov1$CoverRange <- "0-20"
+gof_cov2$CoverRange <- "20-40"
+gof_cov3$CoverRange <- "40-60"
+gof_cov4$CoverRange <- "60-80"
+gof_cov5$CoverRange <- "80-100"
 
-### Analysis per PFT
+gof_cover <- rbind(gof_cov1, gof_cov2, gof_cov3, gof_cov4, gof_cov5)
+
+save.image("Analysis.RData")
+
+#################################
+### Analysis per growth forms ###
+#################################
+
+graminoids <- subset(gof_rf, Species == "Grass_sp9" | Species == "Nardus_stricta" 
+                     | Species == "Grass_Sp_23" | Species == "Setaria_pumila" 
+                     | Species == "Elymus_repens" | Species == "Echinochloa_crus-galli"
+                     | Species == "Panicum_capillare")
+
+fobs <- subset(gof_rf, Species == "Prunella_vulgaris" | Species == "Sp_2" 
+               | Species == "Hypochaeris_radicata" | Species == "Trifolium_pratense" 
+               | Species == "Trifolium_repens" | Species == "Conyza_canadensis" 
+               | Species == "Potentilla_reptans" | Species == "Taraxacum_officinale" 
+               | Species == "Galium_sp" | Species == "Bellis perennis" 
+               | Species == "Glechoma_hederacea" | Species == "Medicago_lupulina" 
+               | Species == "Minuartia_hybrida" | Species == "Plantago_lancelota" 
+               | Species == "Geranium_pusillum" | Species == "Plantago_major" 
+               | Species == "Potentilla_2" | Species == "Achillea_millefolium"
+               | Species == "Oxalis_stricta" | Species == "Medicago_arabica" 
+               | Species == "Echium_vulgare" | Species == "Erigoron_annuus" 
+               | Species == "Senecio_vulgaris" | Species == "Filago_arvensis" 
+               | Species == "Anagallis_arvensis" | Species == "Daucum_carota" 
+               | Species == "Medicago_sativa " | Species == "Rumex_obtusifolius" 
+               | Species == "Convolvulus_sepium" | Species == "Verbena_officinalis" 
+               | Species == "Urtica_dioica" | Species == "Cichorium_intybus" 
+               | Species == "Solidago_gigantea" | Species == "Polygonum_persicaria" 
+               | Species == "Oenothera_biennis" | Species == "Arthemisia_vulgaris" 
+               | Species == "Anthemis_arvensis")
+
+bryophytes <-  subset(gof_rf, Species == "Brachythecium_sp")
 
 
-### Analysis of resolutions
+graminoids$PFT <- "Graminoids"
+fobs$PFT <- "Fobs"
+bryophytes$PFT <- "Bryophytes"
+
+PFT <- rbind(graminoids, fobs, bryophytes)
+
+
+###############################
+### Analysis of resolutions ###
+###############################
+
 setwd(rasterDir)
 
 ## load the data
@@ -169,5 +225,28 @@ BootsClassificationBest(classes = rf_MNF_BN$Species,
 
 
 
+#
+#
+#
 
+gof_res1 <- gof_rf[gof_res1$Normalization == "MNF_BN", ]
+gof_res1 <- gof_res1[, !names(gof_res1) %in% c("Models", "Normalization", "Validation")]# delate useles columns
+gof_res2 <- GOFbest(res2)
+gof_res4 <- GOFbest(res4)
+gof_res6 <- GOFbest(res6)
+gof_res8 <- GOFbest(res8)
+gof_res10 <- GOFbest(res10)
+gof_res12 <- GOFbest(res12)
 
+gof_res1$Resolution <- 0.3
+gof_res2$Resolution <- 0.6
+gof_res4$Resolution <- 1.2
+gof_res6$Resolution <- 1.8
+gof_res8$Resolution <- 2.4
+gof_res10$Resolution <- 3
+gof_res12$Resolution <- 3.6
+
+gof_resolution <- rbind(gof_res1, gof_res2, gof_res4, gof_res6,
+                        gof_res8, gof_res10, gof_res12)
+
+save.image("Analysis.RData")
