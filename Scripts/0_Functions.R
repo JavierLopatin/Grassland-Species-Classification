@@ -888,7 +888,6 @@ obstainCovers <- function(ObservedSpecies, rasterDir, subplotDir, shpMaskName,
   
 }
 
-
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
 ## plot.ensemble: visualization of ensemble objects                           ##

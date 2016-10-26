@@ -1,11 +1,95 @@
 
-##############################################
-### plot variable importance at leaf level ###
-##############################################
+################################
+### plot variable importance ###
+################################
 
-pdf(file = "Figures/VarImplot_LeafLevel.pdf", width=8, height=5)
-plot.classificationEnsemble(hyperASD$spc, fitASD)
-dev.off()
+library(SDMTools)
+
+# extract the data from the classification Ensamble function
+wl <- bestImp[[1]][1,]
+cf <- bestImp[[1]][2:4,]
+encf <- bestImp[[1]][5,]
+# matices of varImport
+z1 <- matrix (rep (cf[1, ], 100), ncol=100)
+z1[,0:75] <- NA
+z2 <- matrix (rep (cf[2, ], 100), ncol=100)
+z2[,c(0:50, 75:100)] <- NA
+z3 <- matrix (rep (cf[3, ], 100), ncol=100)
+z3[, c(0:25, 50:100)] <- NA
+# ensemble
+z4 <- matrix (rep (encf, 100), ncol=100)
+sel <- as.logical (en[[1]][6,])
+z5 <- matrix (rep (sel, 100), ncol=100)
+z5[z5==0] <- NA
+z5[,25:100] <- NA
+# obtain the quantiles of the spectras
+quant <- apply(spec, 2, quantile, probs =c(0.05, 0.25, 0.5, 0.75, 0.95))
+
+# Plot the spectra
+mat <- layout(matrix(1:3,ncol=1), widths=c(4,4,4), heights=c(2,1,0.5), TRUE) 
+layout.show(mat)
+
+par(mai=c(0,0.5,0.1,0.5))
+plot(wl, quant[1,], type="l", ylim = c(0,max(quant[5,])), xlim = c(min(wl)-10, max(wl)+10), 
+     xaxs = "i", axes=F, ylab = NA, xlab=NA, las=1)
+lines(wl, quant[2,], type="l")
+lines(wl, quant[3,], type="l")
+lines(wl, quant[4,], type="l")
+lines(wl, quant[5,], type="l")
+polygon(c(wl, rev(wl)), c(quant[2,], rev(quant[1,])), col = "grey70")
+polygon(c(wl, rev(wl)), c(quant[3,], rev(quant[2,])), col = "grey50")
+polygon(c(wl, rev(wl)), c(quant[4,], rev(quant[3,])), col = "grey50")
+polygon(c(wl, rev(wl)), c(quant[5,], rev(quant[4,])), col = "grey70")
+axis(side = 2, las=1)
+mtext(side = 2, line = 3, 'Reflectance')
+abline(v = wl[sel], lty=2)
+box()
+
+# add coefficients
+blueish <- rev( 0.5(brewer.pal(9,"Blues"))(100) )
+redish <- colorRampPalette(brewer.pal(9,"Reds"))(100)
+
+# PLS
+par(mai=c(1,0.5,0,0.5))
+r1 = z1
+r2 = z1
+r1[r1>0]=NA
+r2[r2<0]=NA
+image(wl, seq(0, 100, 1), r1, xlim = c(min(wl)-10, max(wl)+10), xlab=expression(lambda(nm)), col=blueish, ylab="", axes=F)
+image(wl, seq(0, 100, 1), r2, xlim = c(min(wl)-10, max(wl)+10), col=redish, xlab="", ylab="", axes=F, add=T)
+#RF
+r1 = z2
+r2 = z2
+r1[r1>0]=NA
+r2[r2<0]=NA
+image(wl,seq(0, 100, 1), r1, xlim = c(min(wl)-10, max(wl)+10), col=blueish, xlab="", ylab="", axes=F, add=T)
+image(wl, seq(0, 100, 1), r2, xlim = c(min(wl)-10, max(wl)+10), col=redish, xlab="", ylab="", axes=F, add=T)
+# SVM
+r1 = z3
+r2 = z3
+r1[r1>0]=NA
+r2[r2<0]=NA
+image(wl,seq(0, 100, 1), r1, xlim = c(min(wl)-10, max(wl)+10), col=blueish, xlab="", ylab="", axes=F, add=T)
+image(wl, seq(0, 100, 1), r2, xlim = c(min(wl)-10, max(wl)+10), col=redish, xlab="", ylab="", axes=F, add=T)
+# Ensemble
+image(wl, seq(0, 100, 1), z5, xlim = c(min(wl)-10, max(wl)+10), col=1, ylab="", axes=F, add=T)
+axis(side = 1, las=1)
+abline(h = c(24.5, 49.5, 74.5))
+abline(v = wl[sel], lty=2)
+box()
+
+# legend 
+
+m <- matrix(ncol=200, nrow=1)
+m[1,] <- seq(-100, 99)
+
+
+plot(0, xaxt='n',yaxt='n',bty='n',pch='',ylab='',xlab='')
+x=c(0.6, 1.4, 1.4, 0.6)
+y=c(-0.5, 0.5, 0.5, -0.5)
+legend.gradient(cbind(x=x, y=y), cols=c(blueish, redish), title="", limits = c("Sign -", "+") )
+
+
 
 ############################
 ### plot general results ###

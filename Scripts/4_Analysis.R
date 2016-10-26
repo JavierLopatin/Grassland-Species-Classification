@@ -83,6 +83,14 @@ gof_best <- y[x, ]
 # count for well, miss and over classifications
 bestModel <- ClassPresence(bestModel)
 
+###########################
+### Variable importance ###
+###########################
+
+bestImp <- tunningModels(classes = rf_spec_BN$Species,
+                         spectra = rf_spec_BN[, 3:length(rf_spec_BN)], 
+                         wl = wl)
+
 ##############################################
 ### Analysis of architectural complexities ###
 ##############################################
