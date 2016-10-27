@@ -75,13 +75,54 @@ source_github("https://raw.githubusercontent.com/JavierLopatin/Herbaceous-Specie
 
 # With the AISA+ band seting
 fitAISA <- tunningModels(hyperAISA@data$Species, hyperAISA$spc, hyperAISA@wavelength)
-plot.classificationEnsemble(hyperAISA$spc, fitAISA)
 save(fitAISA, file="fitAISALeaf.Rdata")
 
 # ASD full range
 fitASD <-  tunningModels(hyperASD@data$Species, hyperASD$spc, hyperASD@wavelength)
-plot.classificationEnsemble(hyperASD$spc, fitASD)
 save(fitASD, file="fitASDLeaf.Rdata")
+
+############################################
+### Growth form analysis with full range ###
+############################################
+ASD <- data.frame( classes=hyperASD@data$classes, hyperASD$spc)
+
+graminoids_varImport_ASD <- subset(ASD, classes == "Grass_sp9" | classes == "Nardus_stricta" 
+                               | classes == "Grass_Sp_23"   | classes == "Setaria_pumila" 
+                               | classes == "Elymus_repens" | classes == "Echinochloa_crus-galli"
+                               | classes == "Panicum_capillare")
+graminoids_varImport_ASD$classes <- factor(graminoids_varImport_ASD$classes)
+
+fobs_varImport_ASD <- subset(ASD, classes == "Prunella_vulgaris" | classes == "Sp_2" 
+                         | classes == "Hypochaeris_radicata" | classes == "Trifolium_pratense" 
+                         | classes == "Trifolium_repens" | classes == "Conyza_canadensis" 
+                         | classes == "Potentilla_reptans" | classes == "Taraxacum_officinale" 
+                         | classes == "Galium_sp" | classes == "Bellis perennis" 
+                         | classes == "Glechoma_hederacea" | classes == "Medicago_lupulina" 
+                         | classes == "Minuartia_hybrida" | classes == "Plantago_lancelota" 
+                         | classes == "Geranium_pusillum" | classes == "Plantago_major" 
+                         | classes == "Potentilla_2" | classes == "Achillea_millefolium"
+                         | classes == "Oxalis_stricta" | classes == "Medicago_arabica" 
+                         | classes == "Echium_vulgare" | classes == "Erigoron_annuus" 
+                         | classes == "Senecio_vulgaris" | classes == "Filago_arvensis" 
+                         | classes == "Anagallis_arvensis" | classes == "Daucum_carota" 
+                         | classes == "Medicago_sativa " | classes == "Rumex_obtusifolius" 
+                         | classes == "Convolvulus_sepium" | classes == "Verbena_officinalis" 
+                         | classes == "Urtica_dioica" | classes == "Cichorium_intybus" 
+                         | classes == "Solidago_gigantea" | classes == "Polygonum_persicaria" 
+                         | classes == "Oenothera_biennis" | classes == "Arthemisia_vulgaris" 
+                         | classes == "Anthemis_arvensis")
+fobs_varImport_ASD$classes <- factor(fobs_varImport_ASD$classes)
+
+Gramm_Imp_ASD <- tunningModels(classes = graminoids_varImport_ASD$classes,
+                           spectra = graminoids_varImport_ASD[, 2:length(graminoids_varImport_ASD)], 
+                           wl = hyperASD@wavelength)
+save(Gramm_Imp_ASD, file = "Gramm_Imp_ASD.RData")
+
+Fobs_Imp_ASD <- tunningModels(classes = fobs_varImport_ASD$classes,
+                          spectra = fobs_varImport_ASD[, 2:length(fobs_varImport_ASD)], 
+                          wl = hyperASD@wavelength)
+save(Fobs_Imp_ASD, file = "Fobs_Imp_ASD.RData")
+
 
 ##################################
 ## Bootstrap significance test ###

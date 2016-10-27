@@ -90,6 +90,43 @@ bestModel <- ClassPresence(bestModel)
 bestImp <- tunningModels(classes = rf_spec_BN$Species,
                          spectra = rf_spec_BN[, 3:length(rf_spec_BN)], 
                          wl = wl)
+save(bestImp, file = "bestImp.RData")
+
+### Growth forms
+graminoids_varImport <- subset(rf_spec_BN, Species == "Grass_sp9" | Species == "Nardus_stricta" 
+                     | Species == "Grass_Sp_23"   | Species == "Setaria_pumila" 
+                     | Species == "Elymus_repens" | Species == "Echinochloa_crus-galli"
+                     | Species == "Panicum_capillare")
+
+fobs_varImport <- subset(rf_spec_BN, Species == "Prunella_vulgaris" | Species == "Sp_2" 
+               | Species == "Hypochaeris_radicata" | Species == "Trifolium_pratense" 
+               | Species == "Trifolium_repens" | Species == "Conyza_canadensis" 
+               | Species == "Potentilla_reptans" | Species == "Taraxacum_officinale" 
+               | Species == "Galium_sp" | Species == "Bellis perennis" 
+               | Species == "Glechoma_hederacea" | Species == "Medicago_lupulina" 
+               | Species == "Minuartia_hybrida" | Species == "Plantago_lancelota" 
+               | Species == "Geranium_pusillum" | Species == "Plantago_major" 
+               | Species == "Potentilla_2" | Species == "Achillea_millefolium"
+               | Species == "Oxalis_stricta" | Species == "Medicago_arabica" 
+               | Species == "Echium_vulgare" | Species == "Erigoron_annuus" 
+               | Species == "Senecio_vulgaris" | Species == "Filago_arvensis" 
+               | Species == "Anagallis_arvensis" | Species == "Daucum_carota" 
+               | Species == "Medicago_sativa " | Species == "Rumex_obtusifolius" 
+               | Species == "Convolvulus_sepium" | Species == "Verbena_officinalis" 
+               | Species == "Urtica_dioica" | Species == "Cichorium_intybus" 
+               | Species == "Solidago_gigantea" | Species == "Polygonum_persicaria" 
+               | Species == "Oenothera_biennis" | Species == "Arthemisia_vulgaris" 
+               | Species == "Anthemis_arvensis")
+
+Gramm_Imp <- tunningModels(classes = graminoids_varImport$Species,
+                         spectra = graminoids_varImport[, 3:length(rf_spec_BN)], 
+                         wl = wl)
+save(Gramm_Imp, file = "Gramm_Imp.RData")
+
+Fobs_Imp <- tunningModels(classes = fobs_varImport$Species,
+                           spectra = fobs_varImport[, 3:length(rf_spec_BN)], 
+                           wl = wl)
+save(Fobs_Imp, file = "Fobs_Imp.RData")
 
 ##############################################
 ### Analysis of architectural complexities ###

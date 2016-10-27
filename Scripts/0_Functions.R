@@ -319,7 +319,6 @@ tunningModels <- function(classes, spectra, wl=NA){
   svrcf <- svrcf / sd (svrcf) ## scale pseudo-coefficients
   
   print("Done!")
-  print("")
   
   # stop parallel process
   stopCluster(cl) 
@@ -890,61 +889,134 @@ obstainCovers <- function(ObservedSpecies, rasterDir, subplotDir, shpMaskName,
 
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
-## plot.ensemble: visualization of ensemble objects                           ##
+## plots: visualization of spectral ranges and ensemble objects               ##
 ##                                                                            ##
 ## Arguments:                                                                 ##
-## - spec     spectral information. Used to create the quantiles of spectra   ##
+## - spectra  spectral information. Used to create the quantiles of spectra   ##
 ## - en       classificationEnsemble object                                   ##
 ##                                                                            ##
 ##----------------------------------------------------------------------------##
 
-plot.classificationEnsemble <- function (spec, en,label=TRUE, ...) {
-  # extract the data from the classification Ensamble function
+plot.spectra <- function(spectra, en, selection=TRUE, xaxis=TRUE, ylabside = TRUE, ...){
+  # bands
+  wl <- en[[1]][1,]
+  
+  # selection of ensemble bands
+  sel <- as.logical (en[[1]][6,])
+  
+  # obtain the quantiles of the spectras
+  quant <- apply(spectra, 2, quantile, probs =c(0.05, 0.25, 0.5, 0.75, 0.95))
+  
+  if (xaxis == TRUE){
+    plot(wl, quant[1,], type="l", ylim = c(0,max(quant[5,])), xlim = c(min(wl)-10, max(wl)+10), 
+         xaxs = "i", ylab = NA, las=1, xlab=expression(lambda(nm)), axes=F)
+    lines(wl, quant[2,], type="l")
+    lines(wl, quant[3,], type="l")
+    lines(wl, quant[4,], type="l")
+    lines(wl, quant[5,], type="l")
+    polygon(c(wl, rev(wl)), c(quant[2,], rev(quant[1,])), col = "grey70")
+    polygon(c(wl, rev(wl)), c(quant[3,], rev(quant[2,])), col = "grey50")
+    polygon(c(wl, rev(wl)), c(quant[4,], rev(quant[3,])), col = "grey50")
+    polygon(c(wl, rev(wl)), c(quant[5,], rev(quant[4,])), col = "grey70")
+    if (ylabside == TRUE){ 
+      axis(side = 2, las=1)
+      mtext(side = 2, line = 3, 'Reflectance')
+    } else{
+      axis(side = 4, las=1)
+      mtext(side = 4, line = 3, 'Reflectance')
+    }
+    if (selection == TRUE ) {
+      abline(v = wl[sel], lty=2)
+    }
+    box()
+  } else {
+    plot(wl, quant[1,], type="l", ylim = c(0,max(quant[5,])), xlim = c(min(wl)-10, max(wl)+10), 
+         xaxs = "i", axes=F, ylab = NA, xlab=NA, las=1)
+    lines(wl, quant[2,], type="l")
+    lines(wl, quant[3,], type="l")
+    lines(wl, quant[4,], type="l")
+    lines(wl, quant[5,], type="l")
+    polygon(c(wl, rev(wl)), c(quant[2,], rev(quant[1,])), col = "grey70")
+    polygon(c(wl, rev(wl)), c(quant[3,], rev(quant[2,])), col = "grey50")
+    polygon(c(wl, rev(wl)), c(quant[4,], rev(quant[3,])), col = "grey50")
+    polygon(c(wl, rev(wl)), c(quant[5,], rev(quant[4,])), col = "grey70")
+    if (ylabside == TRUE){ 
+      axis(side = 2, las=1)
+      mtext(side = 2, line = 3, 'Reflectance')
+    } else{
+      axis(side = 4, las=1)
+      mtext(side = 4, line = 3, 'Reflectance')
+    }
+    if (selection == TRUE ) {
+      abline(v = wl[sel], lty=2)
+    }
+    box()
+  }
+}
+
+plot.importance <- function(en, xaxis=TRUE, linetype, ...){
+  
+  library(grDevices)
+  library(RColorBrewer)
+  
+  # variables from ensemble
   wl <- en[[1]][1,]
   cf <- en[[1]][2:4,]
-  fit <- en[[2]]
-  cf <- cf * fit
-  fit <- round (fit, 2)
   encf <- en[[1]][5,]
-  z1 <- matrix (rep (encf, 100), ncol=100)
+  
+  # matices of varImport
+  z1 <- matrix (rep (cf[1, ], 100), ncol=100)
+  z1[,0:75] <- NA
+  z2 <- matrix (rep (cf[2, ], 100), ncol=100)
+  z2[,c(0:50, 75:100)] <- NA
+  z3 <- matrix (rep (cf[3, ], 100), ncol=100)
+  z3[, c(0:25, 50:100)] <- NA
+  # ensemble
+  z4 <- matrix (rep (encf, 100), ncol=100)
   sel <- as.logical (en[[1]][6,])
-  z2 <- matrix (rep (sel, 100), ncol=100)
-  z2[,11:100] <- NA
-  z2[z2==0] <- NA
-  # obtain the quantiles of the spectras
-  quant <- apply(spec, 2, quantile, probs =c(0.05, 0.25, 0.5, 0.75, 0.95))
-  # Plot the spectra
-  par (mar=c (5, 4, 4, 7) + 0.1, xpd=NA)
-  plot(wl, quant[1,], type="l", ylim = c(0,max(quant[5,])), axes=F, ylab = NA, xlab=NA, las=1)
-  lines(wl, quant[2,], type="l")
-  lines(wl, quant[3,], type="l")
-  lines(wl, quant[4,], type="l")
-  lines(wl, quant[5,], type="l")
-  polygon(c(wl, rev(wl)), c(quant[2,], rev(quant[1,])), col = "grey70")
-  polygon(c(wl, rev(wl)), c(quant[3,], rev(quant[2,])), col = "grey50")
-  polygon(c(wl, rev(wl)), c(quant[4,], rev(quant[3,])), col = "grey50")
-  polygon(c(wl, rev(wl)), c(quant[5,], rev(quant[4,])), col = "grey70")
-  axis(side = 4, las=1)
-  mtext(side = 4, line = 3, 'Reflectance')
+  z5 <- matrix (rep (sel, 100), ncol=100)
+  z5[z5==0] <- NA
+  z5[,25:100] <- NA
+  
   # add coefficients
-  par(new = T)
-  plot(wl,  cf[1,], type = "l", col=2, ylab="Weighted coefficients", las=1, xlab=expression(lambda(nm)),
-       ylim=c(min(cf), max(cf)), lty=1, lwd=2)
-  lines(wl,  cf[2,], type = "l", col=3, lty=2, lwd=2)
-  lines(wl,  cf[3,], type = "l", col=4, lty=3, lwd=2) 
-  par(xpd = F) 
-  abline(h=0, lty=2)
-  # add spectral bands selected by the ensemble method
-  image (wl, seq(min (cf) * 1.1, max (cf) * 1.1, length.out=100), z2, col=7, 
-         xlab="", ylab="", add=T)
-  # Labels
-  labels <- c (paste (c ("PLS ", "RF ", "SVM "), "Kappa ", "= ", fit, sep=""), NA, 
-               "Ensemble selection")
-  legend ("topright", bty="n", col=c (2, 3, 4, NA, NA, rep (1, 3)), 
-           pt.bg=c(rep (NA, 4), 7), lwd=c(rep (2, 3), rep (NA, 2)),
-           pch=c (rep (NA, 4), 22), cex=0.7, pt.cex=1, legend=labels, lty=c(1,2,3,rep (NA, 2)))
-   
- }
+  blueish <- rev( colorRampPalette(brewer.pal(9,"Blues"))(100) )
+  redish <- colorRampPalette(brewer.pal(9,"Reds"))(100)
+  
+  # PLS
+  r1 = z1
+  r2 = z1
+  r1[r1>0]=NA
+  r2[r2<0]=NA
+  if (xaxis == TRUE){
+    image(wl, seq(0, 100, 1), r1, xlim = c(min(wl)-10, max(wl)+10), xlab=expression(lambda(nm)), col=blueish, ylab="", axes=F)
+  } else {
+    image(wl, seq(0, 100, 1), r1, xlim = c(min(wl)-10, max(wl)+10), xlab="", col=blueish, ylab="", axes=F)
+  }
+  image(wl, seq(0, 100, 1), r2, xlim = c(min(wl)-10, max(wl)+10), col=redish, xlab="", ylab="", axes=F, add=T)
+  #RF
+  r1 = z2
+  r2 = z2
+  r1[r1>0]=NA
+  r2[r2<0]=NA
+  image(wl,seq(0, 100, 1), r1, xlim = c(min(wl)-10, max(wl)+10), col=blueish, xlab="", ylab="", axes=F, add=T)
+  image(wl, seq(0, 100, 1), r2, xlim = c(min(wl)-10, max(wl)+10), col=redish, xlab="", ylab="", axes=F, add=T)
+  # SVM
+  r1 = z3
+  r2 = z3
+  r1[r1>0]=NA
+  r2[r2<0]=NA
+  image(wl,seq(0, 100, 1), r1, xlim = c(min(wl)-10, max(wl)+10), col=blueish, xlab="", ylab="", axes=F, add=T)
+  image(wl, seq(0, 100, 1), r2, xlim = c(min(wl)-10, max(wl)+10), col=redish, xlab="", ylab="", axes=F, add=T)
+  # Ensemble
+  image(wl, seq(0, 100, 1), z5, xlim = c(min(wl)-10, max(wl)+10), col=1, ylab="", axes=F, add=T)
+  if (xaxis == TRUE){
+    axis(side = 1, las=1)
+  }
+  abline(h = c(24.5, 49.5, 74.5))
+  abline(v = wl[sel], lty=linetype)
+  box()
+  
+}
 
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
