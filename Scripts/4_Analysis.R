@@ -61,35 +61,129 @@ save(gof_rf, file="gof_rf.RData")
 #x = grep("rf", outputGOF$Validation)
 #gof_rf <- outputGOF[x, ]
 
-############################
-### Best model rf MNF_BN ###
-############################
+################################
+### Best model SVM SpectraBN ###
+################################
 
-x = grep("RF", rf_cover$Model)
+x = grep("SVM", rf_cover$Model)
 y <- rf_cover[x, ] 
 
-x = grep("MNF_BN", y$Normalization)
+x = grep("spectra_BN", y$Normalization)
 bestModel <- y[x, ]
 
 x = grep("rf", outputGOF$Validation)
 y <- outputGOF[x, ] 
 
-x = grep("RF", y$Models)
+x = grep("SVM", y$Models)
 y <- y[x, ] 
 
-x = grep("MNF_BN", y$Normalization)
+x = grep("spectra_BN", y$Normalization)
 gof_best <- y[x, ]
 
 # count for well, miss and over classifications
 bestModel <- ClassPresence(bestModel)
 
+
+################################################
+### Best model usetr and producer accuracies ###
+################################################
+
+lis <- list.files("bestPA_UA", pattern = ".txt")
+
+median_PA_UA <- data.frame( Species=character(), PA=double(), UA=double() )
+
+for (i in 1:length(lis)){
+  x <- read.table( paste0( "bestPA_UA/", lis[i]) , header = T)
+  y <- data.frame(Species=x$Species, PA=x$PA_RF, UA=x$OA_RF)
+  if (length( median_PA_UA[,1] ) == 0){
+    median_PA_UA <- y
+  } else {
+    median_PA_UA <- merge(median_PA_UA, y, by = intersect(names(median_PA_UA), names(y)), all = TRUE)
+  }
+}
+
+# merge species
+median_PA_UA <- mergeSpecies(median_PA_UA)
+
+# get the median value per specie
+dummy_matrix <- matrix( ncol = ncol(median_PA_UA), nrow = length( unique(median_PA_UA$Species) ) )
+colnames(dummy_matrix) <- colnames(median_PA_UA)
+dummy_matrix[,1] <- as.character( unique(median_PA_UA$Species) )
+
+for (i in 1:length(unique(median_PA_UA$Species))){#(levelsNumber-1)
+  x = grep( unique(median_PA_UA$Species)[i], median_PA_UA$Species )
+  sp = median_PA_UA[x, ]
+  pa =  sp$PA 
+  ua = sp$UA 
+  pa_med = median(pa) 
+  ua_med = median(ua)
+  dummy_matrix[i,2] <- as.numeric(pa_med)
+  dummy_matrix[i,3] <- as.numeric(ua_med)
+}
+
+median_PA_UA <- as.data.frame(dummy_matrix)
+median_PA_UA$PA <- as.numeric( as.character(median_PA_UA$PA) )
+median_PA_UA$UA <- as.numeric( as.character(median_PA_UA$UA) )
+
+graminoids <- subset(median_PA_UA, Species == "Grass_sp9" | Species == "Nardus_stricta" 
+                               | Species == "Grass_Sp_23"   | Species == "Setaria_pumila" 
+                               | Species == "Elymus_repens" | Species == "Echinochloa_crus-galli"
+                               | Species == "Panicum_capillare")
+graminoids$PFT <- "graminods"
+
+fobs <- subset(median_PA_UA, Species == "Prunella_vulgaris" | Species == "Sp_2" 
+                         | Species == "Hypochaeris_radicata" | Species == "Trifolium_pratense" 
+                         | Species == "Trifolium_repens" | Species == "Conyza_canadensis" 
+                         | Species == "Potentilla_reptans" | Species == "Taraxacum_officinale" 
+                         | Species == "Galium_sp" | Species == "Bellis_perennis" 
+                         | Species == "Glechoma_hederacea" | Species == "Medicago_lupulina" 
+                         | Species == "Minuartia_hybrida" | Species == "Plantago_lancelota" 
+                         | Species == "Geranium_pusillum" | Species == "Plantago_major" 
+                         | Species == "Potentilla_2" | Species == "Achillea_millefolium"
+                         | Species == "Oxalis_stricta" | Species == "Medicago_arabica" 
+                         | Species == "Echium_vulgare" | Species == "Erigoron_annuus" 
+                         | Species == "Senecio_vulgaris" | Species == "Filago_arvensis" 
+                         | Species == "Anagallis_arvensis" | Species == "Daucum_carota" 
+                         | Species == "Medicago_sativa " | Species == "Rumex_obtusifolius" 
+                         | Species == "Convolvulus_sepium" | Species == "Verbena_officinalis" 
+                         | Species == "Urtica_dioica" | Species == "Cichorium_intybus" 
+                         | Species == "Solidago_gigantea" | Species == "Polygonum_persicaria" 
+                         | Species == "Oenothera_biennis" | Species == "Arthemisia_vulgaris" 
+                         | Species == "Anthemis_arvensis" | Species == "Crepis_capillaris")
+fobs$PFT <- "fobs"
+
+bryophytes <- subset(median_PA_UA, Species == "Brachythecium_sp")
+bryophytes$PFT <- "bryophytes"
+
+median_PA_UA <- rbind(bryophytes, graminoids, fobs)
+
+write.table(median_PA_UA, file = "median_PA_UA.csv", sep = ",", col.names = T, row.names = F)
+
 ###########################
 ### Variable importance ###
 ###########################
 
-bestImp <- tunningModels(classes = rf_spec_BN$Species,
-                         spectra = rf_spec_BN[, 3:length(rf_spec_BN)], 
-                         wl = wl)
+library(vegan)
+
+classes = rf_spec_BN$Species
+spectra = rf_spec_BN[, 3:length(rf_spec_BN)]
+
+
+mat_mrpp = matrix(NA, ncol=ncol(spectra)-1, nrow=2)
+
+for(i in 1:ncol(spectra)){
+  
+  obj_mrpp = mrpp(dat = spectra[,i], grouping=classes, distance="euclidean")
+  mat_mrpp[1,i] = obj_mrpp$A
+  mat_mrpp[2,i] = obj_mrpp$Pvalue
+  
+}
+
+plot(1:ncol(spectra),as.numeric(spectra[2,]), type="l", ylim=c(0,1), main="mrpp")
+lines(1:ncol(spectra), mat_mrpp[1,])
+
+
+
 save(bestImp, file = "bestImp.RData")
 
 ### Growth forms

@@ -1,4 +1,20 @@
 
+###############################
+### plot leaf level results ### 
+###############################
+
+library(beanplot)
+
+pdf(file = "Figures/LeafLevel_accuracy.pdf", width=8, height=6)
+par(mai=c(0.5, 1, 0.3, 0.3))
+beanplot( unlist(boot_test$fit$OA.ASD), unlist(boot_test$fit$kappa.ASD), 
+          unlist(boot_test$fit$OA.AISA), unlist(boot_test$fit$kappa.AISA), 
+        col = list("black", "gray"), border = NA, innerboerder=NA, beanlines="median", 
+        ll = 0, side = "b", log="", main = "", names=c("Full range", "AISA+ range"), 
+        ylab = "Accuracy [0-1]", ylim = c(0,1), yaxs = "i", cex.lab=1.3, cex.axis=1.3, las=1)
+legend("bottomleft", legend=c("Overall accuracy", "Kappa"), fill=c("black", "gray"), bty="n", cex=1.3)
+dev.off()
+
 ################################
 ### plot variable importance ###
 ################################
@@ -60,6 +76,7 @@ color.bar <- function(lut, min, max=-min, nticks=11, ticks=seq(min, max, len=nti
 pdf(file = "Figures/legend_VarImport.pdf", width=3, height=10)
 color.bar(colfunc, -1, ticks = 0, nticks = 1)
 dev.off()
+
 ############################
 ### plot general results ###
 ############################
@@ -82,7 +99,7 @@ get_legend<-function(myggplot){
   return(legend)
 }
 
-## Overall accuracy
+## Overall accuracy all models (Supplementary data)
 p1 <- ggplot(data = fit_potVal, mapping = aes(x = Models, y = Kappa, fill = factor(Normalization))) +
   geom_violin(mapping=aes(ymin = Kappa, ymax = Kappa), position = position_dodge(width = 0.6), size = 0.5) +
   stat_summary(fun.data=data_summary, position = position_dodge(width = 0.6), aes(shape = factor(Normalization))) +
@@ -206,9 +223,24 @@ plot_fits <- grid.arrange(p1, p2, p3, p4,
 # Save
 ggsave("Figures/Fits_all.pdf", plot_fits, width = 10, height = 8)
 
-#############################
-### scaterplot best model ###
-#############################
+
+###################
+### SVM results ###
+###################
+x = fit_potVal[fit_potVal$Models == "SVM", ]
+y_pot = x[x$Normalization == "Spect_BN", ]
+
+x = fit_rf[fit_potVal$Models == "SVM", ]
+y_rf = x[x$Normalization == "Spect_BN", ]
+
+library(beanplot)
+
+beanplot()
+
+
+###############################
+### scatter plot best model ###
+###############################
 
 well <- subset(complex_all, ClassPresence == "Well")
 not_well <- subset(complex_all, ClassPresence == "Over" | ClassPresence == "Miss")

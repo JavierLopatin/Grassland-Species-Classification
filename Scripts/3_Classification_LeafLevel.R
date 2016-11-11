@@ -143,3 +143,34 @@ for(i in 1:2){
 }
 
 save.image("ClassLeafLevel.RData")
+
+#########################
+### PA and UA results ### 
+#########################
+
+pa <- unlist(boot_test$fit$PA.ASD)
+ua <- unlist(boot_test$fit$UA.ASD)
+
+PA_UA <- data.frame(Species=names(pa), PA=pa, UA=ua )
+
+# get the median value per specie
+dummy_matrix <- matrix( ncol = ncol(PA_UA), nrow = length( unique(PA_UA$Species) ) )
+colnames(dummy_matrix) <- colnames(PA_UA)
+dummy_matrix[,1] <- as.character( unique(PA_UA$Species) )
+
+for (i in 1:length(unique(PA_UA$Species))){#(levelsNumber-1)
+  x = grep( unique(PA_UA$Species)[i], PA_UA$Species )
+  sp = PA_UA[x, ]
+  pa =  sp$PA 
+  ua = sp$UA 
+  pa_med = median(pa) 
+  ua_med = median(ua)
+  dummy_matrix[i,2] <- as.numeric(pa_med)
+  dummy_matrix[i,3] <- as.numeric(ua_med)
+}
+
+PA_UA <- as.data.frame(dummy_matrix)
+PA_UA$PA <- as.numeric( as.character(PA_UA$PA) )
+PA_UA$UA <- as.numeric( as.character(PA_UA$UA) )
+
+write.table(PA_UA, file = "Leaf_PA_UA.csv", sep = ",", col.names = T, row.names = F)

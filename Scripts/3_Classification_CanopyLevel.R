@@ -119,27 +119,3 @@ ApplyModels(valData = species,
             wl =  seq(1,10,1), 
             modelTag = "MNF_BN",
             boots = 10)
-
-#------------------------#
-# GLCM                   #
-#------------------------#
-
-ApplyModels(valData = species, 
-            potVal = potVal_GLCM, 
-            rf = rf_GLCM, 
-            raster_List = raster_GLCM, 
-            wl =  seq(1,6,1), 
-            modelTag = "GLCM",
-            boots = 10)
-
-#------------------------#
-# GLCM BN                #
-#------------------------#
-
-ApplyModels(valData = species, 
-            potVal = potVal_GLCM_BN, 
-            rf = rf_GLCM_BN, 
-            raster_List = raster_GLCM_BN, 
-            wl =  seq(1,6,1), 
-            modelTag = "GLCM_BN",
-            boots = 10)

@@ -1093,6 +1093,7 @@ significanceTest_LeafLevel <- function(data, fitASD, fitAISA, B=500){
    ###########
    ### ASD ###
    ###########
+   
    m1 <-  svm(hyperASD$spc[idx,], hyperASD@data$Species[idx], gamma = fitASD$SVM$finalModel$gamma, cost = fitASD$SVM$finalModel$cost, probability = TRUE)
    
    m1.pred <- predict(m1, hyperASD$spc[-idx,])
@@ -1119,6 +1120,7 @@ significanceTest_LeafLevel <- function(data, fitASD, fitAISA, B=500){
    ############
    ### AISA ###
    ############
+   
    m2 <-  svm(hyperAISA$spc[idx,], hyperAISA@data$Species[idx], gamma = fitAISA$SVM$finalModel$gamma, cost = fitAISA$SVM$finalModel$cost, probability = TRUE)
    
    m2.pred <- predict(m2, hyperAISA$spc[-idx,])
@@ -1460,9 +1462,7 @@ coverSummary <- function(validation, na.replace = TRUE){
           }
           if (length(output[,1])==0){
             output = df
-          }
-          
-          if (length(output[,1])!=0) { 
+          } else { 
             output <-  merge(output, df, by = intersect(names(output), names(df)), all = TRUE)
           }
           
@@ -1750,3 +1750,4 @@ ClassPresence <- function(data){
   }
   data
 }
+
