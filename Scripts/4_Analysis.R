@@ -169,22 +169,18 @@ classes = rf_spec_BN$Species
 spectra = rf_spec_BN[, 3:length(rf_spec_BN)]
 
 
-mat_mrpp = matrix(NA, ncol=ncol(spectra)-1, nrow=2)
+mat_mrpp = matrix(NA, ncol=ncol(spectra), nrow=2)
 
 for(i in 1:ncol(spectra)){
-  
-  obj_mrpp = mrpp(dat = spectra[,i], grouping=classes, distance="euclidean")
+  SAM <- designdist(spectra, "acos( J / ( (A*0.5) * (B*0.5) ) )", terms = "quadratic")
+  obj_mrpp = mrpp(dat = SAM, grouping = classes, parallel = 16)
   mat_mrpp[1,i] = obj_mrpp$A
   mat_mrpp[2,i] = obj_mrpp$Pvalue
-  
 }
 
-plot(1:ncol(spectra),as.numeric(spectra[2,]), type="l", ylim=c(0,1), main="mrpp")
-lines(1:ncol(spectra), mat_mrpp[1,])
+mat_mrpp[1, ] <- (mat_mrpp[1, ] - min(mat_mrpp[1, ]))/(max(mat_mrpp[1, ]) - min(mat_mrpp[1, ]))
 
-
-
-save(bestImp, file = "bestImp.RData")
+save(mat_mrpp, file = "bestImp.RData")
 
 ### Growth forms
 graminoids_varImport <- subset(rf_spec_BN, Species == "Grass_sp9" | Species == "Nardus_stricta" 
@@ -192,7 +188,7 @@ graminoids_varImport <- subset(rf_spec_BN, Species == "Grass_sp9" | Species == "
                      | Species == "Elymus_repens" | Species == "Echinochloa_crus-galli"
                      | Species == "Panicum_capillare")
 
-fobs_varImport <- subset(rf_spec_BN, Species == "Prunella_vulgaris" | Species == "Sp_2" 
+forbs_varImport <- subset(rf_spec_BN, Species == "Prunella_vulgaris" | Species == "Sp_2" 
                | Species == "Hypochaeris_radicata" | Species == "Trifolium_pratense" 
                | Species == "Trifolium_repens" | Species == "Conyza_canadensis" 
                | Species == "Potentilla_reptans" | Species == "Taraxacum_officinale" 
@@ -212,15 +208,44 @@ fobs_varImport <- subset(rf_spec_BN, Species == "Prunella_vulgaris" | Species ==
                | Species == "Oenothera_biennis" | Species == "Arthemisia_vulgaris" 
                | Species == "Anthemis_arvensis")
 
-Gramm_Imp <- tunningModels(classes = graminoids_varImport$Species,
-                         spectra = graminoids_varImport[, 3:length(rf_spec_BN)], 
-                         wl = wl)
-save(Gramm_Imp, file = "Gramm_Imp.RData")
+# graminoids
+classes = graminoids_varImport$Species
+spectra = graminoids_varImport[, 3:length(graminoids_varImport)]
 
-Fobs_Imp <- tunningModels(classes = fobs_varImport$Species,
-                           spectra = fobs_varImport[, 3:length(rf_spec_BN)], 
-                           wl = wl)
-save(Fobs_Imp, file = "Fobs_Imp.RData")
+gram_mrpp = matrix(NA, ncol=ncol(spectra), nrow=2)
+for(i in 1:ncol(spectra)){
+  SAM <- designdist(spectra, "acos( J / ( (A*0.5) * (B*0.5) ) )", terms = "quadratic")
+  obj_mrpp = mrpp(dat = SAM, grouping = classes, parallel = 16)
+  gram_mrpp[1,i] = obj_mrpp$A
+  gram_mrpp[2,i] = obj_mrpp$Pvalue
+}
+
+gram_mrpp[1, ] <- (gram_mrpp[1, ] - min(gram_mrpp[1, ]))/(max(gram_mrpp[1, ]) - min(gram_mrpp[1, ]))
+
+save(gram_mrpp, file = "Gramm_Imp.RData")
+
+# forbs
+classes = forbs_varImport$Species
+spectra = forbs_varImport[, 3:length(forbs_varImport)]
+
+frobs_mrpp = matrix(NA, ncol=ncol(spectra), nrow=2)
+for(i in 1:ncol(spectra)){
+  SAM <- designdist(spectra, "acos( J / ( (A*0.5) * (B*0.5) ) )", terms = "quadratic")
+  obj_mrpp = mrpp(dat = SAM, grouping = classes, parallel = 16)
+  frobs_mrpp[1,i] = obj_mrpp$A
+  frobs_mrpp[2,i] = obj_mrpp$Pvalue
+}
+
+frobs_mrpp[1, ] <- (frobs_mrpp[1, ] - min(frobs_mrpp[1, ]))/(max(frobs_mrpp[1, ]) - min(frobs_mrpp[1, ]))
+
+save(frobs_mrpp, file = "Fobs_Imp.RData")
+
+
+plot(1:ncol(spectra), mat_mrpp[1,], type="l", main="mrpp")
+lines(1:ncol(spectra), gram_mrpp[1,], type="l", lty=2, col="blue")
+lines(1:ncol(spectra), frobs_mrpp[1,], type="l", lty=3, col="red")
+
+adonis(Y ~ NO3, data=dat, strata=dat$field, perm=1e3)
 
 ##############################################
 ### Analysis of architectural complexities ###
