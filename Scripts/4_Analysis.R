@@ -165,31 +165,16 @@ write.table(median_PA_UA, file = "median_PA_UA.csv", sep = ",", col.names = T, r
 
 library(vegan)
 
-classes = rf_spec_BN$Species
-spectra = rf_spec_BN[, 3:length(rf_spec_BN)]
-
-dummyList <- list()
-dummyMatrix <- matrix(ncol = length(unique( rf_spec_BN$Species)), nrow = length(rf_spec_BN[,1]))
-colnames(dummyMatrix) <- unique( rf_spec_BN$Species)
-for (i in 1:length(unique(classes))){
-  x = grep( unique(rf_spec_BN$Species)[1], rf_spec_BN )
-}
-
-
-
-
-
-
-mat_mrpp = matrix(NA, ncol=ncol(spectra), nrow=2)
-for(i in 1:ncol(spectra)){
-  #SAM <- designdist(spectra, "acos( J / ( (A*0.5) * (B*0.5) ) )", terms = "quadratic")
+mat_mrpp = matrix(NA, ncol=61, nrow=2)
+for(i in 1:61){
+  #dat <- data.frame(sp=rf_spec_BN$Species, rf_spec_BN[,i+2])
+  #SAM <- designdist(dat, "acos( J / ( (A*0.5) * (B*0.5) ) )", terms = "quadratic")
   #obj_mrpp = mrpp(dat = SAM, grouping = classes, parallel = 16)
-  obj_mrpp = mrpp(dat = spectra, grouping = classes, parallel = 16, distance = "gower")
+  obj_mrpp = mrpp(dat = rf_spec_BN[, 3:length(rf_spec_BN[1,])][i], 
+                  grouping = rf_spec_BN$Species, parallel = 16, distance = "mahalanobis")
   mat_mrpp[1,i] = obj_mrpp$A
   mat_mrpp[2,i] = obj_mrpp$Pvalue
 }
-
-mat_mrpp[1, ] <- (mat_mrpp[1, ] - min(mat_mrpp[1, ]))/(max(mat_mrpp[1, ]) - min(mat_mrpp[1, ]))
 
 save(mat_mrpp, file = "bestImp.RData")
 
@@ -220,43 +205,35 @@ forbs_varImport <- subset(rf_spec_BN, Species == "Prunella_vulgaris" | Species =
                | Species == "Anthemis_arvensis")
 
 # graminoids
-classes = graminoids_varImport$Species
-spectra = graminoids_varImport[, 3:length(graminoids_varImport)]
-
-gram_mrpp = matrix(NA, ncol=ncol(spectra), nrow=2)
-for(i in 1:2){
+gram_mrpp = matrix(NA, ncol=61, nrow=2)
+for(i in 1:61){
   #SAM <- designdist(spectra, "acos( J / ( (A*0.5) * (B*0.5) ) )")
   #obj_mrpp = mrpp(dat = SAM, grouping = classes, parallel = 16)
-  obj_mrpp = mrpp(dat = spectra, grouping = classes, parallel = 16, distance = "gower")
+  obj_mrpp = mrpp(dat = graminoids_varImport[, 3:(length(graminoids_varImport[1,])-1 )][i], 
+                  grouping = graminoids_varImport$Species, parallel = 16, distance = "mahalanobis")
   gram_mrpp[1,i] = obj_mrpp$A
   gram_mrpp[2,i] = obj_mrpp$Pvalue
 }
 
-gram_mrpp[1, ] <- (gram_mrpp[1, ] - min(gram_mrpp[1, ]))/(max(gram_mrpp[1, ]) - min(gram_mrpp[1, ]))
-
 save(gram_mrpp, file = "Gramm_Imp.RData")
 
 # forbs
-classes = forbs_varImport$Species
-spectra = forbs_varImport[, 3:length(forbs_varImport)]
-
-frobs_mrpp = matrix(NA, ncol=ncol(spectra), nrow=2)
-for(i in 1:ncol(spectra)){
+frobs_mrpp = matrix(NA, ncol=61, nrow=2)
+for(i in 1:61){
   #SAM <- designdist(spectra, "acos( J / ( (A*0.5) * (B*0.5) ) )", terms = "quadratic")
   #obj_mrpp = mrpp(dat = SAM, grouping = classes, parallel = 16)
-  obj_mrpp = mrpp(dat = spectra, grouping = classes, parallel = 16, distance = "gower")
+  obj_mrpp = mrpp(dat = forbs_varImport[, 3:length(forbs_varImport[1,])][i], 
+                  grouping = forbs_varImport$Species, parallel = 16, distance = "mahalanobis")
   frobs_mrpp[1,i] = obj_mrpp$A
   frobs_mrpp[2,i] = obj_mrpp$Pvalue
 }
 
-frobs_mrpp[1, ] <- (frobs_mrpp[1, ] - min(frobs_mrpp[1, ]))/(max(frobs_mrpp[1, ]) - min(frobs_mrpp[1, ]))
-
 save(frobs_mrpp, file = "Fobs_Imp.RData")
 
-
-plot(1:ncol(spectra), mat_mrpp[1,], type="l", main="mrpp")
+plot (1:ncol(spectra), mat_mrpp[1,], type="l", main="mrpp")
 lines(1:ncol(spectra), gram_mrpp[1,], type="l", lty=2, col="blue")
 lines(1:ncol(spectra), frobs_mrpp[1,], type="l", lty=3, col="red")
+
 
 ##############################################
 ### Analysis of architectural complexities ###

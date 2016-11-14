@@ -84,6 +84,7 @@ save(fitASD, file="fitASDLeaf.Rdata")
 ############################################
 ### Growth form analysis with full range ###
 ############################################
+
 ASD <- data.frame( classes=hyperASD@data$classes, hyperASD$spc)
 
 graminoids_varImport_ASD <- subset(ASD, classes == "Grass_sp9" | classes == "Nardus_stricta" 
@@ -113,15 +114,50 @@ fobs_varImport_ASD <- subset(ASD, classes == "Prunella_vulgaris" | classes == "S
                          | classes == "Anthemis_arvensis")
 fobs_varImport_ASD$classes <- factor(fobs_varImport_ASD$classes)
 
-Gramm_Imp_ASD <- tunningModels(classes = graminoids_varImport_ASD$classes,
-                           spectra = graminoids_varImport_ASD[, 2:length(graminoids_varImport_ASD)], 
-                           wl = hyperASD@wavelength)
-save(Gramm_Imp_ASD, file = "Gramm_Imp_ASD.RData")
+### Variable importance
 
-Fobs_Imp_ASD <- tunningModels(classes = fobs_varImport_ASD$classes,
-                          spectra = fobs_varImport_ASD[, 2:length(fobs_varImport_ASD)], 
-                          wl = hyperASD@wavelength)
-save(Fobs_Imp_ASD, file = "Fobs_Imp_ASD.RData")
+library(vegan)
+
+normalize <- function(x) { (x-min(x))/(max(x)-min(x)) }
+
+# all species 
+
+
+leaf_mrpp = matrix(NA, ncol=length( hyperASD$spc[1,] ), nrow=2)
+for(i in 1:length( hyperASD$spc[1,] )){
+  obj_mrpp = mrpp(dat =  hyperASD$spc[,i], grouping = ASD$classes, parallel = 16, 
+                  distance = "mahalanobis", permutations = 500)
+  leaf_mrpp[1,i] = obj_mrpp$A
+  leaf_mrpp[2,i] = obj_mrpp$Pvalue
+}
+
+save(leaf_mrpp, file = "bestImp.RData")
+
+# graminoids
+leaf_mrpp_gram = matrix(NA, ncol=length( hyperASD$spc[1,] ), nrow=2)
+for(i in 1:length( hyperASD$spc[1,] )){
+  obj_mrpp = mrpp(dat =  graminoids_varImport_ASD[,2:length(ASD)][i], grouping = graminoids_varImport_ASD$classes, 
+                  parallel = 16, distance = "mahalanobis", permutations = 500)
+  leaf_mrpp_gram[1,i] = obj_mrpp$A
+  leaf_mrpp_gram[2,i] = obj_mrpp$Pvalue
+}
+
+save(leaf_mrpp_gram, file = "Gramm_Imp_ASD.RData")
+
+# Forbs
+leaf_mrpp_forbs = matrix(NA, ncol=length( hyperASD$spc[1,] ), nrow=2)
+for(i in 1:length( hyperASD$spc[1,] )){
+  obj_mrpp = mrpp(dat =  leaf_mrpp_forbs[,2:length(ASD)][i], grouping = leaf_mrpp_forbs$classes, 
+                  parallel = 16, distance = "mahalanobis", permutations = 500)
+  leaf_mrpp_forbs[1,i] = obj_mrpp$A
+  leaf_mrpp_forbs[2,i] = obj_mrpp$Pvalue
+}
+
+save(leaf_mrpp_forbs, file = "Fobs_Imp_ASD.RData")
+
+plot (hyperASD@wavelength, leaf_mrpp[1,], type="l", main="mrpp")
+lines(hyperASD@wavelength, leaf_mrpp_gram[1,], type="l", lty=2, col="blue")
+lines(hyperASD@wavelength, leaf_mrpp_forbs[1,], type="l", lty=3, col="red")
 
 
 ##################################
