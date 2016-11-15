@@ -239,6 +239,30 @@ lines(wl, forbs_mrpp[1,], type="l", lty=3, col="red")
 ### Analysis of architectural complexities ###
 ##############################################
 
+# evenness
+library(fuzzySim)
+
+plotsxx <- unique(bestModel$Plot)
+evenness <- matrix(ncol = 11, nrow = 1 )
+colnames(evenness) <- paste0( rep("plot_", nrow(classes)), plotsxx )  
+
+for (i in 1:11){
+  # subset plot
+  plot = bestModel[bestModel$Plot == plotsxx[i], ]
+  # convert species list
+  classes <- splist2presabs(plot, sites.col = "Plot", sp.col = "Species", keep.n = T)
+  # estimate evennes
+  evenness[,i] = unlist( camargo( classes[ ,3:length(classes)] ) )
+} 
+
+# cover per plot
+x = bestModel
+x$Observed[x$Observed == 0] <- NA
+
+tapply(x$Observed, x$Plot, summary)
+
+###
+
 x = grep(paste0(c(18,19), collapse="|"), bestModel$Plot)
 complex1 <- bestModel[x, ]
 
