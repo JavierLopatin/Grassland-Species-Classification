@@ -233,7 +233,7 @@ par(mai=c(0.6,0.7,0.3,0.3))
 # Classification
 beanplot(dat_potVal$OA_SVM, dat_rfVal$OA_SVM, dat_potVal$Kappa_SVM, dat_rfVal$Kappa_SVM, col = list("black", "gray"), 
          border = NA, innerboerder=NA, beanlines="median", ll = 0, side = "b", log="",  main = "", 
-         names=c("Overall Acc.", "Kappa"), ylab = "Accuracy [0-1]", 
+         names=c("Overall Accuracy", "Kappa"), ylab = "Accuracy [0-1]", 
          ylim = c(0.4,1), yaxs = "i",cex.lab=1.3, cex.axis=1.3, las=1)
 legend("bottomright", legend=c("Pot method", "Rip-it-off method"), fill=c("black", "gray"), bty="n", cex=1.3)
 text(x = c(0.95,0.95), labels = "*", cex = 3)
