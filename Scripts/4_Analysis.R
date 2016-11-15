@@ -68,7 +68,7 @@ save(gof_rf, file="gof_rf.RData")
 x = grep("SVM", rf_cover$Model)
 y <- rf_cover[x, ] 
 
-x = grep("spectra_BN", y$Normalization)
+x = grep("spectra", y$Normalization)
 bestModel <- y[x, ]
 
 x = grep("rf", outputGOF$Validation)
@@ -77,7 +77,7 @@ y <- outputGOF[x, ]
 x = grep("SVM", y$Models)
 y <- y[x, ] 
 
-x = grep("spectra_BN", y$Normalization)
+x = grep("spectra", y$Normalization)
 gof_best <- y[x, ]
 
 # count for well, miss and over classifications
@@ -218,21 +218,21 @@ for(i in 1:61){
 save(gram_mrpp, file = "Gramm_Imp.RData")
 
 # forbs
-frobs_mrpp = matrix(NA, ncol=61, nrow=2)
+forbs_mrpp = matrix(NA, ncol=61, nrow=2)
 for(i in 1:61){
   #SAM <- designdist(spectra, "acos( J / ( (A*0.5) * (B*0.5) ) )", terms = "quadratic")
   #obj_mrpp = mrpp(dat = SAM, grouping = classes, parallel = 16)
   obj_mrpp = mrpp(dat = forbs_varImport[, 3:length(forbs_varImport[1,])][i], 
                   grouping = forbs_varImport$Species, parallel = 16, distance = "mahalanobis")
-  frobs_mrpp[1,i] = obj_mrpp$A
-  frobs_mrpp[2,i] = obj_mrpp$Pvalue
+  forbs_mrpp[1,i] = obj_mrpp$A
+  forbs_mrpp[2,i] = obj_mrpp$Pvalue
 }
 
 save(frobs_mrpp, file = "Fobs_Imp.RData")
 
-plot (1:ncol(spectra), mat_mrpp[1,], type="l", main="mrpp")
-lines(1:ncol(spectra), gram_mrpp[1,], type="l", lty=2, col="blue")
-lines(1:ncol(spectra), frobs_mrpp[1,], type="l", lty=3, col="red")
+plot (wl, mat_mrpp[1,], type="l", main="mrpp", ylim=c(0,0.5))
+lines(wl, gram_mrpp[1,], type="l", lty=2, col="blue")
+lines(wl, forbs_mrpp[1,], type="l", lty=3, col="red")
 
 
 ##############################################
