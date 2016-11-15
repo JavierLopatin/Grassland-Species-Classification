@@ -19,49 +19,43 @@ dev.off()
 ### plot variable importance ###
 ################################
 
-pdf(file = "Figures/VarImport.pdf", width=10, height=6)
-mat <- layout(matrix(1:8,ncol=2), widths=c(3,6), heights=c(2,0.7,0.8,1.3), TRUE) 
+pdf(file = "Figures/VarImport2.pdf", width=10, height=6)
+mat <- layout(matrix(1:8,ncol=2), widths=c(2,4), heights=c(2,0.35,0.43,0.8), TRUE) 
 #layout.show(mat)
 
 ### Canopy level
 par(mai=c(0,0.6,0.1,0.1))
-plot.spectra(spectra = rf_spec_BN[, 3:length(rf_spec_BN)]/10,
-             en = bestImp,
-             selection=F, xaxis=F)
-abline(v = wl[ as.logical(bestImp[[1]][6,]) ], lty=1)
-abline(v = wl[ as.logical(Gramm_Imp[[1]][6,]) ], lty=2)
-abline(v = wl[ as.logical(Fobs_Imp[[1]][6,]) ], lty=3)
+plot.spectra(spectra = rf_spec[, 3:length(rf_spec)]/10000,
+             wl = wl,
+             xaxis=F, ylab= T, ymax=0.6)
 
 par(mai=c(0,0.6,0,0.1))
-plot.importance(en = bestImp, xaxis=F, linetype=1)
+plot.importance(mat_mrpp, wl, FALSE)
 
 par(mai=c(0,0.6,0.1,0.1))
-plot.importance(Gramm_Imp, FALSE, 2)
+plot.importance(gram_mrpp, wl, FALSE)
 
 par(mai=c(0.6,0.6,0.1,0.1))
-plot.importance(Fobs_Imp, TRUE, 3)
+plot.importance(forbs_mrpp, wl, TRUE)
 
 ### Leaf level
 par(mai=c(0,0,0.1,0.6))
 plot.spectra(spectra = hyperASD$spc,
-             en = fitASD,
-             selection=F, xaxis=F, ylabside = F)
-abline(v = hyperASD@wavelength[ as.logical(fitASD[[1]][6,]) ], lty=1)
-abline(v = hyperASD@wavelength[ as.logical(Gramm_Imp_ASD[[1]][6,]) ], lty=2)
-abline(v = hyperASD@wavelength[ as.logical(Fobs_Imp_ASD[[1]][6,]) ], lty=3)
+             wl = hyperASD@wavelength,
+             xaxis=F, ymax=0.6, ylab = F)
 
 par(mai=c(0,0,0,0.6))
-plot.importance(en = fitASD, xaxis=F, linetype=1)
+plot.importance(leaf_mrpp, hyperASD@wavelength, FALSE)
 
 par(mai=c(0,0,0.1,0.6))
-plot.importance(Gramm_Imp_ASD, FALSE, 2)
+plot.importance(leaf_mrpp_gram, hyperASD@wavelength, FALSE)
 
 par(mai=c(0.6,0,0.1,0.6))
-plot.importance(Fobs_Imp_ASD, TRUE, 3)
+plot.importance(leaf_mrpp_forbs, hyperASD@wavelength, TRUE)
 dev.off()
 
 # legend 
-colfunc <- c(rev( colorRampPalette(brewer.pal(9,"Blues"))(100) ), colorRampPalette(brewer.pal(9,"Reds"))(100))
+colfunc <- c( colorRampPalette(brewer.pal(9,"Blues"))(100) )
 color.bar <- function(lut, min, max=-min, nticks=11, ticks=seq(min, max, len=nticks), title='') {
   scale = (length(lut)-1)/(max-min)
   
@@ -77,9 +71,9 @@ pdf(file = "Figures/legend_VarImport.pdf", width=3, height=10)
 color.bar(colfunc, -1, ticks = 0, nticks = 1)
 dev.off()
 
-############################
-### plot general results ###
-############################
+#################################################
+### plot general results (Supplementary data) ###
+#################################################
 
 library(ggplot2)
 library(gridExtra)
@@ -227,16 +221,51 @@ ggsave("Figures/Fits_all.pdf", plot_fits, width = 10, height = 8)
 ###################
 ### SVM results ###
 ###################
-x = fit_potVal[fit_potVal$Models == "SVM", ]
-y_pot = x[x$Normalization == "Spect_BN", ]
 
-x = fit_rf[fit_potVal$Models == "SVM", ]
-y_rf = x[x$Normalization == "Spect_BN", ]
+dat_potVal <- read.table("D:/Sp_Images/BootsClass_out/Fits_all_pot.txt", header = T)
+dat_rfVal  <- read.table("D:/Sp_Images/BootsClass_out/Fits_all_rf.txt", header = T)
 
 library(beanplot)
 
-beanplot()
+pdf(file = "Figures/SVM.pdf", width=7, height=6)
+mat <- layout(rbind(c(1,1,1),c(2,3,4)), heights=c(1,1), TRUE) 
+par(mai=c(0.6,0.7,0.3,0.3))
+# Classification
+beanplot(dat_potVal$OA_SVM, dat_rfVal$OA_SVM, dat_potVal$Kappa_SVM, dat_rfVal$Kappa_SVM, col = list("black", "gray"), 
+         border = NA, innerboerder=NA, beanlines="median", ll = 0, side = "b", log="",  main = "", 
+         names=c("Overall Acc.", "Kappa"), ylab = "Accuracy [0-1]", 
+         ylim = c(0.4,1), yaxs = "i",cex.lab=1.3, cex.axis=1.3, las=1)
+legend("bottomright", legend=c("Pot method", "Rip-it-off method"), fill=c("black", "gray"), bty="n", cex=1.3)
+text(x = c(0.95,0.95), labels = "*", cex = 3)
+mtext("A", side=3, line=0.5, adj=0, cex=1.3)
 
+# Cover prediction
+# r2
+par(mai=c(0.6,0.7,0,0.3))
+beanplot( subset(gof_pv, Models=="SVM" & Normalization=="spectra")$r2 , 
+          subset(gof_rf, Models=="SVM" & Normalization=="spectra")$r2,
+          col = list("black", "gray"), border = NA, innerboerder=NA, beanlines="median", 
+          ll = 0, side = "b", log="",  main = "", names=expression(r^2), 
+          ylab = expression(r^2), yaxs = "i", cex.lab=1.3, cex.axis=1.3, las=1)
+mtext("B", side=3, line=0.5, adj=0, cex=1.3)
+# RMSE
+par(mai=c(0.6,0.7,0,0.3))
+beanplot( subset(gof_pv, Models=="SVM" & Normalization=="spectra")$RMSE , 
+          subset(gof_rf, Models=="SVM" & Normalization=="spectra")$RMSE,
+          col = list("black", "gray"), border = NA, innerboerder=NA, beanlines="median", 
+          ll = 0, side = "b", log="",  main = "", names="RMSE", 
+          ylab = "RMSE [%]", yaxs = "i", cex.lab=1.3, cex.axis=1.3, las=1)
+mtext("C", side=3, line=0.5, adj=0, cex=1.3)
+# bias
+par(mai=c(0.6,0.7,0,0.3))
+beanplot( subset(gof_pv, Models=="SVM" & Normalization=="spectra")$bias, 
+          subset(gof_rf, Models=="SVM" & Normalization=="spectra")$bias,
+          col = list("black", "gray"), border = NA, innerboerder=NA, beanlines="median", 
+          ll = 0, side = "b", log="",  main = "", names="Bias", 
+          ylab = "Bias", yaxs = "i", cex.lab=1.3, cex.axis=1.3, las=1)
+mtext("D", side=3, line=0.5, adj=0, cex=1.3)
+
+dev.off()
 
 ###############################
 ### scatter plot best model ###
@@ -384,10 +413,3 @@ plot_fits <- grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12,
                           nrow=4, ncol=3 ,heights = c(5,4.5,5,5))
 # Save
 ggsave("Figures/Best_analysis.pdf", plot_fits, width = 10, height = 8)
-
-
-
-###########################
-### Per species results ###
-###########################
-
