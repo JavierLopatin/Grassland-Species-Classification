@@ -1745,3 +1745,20 @@ ClassPresence <- function(data){
   data
 }
 
+# function to calculate Camargo's eveness:
+camargo <- function(n_spec, include_zeros = T)
+{
+  if (include_zeros) n <- n_spec else n <- n_spec[n_spec > 0]
+  S <- length(n)
+  camar <- 1
+  for (i in 1:(S - 1))
+  {
+    for (j in (i + 1):S)
+    {
+      p_i <- n[i]/sum(n)
+      p_j <- n[j]/sum(n)
+      camar <- camar - abs(p_i - p_j)/S
+    }
+  }
+  return(camar)
+}
