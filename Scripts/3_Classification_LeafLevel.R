@@ -18,10 +18,10 @@ setwd(home)
 library(hyperSpec)
 
 # load the data
-data <- read.table("/data/LeafHerbaceous.txt", sep = "", header = T)
+data <- read.table("data/LeafHerbaceous.txt", sep = "", header = T)
 
 # load species names
-SpNames <- read.table("/data/SpNamesLeafClip.csv", sep = "", header = T)
+SpNames <- read.table("data/SpNamesLeafClip.csv", sep = "", header = T)
 # add to data
 data$Species <- SpNames$Species
 # erase bad data
@@ -147,7 +147,7 @@ save(leaf_mrpp_gram, file = "Gramm_Imp_ASD.RData")
 # Forbs
 leaf_mrpp_forbs = matrix(NA, ncol=length( hyperASD$spc[1,] ), nrow=2)
 for(i in 1:length( hyperASD$spc[1,] )){
-  obj_mrpp = mrpp(dat =  leaf_mrpp_forbs[,2:length(ASD)][i], grouping = leaf_mrpp_forbs$classes, 
+  obj_mrpp = mrpp(dat =  fobs_varImport_ASD[,2:length(ASD)][i], grouping = fobs_varImport_ASD$classes, 
                   parallel = 16, distance = "mahalanobis", permutations = 500)
   leaf_mrpp_forbs[1,i] = obj_mrpp$A
   leaf_mrpp_forbs[2,i] = obj_mrpp$Pvalue
@@ -155,30 +155,10 @@ for(i in 1:length( hyperASD$spc[1,] )){
 
 save(leaf_mrpp_forbs, file = "Fobs_Imp_ASD.RData")
 
-plot (hyperASD@wavelength, leaf_mrpp[1,], type="l", main="mrpp")
+plot (hyperASD@wavelength, leaf_mrpp[1,], ylim=c(0,0.8), type="l", main="mrpp")
 lines(hyperASD@wavelength, leaf_mrpp_gram[1,], type="l", lty=2, col="blue")
 lines(hyperASD@wavelength, leaf_mrpp_forbs[1,], type="l", lty=3, col="red")
 
-
-##################################
-## Bootstrap significance test ###
-##################################
-
-boot_test <- significanceTest_LeafLevel(data, fitASD, fitAISA)
-save(boot_test, file="boot_testLeaf.Rdata")
-
-# Hist do not have to overlap with 0, otherwise is not significant
-# The black "zero-line" needs to be left of the blue "alpha-line". The green line is just the upper quantile.
-par(mfrow=c(1,2), mar=c(2,3,3,1))
-main <- c("OA Leaf level", "Kappa Leaf level")
-for(i in 1:2){
-  hist(unlist(boot_test$boot_test[i]), main=main[i], col="grey", border="white", xlab="", ylab="")
-  abline(v=quantile(unlist(boot_test$boot_test[i]), probs=c(0.05, 0.95)), col=c("blue", "green"))
-  abline(v=0, col=c("black"))
-  box()
-}
-
-save.image("ClassLeafLevel.RData")
 
 #########################
 ### PA and UA results ### 
