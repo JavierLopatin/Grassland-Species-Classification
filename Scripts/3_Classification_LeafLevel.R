@@ -122,7 +122,6 @@ normalize <- function(x) { (x-min(x))/(max(x)-min(x)) }
 
 # all species 
 
-
 leaf_mrpp = matrix(NA, ncol=length( hyperASD$spc[1,] ), nrow=2)
 for(i in 1:length( hyperASD$spc[1,] )){
   obj_mrpp = mrpp(dat =  hyperASD$spc[,i], grouping = ASD$classes, parallel = 16, 
