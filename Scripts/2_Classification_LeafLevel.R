@@ -1,15 +1,15 @@
-##############################################################################
-## R-Script - 3_Classification_LeafLevel.R                                  ##
-## author: Javier Lopatin                                                   ##
-## mail: javierlopatin@gmail.com                                            ##  
-##                                                                          ##
-## description: 
-##
-## Manuscript: 
-##
-## last changes: 
-##                                                                          ##
-##############################################################################
+
+################################################################################
+## R-Script - 2_Classification_LeafLevel.R                                    ##
+## author: Javier Lopatin                                                     ##
+## mail: javierlopatin@gmail.com                                              ##  
+##                                                                            ##
+## Manuscript: Hyperspectral classification of grassland species: towards an  ##
+## application for semi-automatic field surveys                               ##
+##                                                                            ##
+## description: Classification procidure for leaf-level spectras              ## 
+##                                                                            ##
+################################################################################
 
 home = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp"
 setwd(home)
