@@ -1,8 +1,14 @@
-## R-Script - Analysis
-## author: Javier Lopatin 
-## mail: javierlopatin@gmail.com
-## Manuscript: 
-## last changes: 
+################################################################################
+## R-Script - 4_Analysis.R                                                    ##
+## author: Javier Lopatin                                                     ##
+## mail: javierlopatin@gmail.com                                              ##  
+##                                                                            ##
+## Manuscript: Hyperspectral classification of grassland species: towards an  ##
+## application for semi-automatic field surveys                               ##
+##                                                                            ##
+## description: Analysis of the canopy-level classification results           ## 
+##                                                                            ##
+################################################################################
 
 home = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp"
 rasterDir = "D:/Sp_Images"
@@ -61,9 +67,9 @@ save(gof_rf, file="gof_rf.RData")
 #x = grep("rf", outputGOF$Validation)
 #gof_rf <- outputGOF[x, ]
 
-################################
-### Best model SVM SpectraBN ###
-################################
+##################################
+### Best model: rf SVM Spectra ###
+##################################
 
 x = grep("SVM", rf_cover$Model)
 y <- rf_cover[x, ] 
@@ -84,9 +90,9 @@ gof_best <- y[x, ]
 bestModel <- ClassPresence(bestModel)
 
 
-################################################
-### Best model usetr and producer accuracies ###
-################################################
+###############################################
+### Best model user and producer accuracies ###
+###############################################
 
 lis <- list.files("bestPA_UA", pattern = ".txt")
 
@@ -365,7 +371,7 @@ PFT <- rbind(graminoids, fobs, bryophytes)
 setwd(rasterDir)
 
 ## load the data
-rf_MNF_BN <- read.table("Data/rf_MNF_BN.csv", sep = ",", header = T)
+rf_spec <- read.table("Data/rf_spec.csv", sep = ",", header = T)
 
 # load species cover dataset
 species <- read.table("Data/Plots_Species.csv", header = T, sep=",")
@@ -379,6 +385,16 @@ species <- read.table("Data/Plots_Species.csv", header = T, sep=",")
 #               gdal_translate gdal_translate -tr 2 2 ${f} 2/${f}
 #             done
 
+## Obtain the spectras for each resolution using the ExtractValues.py code
+## load the spectras
+res2  <- read.table("Plots/resolution/res2.csv", header = T, sep=",")
+res4  <- read.table("Plots/resolution/res4.csv", header = T, sep=",")
+res6  <- read.table("Plots/resolution/res6.csv", header = T, sep=",")
+res8  <- read.table("Plots/resolution/res8.csv", header = T, sep=",")
+res10 <- read.table("Plots/resolution/res10.csv", header = T, sep=",")
+res12 <- read.table("Plots/resolution/res12.csv", header = T, sep=",")
+
+# load rasters
 raster2 <- rasterList(fileExtantion = ".tif", folder = "Plots/resolution_analysis/2", dir=rasterDir)
 raster4 <- rasterList(fileExtantion = ".tif", folder = "Plots/resolution_analysis/4", dir=rasterDir)
 raster6 <- rasterList(fileExtantion = ".tif", folder = "Plots/resolution_analysis/6", dir=rasterDir)
@@ -386,35 +402,128 @@ raster8 <- rasterList(fileExtantion = ".tif", folder = "Plots/resolution_analysi
 raster10 <- rasterList(fileExtantion = ".tif", folder = "Plots/resolution_analysis/10", dir=rasterDir)
 raster12 <- rasterList(fileExtantion = ".tif", folder = "Plots/resolution_analysis/12", dir=rasterDir)
 
-res2 <- tunningModels(classes = rf_MNF_BN$Species, 
-                      spectra = rf_MNF_BN[, 3:length( rf_MNF_BN )], 
-                      wl=seq(1,10,1))
+## apply parameter tuning
+tun2 <- tunningModels(classes = Species, 
+                      spectra = res2[, 3:length( res2 )], 
+                      wl=wl)
+tun4 <- tunningModels(classes = Species, 
+                      spectra = res4[, 3:length( res4 )], 
+                      wl=wl)
+tun6 <- tunningModels(classes = Species, 
+                      spectra = res6[, 3:length( res6 )], 
+                      wl=wl)
+tun8 <- tunningModels(classes = Species, 
+                      spectra = res8[, 3:length( res8 )], 
+                      wl=wl)
+tun10 <- tunningModels(classes = Species, 
+                      spectra = res10[, 3:length( res10 )], 
+                      wl=wl)
+tun12 <- tunningModels(classes = Species, 
+                      spectra = res12[, 3:length( res22 )], 
+                      wl=wl)
 
-BootsClassificationBest(classes = rf_MNF_BN$Species, 
-                        spectra = rf_MNF_BN[, 3:length( rf_MNF_BN )],
-                        en = res2, 
+## apply bootstrap classification
+BootsClassificationBest(classes = Species, 
+                        spectra = res2[, 3:length( res2 )],
+                        en = tun2, 
                         raster = raster2, 
                         boots = 10, 
-                        outDir = file.path(rasterDir, "2"), 
-                        modelTag = paste0("2_", modelTag),
+                        outDir = file.path(rasterDir, "Plots/resolution/res2"), 
+                        modelTag = res2,
+                        plotName = plot_name)
+BootsClassificationBest(classes = Species, 
+                        spectra = res4[, 3:length( res4 )],
+                        en = tun4, 
+                        raster = raster4, 
+                        boots = 10, 
+                        outDir = file.path(rasterDir, "Plots/resolution/res4"), 
+                        modelTag = res4,
+                        plotName = plot_name)
+BootsClassificationBest(classes = Species, 
+                        spectra = res6[, 3:length( res6 )],
+                        en = tun6, 
+                        raster = raster6, 
+                        boots = 10, 
+                        outDir = file.path(rasterDir, "Plots/resolution/res6"), 
+                        modelTag = res6,
+                        plotName = plot_name)
+BootsClassificationBest(classes = Species, 
+                        spectra = res2[, 3:length( res2 )],
+                        en = tun8, 
+                        raster = raster8, 
+                        boots = 10, 
+                        outDir = file.path(rasterDir, "Plots/resolution/res8"), 
+                        modelTag = res8,
+                        plotName = plot_name)
+BootsClassificationBest(classes = Species, 
+                        spectra = res10[, 3:length( res10 )],
+                        en = tun10, 
+                        raster = raster10, 
+                        boots = 10, 
+                        outDir = file.path(rasterDir, "Plots/resolution/res10"), 
+                        modelTag = res10,
+                        plotName = plot_name)
+BootsClassificationBest(classes = Species, 
+                        spectra = res12[, 3:length( res12 )],
+                        en = tun2, 
+                        raster = raster12, 
+                        boots = 10, 
+                        outDir = file.path(rasterDir, "Plots/resolution/res12"), 
+                        modelTag = res12,
                         plotName = plot_name)
 
+### obtain cover predictions
+obstainCovers(ObservedSpecies = valData, 
+                  rasterDir = file.path(rasterDir, "Plots/resolution/res2"),
+                  subplotDir = subplotDir, 
+                  shpMaskName = plot_name, 
+                  plotNumber = plot, 
+                  Iter = boots,
+                  algorithm = "SVM")
+obstainCovers(ObservedSpecies = valData, 
+                  rasterDir = file.path(rasterDir, "Plots/resolution/res4"),
+                  subplotDir = subplotDir, 
+                  shpMaskName = plot_name, 
+                  plotNumber = plot, 
+                  Iter = boots,
+                  algorithm = "SVM")
+obstainCovers(ObservedSpecies = valData, 
+                  rasterDir = file.path(rasterDir, "Plots/resolution/res6"),
+                  subplotDir = subplotDir, 
+                  shpMaskName = plot_name, 
+                  plotNumber = plot, 
+                  Iter = boots,
+                  algorithm = "SVM")
+obstainCovers(ObservedSpecies = valData, 
+                  rasterDir = file.path(rasterDir, "Plots/resolution/res8"),
+                  subplotDir = subplotDir, 
+                  shpMaskName = plot_name, 
+                  plotNumber = plot, 
+                  Iter = boots,
+                  algorithm = "SVM")
+obstainCovers(ObservedSpecies = valData, 
+                  rasterDir = file.path(rasterDir, "Plots/resolution/res10"),
+                  subplotDir = subplotDir, 
+                  shpMaskName = plot_name, 
+                  plotNumber = plot, 
+                  Iter = boots,
+                  algorithm = "SVM")
+obstainCovers(ObservedSpecies = valData, 
+                  rasterDir = file.path(rasterDir, "Plots/resolution/res12"),
+                  subplotDir = subplotDir, 
+                  shpMaskName = plot_name, 
+                  plotNumber = plot, 
+                  Iter = boots,
+                  algorithm = "SVM")
 
+### Estimate prediction accuracies
+gof_res2 <-  GOFbest(read.table(file.path(rasterDir, "Plots/resolution/res2.txt"), heather = T))
+gof_res4 <-  GOFbest(read.table(file.path(rasterDir, "Plots/resolution/res4.txt"), heather = T))
+gof_res6 <-  GOFbest(read.table(file.path(rasterDir, "Plots/resolution/res6.txt"), heather = T))
+gof_res8 <-  GOFbest(read.table(file.path(rasterDir, "Plots/resolution/res8.txt"), heather = T))
+gof_res10 <- GOFbest(read.table(file.path(rasterDir, "Plots/resolution/res10.txt"), heather = T))
+gof_res12 <- GOFbest(read.table(file.path(rasterDir, "Plots/resolution/res12.txt"), heather = T))
 
-#
-#
-#
-
-gof_res1 <- gof_rf[gof_res1$Normalization == "MNF_BN", ]
-gof_res1 <- gof_res1[, !names(gof_res1) %in% c("Models", "Normalization", "Validation")]# delate useles columns
-gof_res2 <- GOFbest(res2)
-gof_res4 <- GOFbest(res4)
-gof_res6 <- GOFbest(res6)
-gof_res8 <- GOFbest(res8)
-gof_res10 <- GOFbest(res10)
-gof_res12 <- GOFbest(res12)
-
-gof_res1$Resolution <- 0.3
 gof_res2$Resolution <- 0.6
 gof_res4$Resolution <- 1.2
 gof_res6$Resolution <- 1.8
