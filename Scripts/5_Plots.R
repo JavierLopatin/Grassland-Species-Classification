@@ -1,7 +1,19 @@
 
-###############################
-### plot leaf level results ### 
-###############################
+################################################################################
+## R-Script - 5_Plots.R                                                       ##
+## author: Javier Lopatin                                                     ##
+## mail: javierlopatin@gmail.com                                              ##  
+##                                                                            ##
+## Manuscript: Hyperspectral classification of grassland species: towards an  ##
+## application for semi-automatic field surveys                               ##
+##                                                                            ##
+## description: Plots presented in the paper                                  ## 
+##                                                                            ##
+################################################################################
+
+###################################################
+### Classification accuracies at the leaf level ###
+###################################################
 
 library(beanplot)
 
@@ -308,18 +320,18 @@ ggsave("Figures/ScatterPLot.pdf", p3, width = 12, height = 5)
 
  
 
-  ###########################
-  ### Best model analysis ###
-  ###########################
+###########################
+### Best model analysis ###
+###########################
   
-  ### Resolution 
-  ## r2
-  p1 <- ggplot(data = na.omit(gof_resolution), mapping = aes(x = factor(Resolution), y = r2)) +
-  geom_violin(mapping=aes(ymin = r2, ymax = r2), scale = "width", fill="gray90", trim=F) + 
-  stat_summary(fun.y=mean, geom="line", aes(group=1), lty=2, col = "gray50", lwd = 1.5) +
-  stat_summary(fun.data=data_summary) + ylab(expression(r^2)) + xlab("Resolution [cm]") +
-  scale_y_continuous(limits = c(-0.05,1), breaks = seq(0,1,0.2)) + # fixt ylim
-  theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank())
+### Resolution 
+## r2
+p1 <- ggplot(data = na.omit(gof_resolution), mapping = aes(x = factor(Resolution), y = r2)) +
+   geom_violin(mapping=aes(ymin = r2, ymax = r2), scale = "width", fill="gray90", trim=F) + 
+   stat_summary(fun.y=mean, geom="line", aes(group=1), lty=2, col = "gray50", lwd = 1.5) +
+   stat_summary(fun.data=data_summary) + ylab(expression(r^2)) + xlab("Resolution [cm]") +
+   scale_y_continuous(limits = c(-0.05,1), breaks = seq(0,1,0.2)) + # fixt ylim
+   theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank())
 ## RMSE
 p2 <- ggplot(data = na.omit(gof_resolution), mapping = aes(x = factor(Resolution), y = RMSE)) +
   geom_violin(mapping=aes(ymin = RMSE, ymax = RMSE), scale = "width", fill="gray90", trim=F) +
