@@ -99,7 +99,7 @@ parameter <- data.frame(N = rep(1.7, 100),
                         Car = rep(12, 100),
                         Cm = rep(0.007, 100),
                         Cw = rep(0.025, 100),
-                        lidfa = rnorm(100, mean = 0.5, 0.6),
+                        lidfa = rnorm(100, mean = 0.5, 0.7),
                         lidfb = rnorm(100, mean = -0.048, 0.07))
 
 spec_ang = spectra(PROSAIL(parameterList = parameter))      
@@ -109,14 +109,14 @@ plot(400:2500, sens_ang, ylim=c(0,1), type="l")
 for(i in 1:100){
   lines(400:2500,spec_ang[i,])
 }
-lines(400:2500, sens_ang, col="red")
+lines(400:2500, sens_ang, col="red")s
 
 ### Plot median absolute deviation results
-pdf(file = "Figures/PROSAIL.pdf", width=7, height=5)
+pdf(file = "Figures/PROSAIL.pdf", width=7, height=4)
 par(mai=c(1, 1, 0.3, 0.3))
-plot(400:2500, ylim=c(0,0.1),axes = FALSE, ylab="Median absolute deviation",
-     xlab=expression(lambda(nm)))
-axis(1, pos=0)
+plot(400:2500, ylim=c(0,0.1), axes = FALSE, ylab="Median absolute deviation",
+     xlab=expression(lambda(mu*m)))
+axis(1, pos=0, at = seq(0, length(sens_lai), 200), labels = seq(0.4, 2.5, 0.2))
 axis(2, pos=0, las=1)
 #lines(sens_N, col = "yellow")
 lines(sens_lai, col="black", lwd=1.5)
@@ -125,7 +125,7 @@ lines(sens_car, col="red", lwd=1.5)
 lines(sens_cm, col="green", lwd=1.5)
 lines(sens_cw, col="blue", lwd=1.5)
 lines(sens_ang, col="purple",lwd=1.5)
-legend("topright", c("LAI", "Cab", "Car", "Cm", "Cw", "ALA"), 
+legend("topright", c("LAI", expression(C[ab]), expression(C[ar]), expression(C[m]), expression(C[w]), "ALA"), 
        col=c("black", "orange", "red", "green", "blue", "purple"), lwd=1,
        bty = "n", text.font = 3)
 dev.off()
