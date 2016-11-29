@@ -1,7 +1,7 @@
 # Created by Javier Lopatin (javierlopatin@gmail.com)
 #
 # A simple script to use gdal_translate to convert files 
-# to the GTiff format.
+# to the GTiff format. Only for Unix like systems.
 #
 
 # Inputs:
