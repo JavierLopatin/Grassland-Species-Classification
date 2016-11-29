@@ -1,7 +1,7 @@
 # Created by Javier Lopatin (javierlopatin@mac.com)
 #
 # A simple script to use gdal_edit.py change images heather to set files 
-# to the real resolution.
+# to the real resolution. Only for Unix like systems.
 # This example is set to work with all TIF imagery of a folder
 #
 
