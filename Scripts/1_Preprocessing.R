@@ -49,7 +49,7 @@ ref_GrayPannel = c(1368.071, 1637.420, 1719.419, 1730.734, 1732.168, 1731.766, 1
                    1692.026)
 
 # reference pannel
-ref = ref_GrayPannel
+ref = ref_spectralon
 
 # Plot spectralon spectra
 plot(seq(395,955,9.3), unlist(spectralon[1]), type="l", xlab="Wavelength [nm]", ylab="Refectance", ylim=c(0,10000))
