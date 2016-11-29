@@ -1,10 +1,14 @@
-## R-Script - Classification
-## author: Javier Lopatin 
-## mail: javierlopatin@gmail.com
-## Manuscript: 
-## last changes: 
-
-#### run Clasification!
+################################################################################
+## R-Script - 3_Classification_CanopyLevel.R                                  ##
+## author: Javier Lopatin                                                     ##
+## mail: javierlopatin@gmail.com                                              ##  
+##                                                                            ##
+## Manuscript: Hyperspectral classification of grassland species: towards an  ##
+## application for semi-automatic field surveys                               ##
+##                                                                            ##
+## description: Classification procidure for canopy-level spectras            ## 
+##                                                                            ##
+################################################################################
 
 library(raster)
 
