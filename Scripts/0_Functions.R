@@ -1501,7 +1501,6 @@ coverSummary <- function(validation, na.replace = TRUE){
 #################################################
 ### Obtain R2, RMSE and Bias per specie       ###
 ### Inputs: is a results from coverSummary    ###
-###                                           ###
 #################################################
 
 GOF <- function(data){ 
@@ -1753,9 +1752,9 @@ GOFbest <- function(data, modelTag){
   
 }
   
-##############################################
-### Obtain the presense/absense of a class ###
-##############################################
+#####################################################
+### Count for well, miss and over classifications ###
+#####################################################
   
 ClassPresence <- function(data){
   data$ClassPresence <- NA
