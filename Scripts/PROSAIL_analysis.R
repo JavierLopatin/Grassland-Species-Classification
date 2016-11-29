@@ -1,10 +1,21 @@
 
+################################################################################
+## R-Script - PROSAIL_analysis.R                                              ##
+## author: Javier Lopatin                                                     ##
+## mail: javierlopatin@gmail.com                                              ##  
+##                                                                            ##
+## Manuscript: Hyperspectral classification of grassland species: towards an  ##
+## application for semi-automatic field surveys                               ##
+##                                                                            ##
+## description: PROSAIL sensitivity analysis to help in the variable          ## 
+##              importance discussion. Results presented in Supplementary data## 
+##                                                                            ##
+################################################################################
 
 library(hsdar)
 
 home = "C:/Users/Lopatin/Dropbox/PhD/Grass_single_spp_segmentation/Single_spp"
 setwd(home)
-
 
 # lai
 parameter <- data.frame(N = rep(1.7, 100),
