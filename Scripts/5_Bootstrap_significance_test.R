@@ -1,7 +1,15 @@
 
-##################################
-## Bootstrap significance test ###
-##################################
+################################################################################
+## R-Script - 5_Bootstrap_significance_test.R                                 ##
+## author: Javier Lopatin                                                     ##
+## mail: javierlopatin@gmail.com                                              ##  
+##                                                                            ##
+## Manuscript: Hyperspectral classification of grassland species: towards an  ##
+## application for semi-automatic field surveys                               ##
+##                                                                            ##
+## description: One-sided bootstrap significance test                         ## 
+##                                                                            ##
+################################################################################
 
 ### Leaf level 
 
@@ -38,19 +46,3 @@ for(i in 1:length(sig_canopy)){
   abline(v=0, col=c("black"))
   box()
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
