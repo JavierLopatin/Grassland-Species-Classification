@@ -3,14 +3,30 @@
 ## author: Javier Lopatin                                                     ##
 ## mail: javierlopatin@gmail.com                                              ##  
 ##                                                                            ##
-## description: 
-##
-## Manuscript: 
-##
-## last changes: 
+## Manuscript: Hyperspectral classification of grassland species: towards an  ##
+## application for semi-automatic field surveys                               ##
+##                                                                            ##
+## description: This R-code provide most of the functions applied in the paper## 
 ##                                                                            ##
 ################################################################################
 
+##----------------------------------------------------------------------------##
+##                                                                            ##
+## ApplyModels                                                                ##
+##                                                                            ##
+## Apply the functions tunningModels, BootsClassification and obstainCovers   ##
+## in a row to obtain the classification results per dataset                  ## 
+##                                                                            ##
+## Arguments:                                                                 ##
+## - valData     classes to classify. I this case the species list per subplot##
+## - potVa-      reflectance obtained with the pot validation method          ##
+## - rf          reflectance obtained with the rip-it-off validation method   ##
+## - raster_List list of the plots rasters                                    ##
+## - wl          wavelength vector                                            ##
+## - modelTag    tag to assign to the exported results                        ##
+## - boots       number of bootstraps to perform                              ##
+##                                                                            ##
+##----------------------------------------------------------------------------##
 
 ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
   
@@ -178,13 +194,14 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
 
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
-## tunningModels and Multi-method ensemble selection of spectral bands        ##
+## tunningModels                                                              ##
 ##                                                                            ##
 ## This function performs a tunning procidure on the models and               ##
 ## a band selection based on a multi-method ensemble                          ##
 ## assessment of the variable importance and classification coefficients of   ##
 ## three different model types: Partial Least Squares Discriminant Analysis,  ##
-## Random Forest and Support Vector Machine classifications                   ## 
+## Random Forest and Support Vector Machine classifications (not presented in ##
+## the paper)                                                                 ## 
 ##                                                                            ## 
 ## Arguments:                                                                 ##
 ## - x      Numeric matrix containing the spectra (samples as rows)           ##
@@ -354,7 +371,7 @@ tunningModels <- function(classes, spectra, wl=NA){
 ## ApplyBestClassification:                                                   ##
 ##                                                                            ##
 ## Apply the best model from classificationEnsemble to the plots using        ##
-## a bootstrapping procidure. Exported results are in shapefile format        ## 
+## a bootstrapping procidure.                                                 ## 
 ##                                                                            ##
 ## Arguments:                                                                 ##
 ## - spec     spectral information. Used to create the quantiles of spectra   ##
@@ -509,12 +526,8 @@ BootsClassification <- function(classes, spectra, en, raster, boots,
       NDVI[NDVI < 0.3]<- NA
       # apply mask
       raster <- mask(raster, NDVI)
-    }
-    if ( nlayers(raster)==10 ){ 
+    } else ( nlayers(raster)==10 ){ # for MNF components
       names(raster) <- paste( rep("B", 10), seq(1,10,1),  sep="" )
-    }
-    if ( nlayers(raster)==6 ){ 
-      names(raster) <- paste( rep("B", 6), seq(1,6,1),  sep="" )
     }
     
     ### Predict PLS DA
@@ -721,16 +734,16 @@ BootsClassificationBest <- function(classes, spectra, en, raster, boots,
 
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
-## obstainCovers: Obtain the covers prediction valiuos per plot               ##
+## obstainCovers: Obtain the covers prediction values per plot                ##
 ##                                                                            ##
 ## Arguments:                                                                 ##
-## - rasterDir:   folder of the predicted plots of ApplyBootsClassification   ##
-## - shpDir:      folder of the shapefiles used to mask the image             ##
-## - shpMaskName: Name of the plot to use as a mask                           ## 
+## - rasterDir    folder of the predicted plots of ApplyBootsClassification   ##
+## - shpDir       folder of the shapefiles used to mask the image             ##
+## - maskName     Name of the plot to use as a mask                           ## 
 ##                                                                            ##
 ##----------------------------------------------------------------------------##
 
-obstainCovers <- function(ObservedSpecies, rasterDir, subplotDir, shpMaskName,
+obstainCovers <- function(ObservedSpecies, rasterDir, subplotDir, maskName,
                           plotNumber, Iter, algorithm){ 
   
   library(raster)
@@ -871,13 +884,13 @@ obstainCovers <- function(ObservedSpecies, rasterDir, subplotDir, shpMaskName,
   dir.create( file.path(home, "Covers_results"), showWarnings = FALSE)
   
   # create output names
-  boot_covers = paste0(algorithm, "_Boot_Covers_", shpMaskName, "_", modelTag, ".txt")
+  boot_covers = paste0(algorithm, "_Boot_Covers_", maskName, "_", modelTag, ".txt")
   boot_covers = file.path( home, "Covers_results", boot_covers )
   
-  median_covers = paste0( algorithm, "_Median_Covers_", shpMaskName, "_", modelTag, ".txt")
+  median_covers = paste0( algorithm, "_Median_Covers_", maskName, "_", modelTag, ".txt")
   median_covers = file.path( home, "Covers_results", median_covers )
   
-  observed_covers = paste0( algorithm, "_Obs_covers", shpMaskName, "_", modelTag, ".txt")
+  observed_covers = paste0( algorithm, "_Obs_covers", maskName, "_", modelTag, ".txt")
   observed_covers = file.path( home, "Covers_results", observed_covers )
   
   # write results
@@ -887,15 +900,19 @@ obstainCovers <- function(ObservedSpecies, rasterDir, subplotDir, shpMaskName,
   
 }
 
-##----------------------------------------------------------------------------##
-##                                                                            ##
-## plots: visualization of spectral ranges and ensemble objects               ##
-##                                                                            ##
-## Arguments:                                                                 ##
-## - spectra  spectral information. Used to create the quantiles of spectra   ##
-## - en       classificationEnsemble object                                   ##
-##                                                                            ##
-##----------------------------------------------------------------------------##
+##------------------------------------------------------------------------------##
+##                                                                              ##
+## plots: visualization of spectras with the 5, 25, 50, 75 and 95 percentiles   ##
+##                                                                              ##
+## Arguments:                                                                   ##
+## - spectra    spectral information. Used to create the quantiles of spectra   ##
+## - wl         classificationEnsemble object                                   ##
+## - xaxis      if TRUE the X axis is ploted                                    ##
+## - ylab       if TRUE the Y axis label is ploted                              ##
+## - ylabside   if TRUE the Y axis label is ploted at the left side of the plot ##
+## - ymax       maximum value of the Y axis                                     ##
+##                                                                              ##
+##------------------------------------------------------------------------------##
 
 plot.spectra <- function(spectra, wl, xaxis=TRUE, ylab = TRUE, ylabside = TRUE, ymax, ...){
   
@@ -948,7 +965,16 @@ plot.spectra <- function(spectra, wl, xaxis=TRUE, ylab = TRUE, ylabside = TRUE, 
   }
 }
 
-plot.importance <- function(varImport, wl, xaxis=TRUE, linetype, ...){
+##------------------------------------------------------------------------------##
+##                                                                              ##
+## plots: the MRPP variable importance and select the values over 0.3           ##
+##                                                                              ##
+## Arguments:                                                                   ##
+## - spectra    spectral information. Used to create the quantiles of spectra   ##
+## - wl         classificationEnsemble object                                   ##
+##                                                                              ##
+##------------------------------------------------------------------------------##
+plot.importance <- function(varImport, wl, xaxis=TRUE, ...){
   
   library(grDevices)
   library(RColorBrewer)
@@ -988,7 +1014,8 @@ plot.importance <- function(varImport, wl, xaxis=TRUE, linetype, ...){
 
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
-## significanceTest_LeafLevel: Apply bootstrap significance test to leaf data ##
+## significanceTest_LeafLevel: Apply one-side bootstrap significance test to  ##
+##                             leaf-level data                                ##
 ##                                                                            ##
 ## Arguments:                                                                 ##
 ## -  data:    input dataset                                                  ##
@@ -1130,6 +1157,25 @@ significanceTest_LeafLevel <- function(data, fitASD, fitAISA, B=500){
  
   }
 
+##----------------------------------------------------------------------------##
+##                                                                            ##
+## significanceTest_LeafLevel: Apply one-side bootstrap significance test to  ##
+##                             canopy-level data                              ##
+##                                                                            ##
+## Arguments:                                                                 ##
+## -  data:    input dataset                                                  ##
+## - fitASD:   classificationEnsemble ASD object                              ##
+## - fitAISA:   classificationEnsemble AISA object                            ##
+##                                                                            ##
+## Function based on:                                                         ##
+## Lopatin, J., Dolos, K., Hernández, H. J., Galleguillos, M., & Fassnacht,  ##
+## F. E. (2016). Comparing Generalized Linear Models and random forest to     ##
+## model vascular plant species richness using LiDAR data in a natural forest ##
+## in central Chile. Remote Sensing of Environment, 173, 200-210.             ##
+## http://doi.org/10.1016/j.rse.2015.11.029                                   ##
+##                                                                            ##
+##----------------------------------------------------------------------------##
+  
 significanceTest_CanopyLevel <- function(model1, model2){
   
   ### PLS
@@ -1154,26 +1200,6 @@ significanceTest_CanopyLevel <- function(model1, model2){
   names(output) <- c("PLS_OA", "RF_OA", "SVM_OA", "PLS_kappa", "RF_kappa", "SVM_kappa")
   class(output) <- "boot_test"
   output
-}
-
-##----------------------------------------------------------------------------##
-##                                                                            ##
-## GLCM: Apply Gray Level Covariance Matrix to an image                       ##
-##                                                                            ##
-## Arguments:                                                                 ##
-## -  img       input image                                                   ##
-##                                                                            ##
-##----------------------------------------------------------------------------##
-
-GLCM <- function(img){
-  # Estimate the GLCM values of one band
-  texture <- glcm(img, n_grey = 32, window = c(3, 3), shift = c(1, 1), 
-                  statistics =c("homogeneity", "contrast", "dissimilarity", "entropy","second_moment", "correlation"),
-                  min_x=NULL, max_x=NULL, na_opt="any",na_val=NA, scale_factor=1, asinteger=FALSE)
-  stats <- c("homogeneity", "contrast", "dissimilarity", "entropy","second_moment", "correlation")
-  Names <- paste(names(img), "_", stats, sep="")
-  names(texture) <- Names
-  return (texture)
 }
 
 ##----------------------------------------------------------------------------##
@@ -1726,8 +1752,11 @@ GOFbest <- function(data, modelTag){
   outputGOF
   
 }
-
-
+  
+##############################################
+### Obtain the presense/absense of a class ###
+##############################################
+  
 ClassPresence <- function(data){
   data$ClassPresence <- NA
   
@@ -1745,7 +1774,10 @@ ClassPresence <- function(data){
   data
 }
 
-# function to calculate Camargo's eveness:
+###############################################
+### function to calculate Camargo's eveness ###
+###############################################
+  
 camargo <- function(n_spec, include_zeros = T)
 {
   if (include_zeros) n <- n_spec else n <- n_spec[n_spec > 0]
