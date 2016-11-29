@@ -1,5 +1,15 @@
 
-## Preprocessing AISA+ images
+################################################################################
+## R-Script - 0_Functions.R                                                   ##
+## author: Javier Lopatin                                                     ##
+## mail: javierlopatin@gmail.com                                              ##  
+##                                                                            ##
+## Manuscript: Hyperspectral classification of grassland species: towards an  ##
+## application for semi-automatic field surveys                               ##
+##                                                                            ##
+## description: Preprocessing AISA+ images                                    ## 
+##                                                                            ##
+################################################################################
 
 library(raster)
 library(rgdal)
