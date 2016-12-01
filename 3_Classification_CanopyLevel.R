@@ -51,7 +51,7 @@ source_github <- function(u) {
   eval(parse(text = script), envir=.GlobalEnv)
   detach("package:RCurl", unload=TRUE)
 } 
-source_github("https://raw.githubusercontent.com/JavierLopatin/Herbaceous-Species-Classification/master/Scripts/0_Functions.R")
+source_github("https://raw.githubusercontent.com/JavierLopatin/Grassland-Species-Classification/master/0_Functions.R")
 
 
 ## load plot images 
