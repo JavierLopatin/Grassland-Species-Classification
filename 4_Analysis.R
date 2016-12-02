@@ -29,7 +29,7 @@ source_github <- function(u) {
   eval(parse(text = script), envir=.GlobalEnv)
   detach("package:RCurl", unload=TRUE)
 } 
-source_github("https://raw.githubusercontent.com/JavierLopatin/Herbaceous-Species-Classification/master/Scripts/0_Functions.R")
+source_github("https://raw.githubusercontent.com/JavierLopatin/Grassland-Species-Classification/master/0_Functions.R")
 
 ## load the data
 fit_potVal <-  read.table("Data/Fits_potVal.csv", sep = ",", header = T)
@@ -74,9 +74,15 @@ save(gof_rf, file="gof_rf.RData")
 x = grep("SVM", rf_cover$Model)
 y <- rf_cover[x, ] 
 
-x = grep("spectra", y$Normalization)
-bestModel <- y[x, ]
+x = grep("MNF", y$Normalization)
+bestModel <- y[-x, ]
+x = grep("spect_BN", bestModel$Normalization)
+bestModel <- bestModel[-x, ]
+bestModel$Normalization <- factor(bestModel$Normalization)
 
+bestModel <- subset(bestModel, Model = "SVM")
+
+## Models fits
 x = grep("rf", outputGOF$Validation)
 y <- outputGOF[x, ] 
 
@@ -84,7 +90,10 @@ x = grep("SVM", y$Models)
 y <- y[x, ] 
 
 x = grep("spectra", y$Normalization)
-gof_best <- y[x, ]
+y <- y[x, ]
+
+x = grep("spectra_BN", y$Normalization)
+gof_best <- y[-x, ]
 
 # count for well, miss and over classifications
 bestModel <- ClassPresence(bestModel)
@@ -250,7 +259,7 @@ library(fuzzySim)
 
 plotsxx <- unique(bestModel$Plot)
 evenness <- matrix(ncol = 11, nrow = 1 )
-colnames(evenness) <- paste0( rep("plot_", nrow(classes)), plotsxx )  
+colnames(evenness) <- paste0( rep("plot_", length(plotsxx)), plotsxx )  
 
 for (i in 1:11){
   # subset plot
@@ -267,8 +276,7 @@ x$Observed[x$Observed == 0] <- NA
 
 tapply(x$Observed, x$Plot, summary)
 
-###
-
+### Complexity gradient
 x = grep(paste0(c(18,19), collapse="|"), bestModel$Plot)
 complex1 <- bestModel[x, ]
 
@@ -329,12 +337,12 @@ save.image("Analysis.RData")
 ### Analysis per growth forms ###
 #################################
 
-graminoids <- subset(gof_rf, Species == "Grass_sp9" | Species == "Nardus_stricta" 
+graminoids <- subset(complex_all, Species == "Grass_sp9" | Species == "Nardus_stricta" 
                      | Species == "Grass_Sp_23" | Species == "Setaria_pumila" 
                      | Species == "Elymus_repens" | Species == "Echinochloa_crus-galli"
                      | Species == "Panicum_capillare")
 
-fobs <- subset(gof_rf, Species == "Prunella_vulgaris" | Species == "Sp_2" 
+fobs <- subset(complex_all, Species == "Prunella_vulgaris" | Species == "Sp_2" 
                | Species == "Hypochaeris_radicata" | Species == "Trifolium_pratense" 
                | Species == "Trifolium_repens" | Species == "Conyza_canadensis" 
                | Species == "Potentilla_reptans" | Species == "Taraxacum_officinale" 
@@ -354,14 +362,14 @@ fobs <- subset(gof_rf, Species == "Prunella_vulgaris" | Species == "Sp_2"
                | Species == "Oenothera_biennis" | Species == "Arthemisia_vulgaris" 
                | Species == "Anthemis_arvensis")
 
-bryophytes <-  subset(gof_rf, Species == "Brachythecium_sp")
+bryophytes <-  subset(complex_all, Species == "Brachythecium_sp")
 
 
 graminoids$PFT <- "Graminoids"
 fobs$PFT <- "Fobs"
 bryophytes$PFT <- "Bryophytes"
 
-PFT <- rbind(graminoids, fobs, bryophytes)
+ALL <- rbind(graminoids, fobs, bryophytes)
 
 
 ###############################
