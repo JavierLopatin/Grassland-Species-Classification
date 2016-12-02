@@ -80,7 +80,7 @@ spec_cm = spectra(PROSAIL(parameterList = parameter))
 sens_cm = apply(as.matrix(spec_cm), 2, FUN = mad)
 
 plot(400:2500, sens_cm, ylim=c(0,1), type="l")                               
-for(i in 1:no_sim){
+for(i in 1:100){
   lines(400:2500,spec_cm[i,])
 }
 lines(400:2500, sens_cm, col="red") 
@@ -120,7 +120,7 @@ plot(400:2500, sens_ang, ylim=c(0,1), type="l")
 for(i in 1:100){
   lines(400:2500,spec_ang[i,])
 }
-lines(400:2500, sens_ang, col="red")s
+lines(400:2500, sens_ang, col="red")
 
 ### Plot median absolute deviation results
 pdf(file = "Figures/PROSAIL.pdf", width=7, height=4)
