@@ -542,4 +542,46 @@ gof_res12$Resolution <- 3.6
 gof_resolution <- rbind(gof_res1, gof_res2, gof_res4, gof_res6,
                         gof_res8, gof_res10, gof_res12)
 
+
+###############
+### CV maps ###
+###############
+
+# load prediction maps
+cv_p9 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_9_SVM_rf_spect", dir=rasterDir)
+cv_p10 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_10_SVM_rf_spect", dir=rasterDir)
+cv_p11 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_11_SVM_rf_spect", dir=rasterDir)
+cv_p12 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_12_SVM_rf_spect", dir=rasterDir)
+cv_p13 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_13_SVM_rf_spect", dir=rasterDir)
+cv_p14 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_14_SVM_rf_spect", dir=rasterDir)
+cv_p15 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_15_SVM_rf_spect", dir=rasterDir)
+cv_p16 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_16_SVM_rf_spect", dir=rasterDir)
+cv_p17 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_17_SVM_rf_spect", dir=rasterDir)
+cv_p18 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_18_SVM_rf_spect", dir=rasterDir)
+cv_p19 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_19_SVM_rf_spect", dir=rasterDir)
+
+# calculate cv
+# create output folder
+dir.create(file.path(rasterDir, "CV"), showWarnings = FALSE)
+
+# cv function
+cv_class <- function(x, outName){
+  r <- stack( unlist(x) )
+  CV <- cv(r)
+  out = file.path(rasterDir, "CV", paste0(outName, ".tif"))
+  writeRaster(CV, filename = out, format = "GTiff", overwrite = T)
+}
+
+cv_class(cv_p9, "plot9")
+cv_class(cv_p10, "plot10")
+cv_class(cv_p11, "plot11")
+cv_class(cv_p12, "plot12")
+cv_class(cv_p13, "plot13")
+cv_class(cv_p14, "plot14")
+cv_class(cv_p15, "plot15")
+cv_class(cv_p16, "plot16")
+cv_class(cv_p17, "plot17")
+cv_class(cv_p18, "plot18")
+cv_class(cv_p19, "plot19")
+
 save.image("Analysis.RData")
