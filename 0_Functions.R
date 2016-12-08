@@ -914,14 +914,15 @@ obstainCovers <- function(ObservedSpecies, rasterDir, subplotDir, maskName,
 ##                                                                              ##
 ##------------------------------------------------------------------------------##
 
-plot.spectra <- function(spectra, wl, xaxis=TRUE, ylab = TRUE, ylabside = TRUE, ymax, ...){
+plot.spectra <- function(spectra, wl, xaxis=TRUE, ymax, ...){
   
   # obtain the quantiles of the spectras
   quant <- apply(spectra, 2, quantile, probs =c(0.05, 0.25, 0.5, 0.75, 0.95))
   
   if (xaxis == TRUE){
+    
     plot(wl, quant[1,], type="l", ylim = c(0,ymax), xlim = c(min(wl)-10, max(wl)+10), 
-         xaxs = "i", ylab = NA, las=1, xlab=expression(lambda(nm)), axes=F)
+         xaxs = "i", ylab= "Reflectance", las=1, xlab=expression(lambda(nm)), axes=F, cex.lab = 1.3)
     lines(wl, quant[2,], type="l")
     lines(wl, quant[3,], type="l")
     lines(wl, quant[4,], type="l")
@@ -930,20 +931,13 @@ plot.spectra <- function(spectra, wl, xaxis=TRUE, ylab = TRUE, ylabside = TRUE, 
     polygon(c(wl, rev(wl)), c(quant[3,], rev(quant[2,])), col = "grey50")
     polygon(c(wl, rev(wl)), c(quant[4,], rev(quant[3,])), col = "grey50")
     polygon(c(wl, rev(wl)), c(quant[5,], rev(quant[4,])), col = "grey70")
-    axis(side = 1, las=1)
-    if (ylab == TRUE){ 
-      if (ylabside == TRUE){ 
-        axis(side = 2, las=1)
-        mtext(side = 2, line = 3, 'Reflectance')
-      } else{
-        axis(side = 4, las=1)
-        mtext(side = 4, line = 3, 'Reflectance')
-      }
-    }
-    box()
+    axis(side = 1, pos = 0, las=1, cex.axis = 1.3)
+    axis(side = 2, las=1, pos=min(wl), cex.axis = 1.3)
+
   } else {
+    
     plot(wl, quant[1,], type="l", ylim = c(0,ymax), xlim = c(min(wl)-10, max(wl)+10), 
-         xaxs = "i", axes=F, ylab = NA, xlab=NA, las=1)
+         xaxs = "i", axes=F, ylab = "Reflectance", xlab=NA, las=1, cex.lab = 1.3)
     lines(wl, quant[2,], type="l")
     lines(wl, quant[3,], type="l")
     lines(wl, quant[4,], type="l")
@@ -952,16 +946,8 @@ plot.spectra <- function(spectra, wl, xaxis=TRUE, ylab = TRUE, ylabside = TRUE, 
     polygon(c(wl, rev(wl)), c(quant[3,], rev(quant[2,])), col = "grey50")
     polygon(c(wl, rev(wl)), c(quant[4,], rev(quant[3,])), col = "grey50")
     polygon(c(wl, rev(wl)), c(quant[5,], rev(quant[4,])), col = "grey70")
-    if (ylab == TRUE){ 
-      if (ylabside == TRUE){ 
-        axis(side = 2, las=1)
-        mtext(side = 2, line = 3, 'Reflectance')
-      } else{
-        axis(side = 4, las=1)
-        mtext(side = 4, line = 3, 'Reflectance')
-      }
-    }
-    box()
+    axis(side = 2, las=1, pos=min(wl), cex.axis = 1.3)
+    
   }
 }
 
@@ -998,14 +984,14 @@ plot.importance <- function(varImport, wl, xaxis=TRUE, ...){
   
   # MRFF coefficients
   if (xaxis == TRUE){
-    image(wl, seq(0, 100, 1), z1, xlim = c(min(wl)-10, max(wl)+10), xlab=expression(lambda(nm)), col=blueish, ylab="", axes=F)
+    image(wl, seq(0, 100, 1), z1, xlim = c(min(wl)-10, max(wl)+10), xlab=expression(lambda(nm)), col=blueish, ylab="", axes=F, cex.lab = 1.3)
   } else {
-    image(wl, seq(0, 100, 1), z1, xlim = c(min(wl)-10, max(wl)+10), xlab="", col=blueish, ylab="", axes=F)
+    image(wl, seq(0, 100, 1), z1, xlim = c(min(wl)-10, max(wl)+10), xlab="", col=blueish, ylab="", axes=F, cex.lab = 1.3)
   }
   # selection
-  image(wl, seq(0, 100, 1), z2, xlim = c(min(wl)-10, max(wl)+10), col=1, ylab="", axes=F, add=T)
+  image(wl, seq(0, 100, 1), z2, xlim = c(min(wl)-10, max(wl)+10), col=1, ylab="", axes=F, add=T, cex.lab = 1.3)
   if (xaxis == TRUE){
-    axis(side = 1, las=1)
+    axis(side = 1, las=1, cex.axis = 1.3)
   }
   abline(h = 49.5)
   box()
