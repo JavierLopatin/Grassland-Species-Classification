@@ -191,7 +191,7 @@ for(i in 1:61){
   mat_mrpp[2,i] = obj_mrpp$Pvalue
 }
 
-save(mat_mrpp, file = "bestImp.RData")
+save(mat_mrpp, file = "mat_mrpp.RData")
 
 ### Growth forms
 graminoids_varImport <- subset(rf_spec_BN, Species == "Grass_sp9" | Species == "Nardus_stricta" 
