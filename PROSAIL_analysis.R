@@ -140,3 +140,8 @@ legend("topright", c("LAI", expression(C[ab]), expression(C[ar]), expression(C[m
        col=c("black", "orange", "red", "green", "blue", "purple"), lwd=1,
        bty = "n", text.font = 3)
 dev.off()
+
+# use only the AISA+ range
+sens_all <- rbind(sens_lai, sens_cab, sens_car, sens_cm, sens_cw, sens_ang)
+
+save(sens_all, file = "PROSAIL.RData")
