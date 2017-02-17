@@ -5,7 +5,7 @@
 ## mail: javierlopatin@gmail.com                                              ##  
 ##                                                                            ##
 ## Manuscript: Hyperspectral classification of grassland species: towards an  ##
-## application for semi-automatic field surveys                               ##
+##             UAS application for semi-automatic field surveys               ##
 ##                                                                            ##
 ## description: Plots presented in the paper                                  ## 
 ##                                                                            ##
