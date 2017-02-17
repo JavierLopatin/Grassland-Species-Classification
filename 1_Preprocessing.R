@@ -1,11 +1,11 @@
 
 ################################################################################
-## R-Script - 0_Functions.R                                                   ##
+## R-Script - 1_Preprocessing.R                                               ##
 ## author: Javier Lopatin                                                     ##
 ## mail: javierlopatin@gmail.com                                              ##  
 ##                                                                            ##
 ## Manuscript: Hyperspectral classification of grassland species: towards an  ##
-## application for semi-automatic field surveys                               ##
+##             UAS application for semi-automatic field surveys               ##
 ##                                                                            ##
 ## description: Preprocessing AISA+ images                                    ## 
 ##                                                                            ##
@@ -46,7 +46,7 @@ AISAbandnames <- c("398nm", "407nm", "415nm", "424nm", "432nm", "441nm", "450nm"
                "918nm", "928nm", "937nm", "947nm", "957nm")
 
 
-# spectralon values
+# white and gray references values
 ref_spectralon = c(2000, 3100, 4300, 5800, 6800, 7800, 8900, 9500, 9600, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800
                    , 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800
                    , 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9700, 9300, 9300, 9200)
