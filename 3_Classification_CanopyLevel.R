@@ -4,7 +4,7 @@
 ## mail: javierlopatin@gmail.com                                              ##  
 ##                                                                            ##
 ## Manuscript: Hyperspectral classification of grassland species: towards an  ##
-## application for semi-automatic field surveys                               ##
+##             UAS application for semi-automatic field surveys               ##
 ##                                                                            ##
 ## description: Classification procidure for canopy-level spectras            ## 
 ##                                                                            ##
@@ -57,7 +57,8 @@ source_github("https://raw.githubusercontent.com/JavierLopatin/Grassland-Species
 ## load plot images 
 raster_spec <-  rasterList(fileExtantion = ".tif", folder = "Plots/Plots_spec", dir=home)
 r <- stack( paste0(home, "/Plots/Plots_spec/plot_17.dat") )
-raster_spec[[11]] <- r; names(raster_spec) <- c("plot_10", "plot_11", "plot_12", "plot_13", "plot_14", "plot_15", "plot_16", "plot_18", "plot_19", "plot_9", "plot_17")
+raster_spec[[11]] <- r; names(raster_spec) <- c("plot_10", "plot_11", "plot_12", "plot_13", "plot_14", "plot_15", 
+                                                "plot_16", "plot_18", "plot_19", "plot_9", "plot_17")
 
 raster_spec_BN <-  rasterList(fileExtantion = ".tif", folder = "Plots/Plots_spec_BN", dir=home)
 raster_MNF     <-  rasterList(fileExtantion = ".tif", folder = "Plots/Plots_MNF", dir=home)
