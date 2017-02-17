@@ -4,7 +4,7 @@
 ## mail: javierlopatin@gmail.com                                              ##  
 ##                                                                            ##
 ## Manuscript: Hyperspectral classification of grassland species: towards an  ##
-## application for semi-automatic field surveys                               ##
+##             UAS application for semi-automatic field surveys               ##
 ##                                                                            ##
 ## description: Analysis of the canopy-level classification results           ## 
 ##                                                                            ##
@@ -385,7 +385,7 @@ rf_spec <- read.table("Data/rf_spec.csv", sep = ",", header = T)
 species <- read.table("Data/Plots_Species.csv", header = T, sep=",")
 
 ## load plot images 
-# resample done with gdal_translate, as: 
+# resample of resolutions done with gdal_translate, as: 
 # Windows --> for %i in (*.tif) do gdal_translate -tr 2 2 %i 2/%i 
 # Linux   --> FILES=inPath/*tif
 #             for f in $FILES
@@ -393,7 +393,8 @@ species <- read.table("Data/Plots_Species.csv", header = T, sep=",")
 #               gdal_translate gdal_translate -tr 2 2 ${f} 2/${f}
 #             done
 
-## Obtain the spectras for each resolution using the ExtractValues.py code
+## Obtain the spectras for each resolution using the ExtractValues.py code 
+## (available at: https://github.com/JavierLopatin/Python-Remote-Sensing-Scripts/blob/master/ExtractValues.py)
 ## load the spectras
 res2  <- read.table("Plots/resolution/res2.csv", header = T, sep=",")
 res4  <- read.table("Plots/resolution/res4.csv", header = T, sep=",")
@@ -411,22 +412,22 @@ raster10 <- rasterList(fileExtantion = ".tif", folder = "Plots/resolution_analys
 raster12 <- rasterList(fileExtantion = ".tif", folder = "Plots/resolution_analysis/12", dir=rasterDir)
 
 ## apply parameter tuning
-tun2 <- tunningModels(classes = Species, 
+tun2 <- tuningModels(classes = Species, 
                       spectra = res2[, 3:length( res2 )], 
                       wl=wl)
-tun4 <- tunningModels(classes = Species, 
+tun4 <- tuningModels(classes = Species, 
                       spectra = res4[, 3:length( res4 )], 
                       wl=wl)
-tun6 <- tunningModels(classes = Species, 
+tun6 <- tuningModels(classes = Species, 
                       spectra = res6[, 3:length( res6 )], 
                       wl=wl)
-tun8 <- tunningModels(classes = Species, 
+tun8 <- tuningModels(classes = Species, 
                       spectra = res8[, 3:length( res8 )], 
                       wl=wl)
-tun10 <- tunningModels(classes = Species, 
+tun10 <- tuningModels(classes = Species, 
                       spectra = res10[, 3:length( res10 )], 
                       wl=wl)
-tun12 <- tunningModels(classes = Species, 
+tun12 <- tuningModels(classes = Species, 
                       spectra = res12[, 3:length( res22 )], 
                       wl=wl)
 
