@@ -4,7 +4,7 @@
 ## mail: javierlopatin@gmail.com                                              ##  
 ##                                                                            ##
 ## Manuscript: Hyperspectral classification of grassland species: towards an  ##
-## application for semi-automatic field surveys                               ##
+## UAS application for semi-automatic field surveys                           ##
 ##                                                                            ##
 ## description: This R-code provide most of the functions applied in the paper## 
 ##                                                                            ##
