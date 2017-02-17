@@ -194,9 +194,9 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
 
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
-## tuningModels                                                              ##
+## tuningModels function                                                      ##
 ##                                                                            ##
-## This function performs a tuning procidure on the models and               ##
+## This function performs a tuning procidure on the models and                ##
 ## a band selection based on a multi-method ensemble                          ##
 ## assessment of the variable importance and classification coefficients of   ##
 ## three different model types: Partial Least Squares Discriminant Analysis,  ##
@@ -1080,7 +1080,8 @@ significanceTest_LeafLevel <- function(data, fitASD, fitAISA, B=500){
    ### ASD ###
    ###########
    
-   m1 <-  svm(hyperASD$spc[idx,], hyperASD@data$Species[idx], gamma = fitASD$SVM$finalModel$gamma, cost = fitASD$SVM$finalModel$cost, probability = TRUE)
+   m1 <-  svm(hyperASD$spc[idx,], hyperASD@data$Species[idx], gamma = fitASD$SVM$finalModel$gamma, 
+              cost = fitASD$SVM$finalModel$cost, probability = TRUE)
    
    m1.pred <- predict(m1, hyperASD$spc[-idx,])
    
