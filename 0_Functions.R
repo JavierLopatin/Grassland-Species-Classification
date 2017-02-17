@@ -12,9 +12,9 @@
 
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
-## ApplyModels                                                                ##
+## ApplyModels function                                                                ##
 ##                                                                            ##
-## Apply the functions tunningModels, BootsClassification and obstainCovers   ##
+## Apply the functions tuningModels, BootsClassification and obstainCovers   ##
 ## in a row to obtain the classification results per dataset                  ## 
 ##                                                                            ##
 ## Arguments:                                                                 ##
@@ -54,7 +54,7 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
     data_rf$Species <- factor(data_rf$Species) 
     
     ####################################
-    ### Apply tunningModels function ###
+    ### Apply tuningModels function ###
     ####################################
     
     print(paste("### Tuning", plot_name, modelTag, "###"))
@@ -63,22 +63,22 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
     print("Tuning pot Validation model")
     print("")
     
-    fit_potVal <- tunningModels(classes = data_potVal$Species, 
+    fit_potVal <- tuningModels(classes = data_potVal$Species, 
                                 spectra = data_potVal[, 3:length( data_potVal )],
                                 wl = wl)
     
     print("Tuning rip-it-off model")
     print("")
     
-    fit_rf     <- tunningModels(classes = data_rf$Species, 
+    fit_rf     <- tuningModels(classes = data_rf$Species, 
                                 spectra = data_rf[, 3:length( data_rf )],
                                 wl = wl)
     # save tuning models
-    dir.create(file.path(home, "tunningOutputs"), showWarnings = FALSE)
+    dir.create(file.path(home, "tuningOutputs"), showWarnings = FALSE)
     
-    save(fit_potVal, file=paste0(home,  "/tunningOutputs/", "potVal_", 
+    save(fit_potVal, file=paste0(home,  "/tuningOutputs/", "potVal_", 
                                  plot_name, "_", modelTag, ".RData"))
-    save(fit_rf,     file=paste0(home,  "/tunningOutputs/", "rf_",
+    save(fit_rf,     file=paste0(home,  "/tuningOutputs/", "rf_",
                                  plot_name,  "_", modelTag, ".RData"))
     
     print("Done!")
@@ -194,9 +194,9 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
 
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
-## tunningModels                                                              ##
+## tuningModels                                                              ##
 ##                                                                            ##
-## This function performs a tunning procidure on the models and               ##
+## This function performs a tuning procidure on the models and               ##
 ## a band selection based on a multi-method ensemble                          ##
 ## assessment of the variable importance and classification coefficients of   ##
 ## three different model types: Partial Least Squares Discriminant Analysis,  ##
@@ -215,7 +215,7 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
 ##                                                                            ##
 ##----------------------------------------------------------------------------##
 
-tunningModels <- function(classes, spectra, wl=NA){
+tuningModels <- function(classes, spectra, wl=NA){
   
   ## load required libraries
   library(caret)
@@ -245,7 +245,7 @@ tunningModels <- function(classes, spectra, wl=NA){
   ### PLS-DA classification ###
   #############################
   
-  print("Tunning PLS-DA Model...")
+  print("Tuning PLS-DA Model...")
 
   # apply classification
   set.seed(123)
@@ -279,7 +279,7 @@ tunningModels <- function(classes, spectra, wl=NA){
   ### RF classification ###
   #########################
   
-  print("Tunning RF model...")
+  print("Tuning RF model...")
 
   set.seed(123)
   rfClas <- train(x=train[, 2:length(train)], y=make.names( train$classes ), method = "rf", 
@@ -307,7 +307,7 @@ tunningModels <- function(classes, spectra, wl=NA){
   ### SVM classification ###
   ##########################
   
-  print("Tunning SVM Model...")
+  print("Tuning SVM Model...")
 
   set.seed(123)
   svmClas <- train(x=train[, 2:length(train)], y=make.names( train$classes ), method = "svmLinear2", 
@@ -1107,7 +1107,8 @@ significanceTest_LeafLevel <- function(data, fitASD, fitAISA, B=500){
    ### AISA ###
    ############
    
-   m2 <-  svm(hyperAISA$spc[idx,], hyperAISA@data$Species[idx], gamma = fitAISA$SVM$finalModel$gamma, cost = fitAISA$SVM$finalModel$cost, probability = TRUE)
+   m2 <-  svm(hyperAISA$spc[idx,], hyperAISA@data$Species[idx], gamma = fitAISA$SVM$finalModel$gamma, 
+              cost = fitAISA$SVM$finalModel$cost, probability = TRUE)
    
    m2.pred <- predict(m2, hyperAISA$spc[-idx,])
    
@@ -1446,8 +1447,10 @@ coverSummary <- function(validation, na.replace = TRUE){
       
       for (i3 in 1:11){ # plots 
         
-        obs <- read.table( paste0( "Covers_results/", modelTag[i2], "_", validation, "_Obs_coversplot_", seq(9,19,1)[i3], "_", Normalization[i], ".txt"), header = T)
-        pred <-  read.table( paste0( "Covers_results/", modelTag[i2], "_", validation, "_Median_Covers_plot_", seq(9,19,1)[i3], "_", Normalization[i], ".txt"), header = T)
+        obs <- read.table( paste0( "Covers_results/", modelTag[i2], "_", validation, "_Obs_coversplot_", 
+                                  seq(9,19,1)[i3], "_", Normalization[i], ".txt"), header = T)
+        pred <-  read.table( paste0( "Covers_results/", modelTag[i2], "_", validation, "_Median_Covers_plot_", 
+                                    seq(9,19,1)[i3], "_", Normalization[i], ".txt"), header = T)
         
         for (i4 in 1:16){ #subplots
           
