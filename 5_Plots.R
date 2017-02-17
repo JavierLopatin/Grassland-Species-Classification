@@ -1,11 +1,11 @@
 
 ################################################################################
-## R-Script - 5_Plots.R                                                       ##
+## R-Script - 6_Plots.R                                                       ##
 ## author: Javier Lopatin                                                     ##
 ## mail: javierlopatin@gmail.com                                              ##  
 ##                                                                            ##
 ## Manuscript: Hyperspectral classification of grassland species: towards an  ##
-## application for semi-automatic field surveys                               ##
+##             UAS application for semi-automatic field surveys               ##
 ##                                                                            ##
 ## description: Plots presented in the paper                                  ## 
 ##                                                                            ##
