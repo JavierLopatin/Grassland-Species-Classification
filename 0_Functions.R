@@ -208,11 +208,6 @@ ApplyModels <- function(valData, potVal, rf, raster_List, wl, modelTag, boots){
 ## - y      Numeric vector containing the response variable                   ##
 ## - wl     Numeric vector containing the wavelength information of the bands ##
 ##                                                                            ##
-## Variable importance based on the paper:                                    ##
-## Feilhauer, H., Asner, G.P., & Martin, R.E. (2015). Multi-method ensemble   ##
-## selection of spectral bands related to leaf biochemistry. Remote Sensing   ## 
-## of Environment, 164, 57-65. http://doi.org/10.1016/j.rse.2015.03.033       ##
-##                                                                            ##
 ##----------------------------------------------------------------------------##
 
 tuningModels <- function(classes, spectra, wl=NA){
@@ -374,7 +369,7 @@ tuningModels <- function(classes, spectra, wl=NA){
 ## a bootstrapping procidure.                                                 ## 
 ##                                                                            ##
 ## Arguments:                                                                 ##
-## - spec     spectral information. Used to create the quantiles of spectra   ##
+## - spectra  spectral information. Used to create the quantiles of spectra   ##
 ## - en       classificationEnsemble object                                   ##
 ##                                                                            ##
 ##----------------------------------------------------------------------------##
