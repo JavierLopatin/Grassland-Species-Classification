@@ -249,7 +249,7 @@ dat_rfVal  <- read.table("D:/Sp_Images/BootsClass_out/Fits_all_rf.txt", header =
 
 library(beanplot)
 
-pdf(file = "Figures/SVM.pdf", width=7, height=6)
+pdf(file = "Figures/Figure2.pdf", width=7, height=6)
 mat <- layout(rbind(c(1,1,1),c(2,3,4)), heights=c(1,1), TRUE) 
 par(mai=c(0.6,0.7,0.3,0.3))
 # Classification
@@ -257,7 +257,7 @@ beanplot(dat_potVal$OA_SVM, dat_rfVal$OA_SVM, dat_potVal$Kappa_SVM, dat_rfVal$Ka
          border = NA, innerboerder=NA, beanlines="median", ll = 0, side = "b", log="",  main = "", 
          names=c("Overall Accuracy", "Kappa"), ylab = "Accuracy [0-1]", 
          ylim = c(0.4,1), yaxs = "i",cex.lab=1.3, cex.axis=1.3, las=1)
-legend("bottomright", legend=c("Pot method", "Rip-it-off method"), fill=c("black", "gray"), bty="n", cex=1.3)
+legend("bottomright", legend=c("Pot method", "Isolation method"), fill=c("black", "gray"), bty="n", cex=1.3)
 text(x = c(0.95,0.95), labels = "*", cex = 3)
 mtext("A", side=3, line=0.5, adj=0, cex=1.3)
 
