@@ -12,9 +12,9 @@
 
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
-## ApplyModels function                                                                ##
+## ApplyModels function                                                       ##
 ##                                                                            ##
-## Apply the functions tuningModels, BootsClassification and obstainCovers   ##
+## Apply the functions tuningModels, BootsClassification and obstainCovers    ##
 ## in a row to obtain the classification results per dataset                  ## 
 ##                                                                            ##
 ## Arguments:                                                                 ##

@@ -182,9 +182,6 @@ library(vegan)
 
 mat_mrpp = matrix(NA, ncol=61, nrow=2)
 for(i in 1:61){
-  #dat <- data.frame(sp=rf_spec_BN$Species, rf_spec_BN[,i+2])
-  #SAM <- designdist(dat, "acos( J / ( (A*0.5) * (B*0.5) ) )", terms = "quadratic")
-  #obj_mrpp = mrpp(dat = SAM, grouping = classes, parallel = 16)
   obj_mrpp = mrpp(dat = rf_spec_BN[, 3:length(rf_spec_BN[1,])][i], 
                   grouping = rf_spec_BN$Species, parallel = 16, distance = "mahalanobis")
   mat_mrpp[1,i] = obj_mrpp$A
@@ -192,62 +189,6 @@ for(i in 1:61){
 }
 
 save(mat_mrpp, file = "mat_mrpp.RData")
-
-### Growth forms
-graminoids_varImport <- subset(rf_spec_BN, Species == "Grass_sp9" | Species == "Nardus_stricta" 
-                     | Species == "Grass_Sp_23"   | Species == "Setaria_pumila" 
-                     | Species == "Elymus_repens" | Species == "Echinochloa_crus-galli"
-                     | Species == "Panicum_capillare")
-
-forbs_varImport <- subset(rf_spec_BN, Species == "Prunella_vulgaris" | Species == "Sp_2" 
-               | Species == "Hypochaeris_radicata" | Species == "Trifolium_pratense" 
-               | Species == "Trifolium_repens" | Species == "Conyza_canadensis" 
-               | Species == "Potentilla_reptans" | Species == "Taraxacum_officinale" 
-               | Species == "Galium_sp" | Species == "Bellis perennis" 
-               | Species == "Glechoma_hederacea" | Species == "Medicago_lupulina" 
-               | Species == "Minuartia_hybrida" | Species == "Plantago_lancelota" 
-               | Species == "Geranium_pusillum" | Species == "Plantago_major" 
-               | Species == "Potentilla_2" | Species == "Achillea_millefolium"
-               | Species == "Oxalis_stricta" | Species == "Medicago_arabica" 
-               | Species == "Echium_vulgare" | Species == "Erigoron_annuus" 
-               | Species == "Senecio_vulgaris" | Species == "Filago_arvensis" 
-               | Species == "Anagallis_arvensis" | Species == "Daucum_carota" 
-               | Species == "Medicago_sativa " | Species == "Rumex_obtusifolius" 
-               | Species == "Convolvulus_sepium" | Species == "Verbena_officinalis" 
-               | Species == "Urtica_dioica" | Species == "Cichorium_intybus" 
-               | Species == "Solidago_gigantea" | Species == "Polygonum_persicaria" 
-               | Species == "Oenothera_biennis" | Species == "Arthemisia_vulgaris" 
-               | Species == "Anthemis_arvensis")
-
-# graminoids
-gram_mrpp = matrix(NA, ncol=61, nrow=2)
-for(i in 1:61){
-  #SAM <- designdist(spectra, "acos( J / ( (A*0.5) * (B*0.5) ) )")
-  #obj_mrpp = mrpp(dat = SAM, grouping = classes, parallel = 16)
-  obj_mrpp = mrpp(dat = graminoids_varImport[, 3:(length(graminoids_varImport[1,])-1 )][i], 
-                  grouping = graminoids_varImport$Species, parallel = 16, distance = "mahalanobis")
-  gram_mrpp[1,i] = obj_mrpp$A
-  gram_mrpp[2,i] = obj_mrpp$Pvalue
-}
-
-save(gram_mrpp, file = "Gramm_Imp.RData")
-
-# forbs
-forbs_mrpp = matrix(NA, ncol=61, nrow=2)
-for(i in 1:61){
-  #SAM <- designdist(spectra, "acos( J / ( (A*0.5) * (B*0.5) ) )", terms = "quadratic")
-  #obj_mrpp = mrpp(dat = SAM, grouping = classes, parallel = 16)
-  obj_mrpp = mrpp(dat = forbs_varImport[, 3:length(forbs_varImport[1,])][i], 
-                  grouping = forbs_varImport$Species, parallel = 16, distance = "mahalanobis")
-  forbs_mrpp[1,i] = obj_mrpp$A
-  forbs_mrpp[2,i] = obj_mrpp$Pvalue
-}
-
-save(frobs_mrpp, file = "Fobs_Imp.RData")
-
-plot (wl, mat_mrpp[1,], type="l", main="mrpp", ylim=c(0,0.5))
-lines(wl, gram_mrpp[1,], type="l", lty=2, col="blue")
-lines(wl, forbs_mrpp[1,], type="l", lty=3, col="red")
 
 
 ##############################################
@@ -297,13 +238,13 @@ complex4$complex <- 4
 complex_all <- rbind(complex1, complex2, complex3, complex4)
 
 gof_1 <- GOFbest(complex1)
-gof_1$complex <- "complex1"
+gof_1$complex <- 1
 gof_2 <- GOFbest(complex2)
-gof_2$complex <- "complex2"
+gof_2$complex <- 2
 gof_3 <- GOFbest(complex3)
-gof_3$complex <- "complex3"
+gof_3$complex <- 3
 gof_4 <- GOFbest(complex4)
-gof_4$complex <- "complex4"
+gof_4$complex <- 4
 
 gof_complex <- rbind(gof_1, gof_2, gof_3, gof_4)
 
@@ -332,44 +273,6 @@ gof_cov5$CoverRange <- "80-100"
 gof_cover <- rbind(gof_cov1, gof_cov2, gof_cov3, gof_cov4, gof_cov5)
 
 save.image("Analysis.RData")
-
-#################################
-### Analysis per growth forms ###
-#################################
-
-graminoids <- subset(complex_all, Species == "Grass_sp9" | Species == "Nardus_stricta" 
-                     | Species == "Grass_Sp_23" | Species == "Setaria_pumila" 
-                     | Species == "Elymus_repens" | Species == "Echinochloa_crus-galli"
-                     | Species == "Panicum_capillare")
-
-fobs <- subset(complex_all, Species == "Prunella_vulgaris" | Species == "Sp_2" 
-               | Species == "Hypochaeris_radicata" | Species == "Trifolium_pratense" 
-               | Species == "Trifolium_repens" | Species == "Conyza_canadensis" 
-               | Species == "Potentilla_reptans" | Species == "Taraxacum_officinale" 
-               | Species == "Galium_sp" | Species == "Bellis perennis" 
-               | Species == "Glechoma_hederacea" | Species == "Medicago_lupulina" 
-               | Species == "Minuartia_hybrida" | Species == "Plantago_lancelota" 
-               | Species == "Geranium_pusillum" | Species == "Plantago_major" 
-               | Species == "Potentilla_2" | Species == "Achillea_millefolium"
-               | Species == "Oxalis_stricta" | Species == "Medicago_arabica" 
-               | Species == "Echium_vulgare" | Species == "Erigoron_annuus" 
-               | Species == "Senecio_vulgaris" | Species == "Filago_arvensis" 
-               | Species == "Anagallis_arvensis" | Species == "Daucum_carota" 
-               | Species == "Medicago_sativa " | Species == "Rumex_obtusifolius" 
-               | Species == "Convolvulus_sepium" | Species == "Verbena_officinalis" 
-               | Species == "Urtica_dioica" | Species == "Cichorium_intybus" 
-               | Species == "Solidago_gigantea" | Species == "Polygonum_persicaria" 
-               | Species == "Oenothera_biennis" | Species == "Arthemisia_vulgaris" 
-               | Species == "Anthemis_arvensis")
-
-bryophytes <-  subset(complex_all, Species == "Brachythecium_sp")
-
-
-graminoids$PFT <- "Graminoids"
-fobs$PFT <- "Fobs"
-bryophytes$PFT <- "Bryophytes"
-
-ALL <- rbind(graminoids, fobs, bryophytes)
 
 
 ###############################
