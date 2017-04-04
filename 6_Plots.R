@@ -11,33 +11,18 @@
 ##                                                                            ##
 ################################################################################
 
-###################################################
-### Classification accuracies at the leaf level ###
-###################################################
-
-library(beanplot)
-
-pdf(file = "Figures/LeafLevel_accuracy.pdf", width=8, height=6)
-par(mai=c(0.5, 1, 0.3, 0.3))
-beanplot( unlist(boot_test$fit$OA.ASD), unlist(boot_test$fit$kappa.ASD), 
-          unlist(boot_test$fit$OA.AISA), unlist(boot_test$fit$kappa.AISA), 
-        col = list("black", "gray"), border = NA, innerboerder=NA, beanlines="median", 
-        ll = 0, side = "b", log="", main = "", names=c("Full range", "AISA+ range"), 
-        ylab = "Accuracy [0-1]", ylim = c(0,1), yaxs = "i", cex.lab=1.3, cex.axis=1.3, las=1)
-legend("bottomleft", legend=c("Overall accuracy", "Kappa"), fill=c("black", "gray"), bty="n", cex=1.3)
-dev.off()
 
 ################################
 ### plot variable importance ###
 ################################
 
 load("mat_mrpp.RData")
-#load("Gramm_Imp.RData")
-#load("Fobs_Imp.RData")
+load("Gramm_Imp.RData")
+load("Fobs_Imp.RData")
 #load("results_leaf/ClassLeafLevel.Rdata")
 
 pdf(file = "Figures/VarImport.pdf", width=8, height=6)
-mat <- layout(matrix(1:2,ncol=1), heights=c(1,0.8), TRUE) 
+mat <- layout(matrix(1:4,ncol=1), heights=c(1,0.3,0.3,0.5), TRUE) 
 #layout.show(mat)
 #
 par(mai=c(0,1,0.1,0.1))
@@ -45,8 +30,15 @@ plot.spectra(spectra = rf_spec[, 3:length(rf_spec)]/10000,
              wl = wl,
              xaxis=F, ylab = T, ymax=0.6)
 
-par(mai=c(0.9,1,0,0.1))
+par(mai=c(0.1,1,0,0.1))
+plot.importance(gram_mrpp, wl, FALSE)
+
+par(mai=c(0.1,1,0,0.1))
+plot.importance(frobs_mrpp, wl, FALSE)
+
+par(mai=c(0.1,1,0,0.1))
 plot.importance(mat_mrpp, wl, TRUE)
+
 dev.off()
 
 # legend 
@@ -242,7 +234,7 @@ par(mai=c(0.6,0.7,0,0.3))
 beanplot( subset(gof_pv, Models=="SVM" & Normalization=="spectra")$r2 , 
           subset(gof_rf, Models=="SVM" & Normalization=="spectra")$r2,
           col = list("black", "gray"), border = NA, innerboerder=NA, beanlines="median", 
-          ll = 0, side = "b", log="",  main = "", names=expression(r^2), 
+          ll = 0, side = "b", log="",  main = "", names="", 
           ylab = expression(r^2), yaxs = "i", cex.lab=1.3, cex.axis=1.3, las=1)
 mtext("B", side=3, line=0.5, adj=0, cex=1.3)
 # RMSE
@@ -250,7 +242,7 @@ par(mai=c(0.6,0.7,0,0.3))
 beanplot( subset(gof_pv, Models=="SVM" & Normalization=="spectra")$RMSE , 
           subset(gof_rf, Models=="SVM" & Normalization=="spectra")$RMSE,
           col = list("black", "gray"), border = NA, innerboerder=NA, beanlines="median", 
-          ll = 0, side = "b", log="",  main = "", names="RMSE", 
+          ll = 0, side = "b", log="",  main = "", names="", 
           ylab = "RMSE [%]", yaxs = "i", cex.lab=1.3, cex.axis=1.3, las=1)
 mtext("C", side=3, line=0.5, adj=0, cex=1.3)
 # bias
@@ -258,7 +250,7 @@ par(mai=c(0.6,0.7,0,0.3))
 beanplot( subset(gof_pv, Models=="SVM" & Normalization=="spectra")$bias, 
           subset(gof_rf, Models=="SVM" & Normalization=="spectra")$bias,
           col = list("black", "gray"), border = NA, innerboerder=NA, beanlines="median", 
-          ll = 0, side = "b", log="",  main = "", names="Bias", 
+          ll = 0, side = "b", log="",  main = "", names="", 
           ylab = "Bias", yaxs = "i", cex.lab=1.3, cex.axis=1.3, las=1)
 mtext("D", side=3, line=0.5, adj=0, cex=1.3)
 
@@ -312,7 +304,7 @@ ggsave("Figures/ScatterPLot.pdf", p3, width = 12, height = 5)
 ### Resolution 
 ## r2
 p1 <- ggplot(data = na.omit(gof_resolution), mapping = aes(x = factor(Resolution), y = r2)) +
-   geom_violin(mapping=aes(ymin = r2, ymax = r2), scale = "width", fill="gray90", trim=F) + 
+   geom_violin(mapping=aes(ymin = r2, ymax = r2), scale = "width", fill="gray90", trim=T) + 
    stat_summary(fun.y=mean, geom="line", aes(group=1), lty=2, col = "gray50", lwd = 1.5) +
    stat_summary(fun.data=data_summary) + labs(y=expression(r^2), x="Resolution [cm]", title="Square Pearson´s \n correlation coefficient \n") +
    scale_y_continuous(limits = c(-0.05,1), breaks = seq(0,1,0.2)) + # fixt ylim
@@ -321,14 +313,14 @@ p1 <- ggplot(data = na.omit(gof_resolution), mapping = aes(x = factor(Resolution
                                   plot.title = element_text(hjust = 0.5))
 ## RMSE
 p2 <- ggplot(data = na.omit(gof_resolution), mapping = aes(x = factor(Resolution), y = RMSE)) +
-  geom_violin(mapping=aes(ymin = RMSE, ymax = RMSE), scale = "width", fill="gray90", trim=F) +
+  geom_violin(mapping=aes(ymin = RMSE, ymax = RMSE), scale = "width", fill="gray90", trim=T) +
   stat_summary(fun.y=mean, geom="line", aes(group=1), lty=2, col = "gray50", lwd = 1.5) +
-  stat_summary(fun.data=data_summary) + labs(y="RMSE [%]",  x="Resolution [cm]", title="Root mean square error \n A: Spatial analysis") +
+  stat_summary(fun.data=data_summary) + labs(y="RMSE [%]",  x="Resolution [cm]", title="Root mean square error \n \n A: Spatial analysis") +
   theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), axis.text.x=element_text(size=14),
                                  axis.text.y=element_text(size=14), text = element_text(size=15))
 ## Bias
 p3 <- ggplot(data = na.omit(gof_resolution), mapping = aes(x = factor(Resolution), y = bias)) +
-  geom_violin(mapping=aes(ymin = bias, ymax = bias), scale = "width", fill="gray90", trim=F) +
+  geom_violin(mapping=aes(ymin = bias, ymax = bias), scale = "width", fill="gray90", trim=T) +
   stat_summary(fun.y=mean, geom="line", aes(group=1), lty=2, col = "gray50", lwd = 1.5) +
   stat_summary(fun.data=data_summary) + labs(y="Bias", x="Resolution [cm]", title="Bias \n \n ") +
   theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), axis.text.x=element_text(size=14),
@@ -338,32 +330,32 @@ p3 <- ggplot(data = na.omit(gof_resolution), mapping = aes(x = factor(Resolution
 ### Analysis of architectural complexities
 ##r2
 p4 <- ggplot(data = na.omit(gof_complex), mapping = aes(x = factor(complex), y = r2)) +
-  geom_violin(mapping=aes(ymin = r2, ymax = r2),  fill="gray90", trim=F) + 
+  geom_violin(mapping=aes(ymin = r2, ymax = r2),  fill="gray90", trim=T) + 
   stat_summary(fun.y=mean, geom="line", aes(group=1), lty=2, col = "gray50", lwd = 1.5) +
-  stat_summary(fun.data=data_summary) +  labs(y=expression(r^2), x="Complexity gradien", title="") + 
+  stat_summary(fun.data=data_summary) +  labs(y=expression(r^2), x="Complexity gradient", title="") + 
   scale_y_continuous(limits = c(0,1), breaks = seq(0,1,0.2)) + # fixt ylim
   theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), axis.text.x=element_text(size=14),
                                  axis.text.y=element_text(size=14), text = element_text(size=15))
 ## RMSE
 p5 <- ggplot(data = na.omit(gof_complex), mapping = aes(x = factor(complex), y = RMSE)) +
-  geom_violin(mapping=aes(ymin = RMSE, ymax = RMSE), scale = "width", fill="gray90", trim=F) +
+  geom_violin(mapping=aes(ymin = RMSE, ymax = RMSE), scale = "width", fill="gray90", trim=T) +
   stat_summary(fun.y=mean, geom="line", aes(group=1), lty=2, col = "gray50", lwd = 1.5) +
   stat_summary(fun.data=data_summary) + labs(y="RMSE [%]", x="Complexity gradient", title="B: Complexity gradient") +
   theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), axis.text.x=element_text(size=14),
                                  axis.text.y=element_text(size=14), text = element_text(size=15))
 ## Bias
 p6 <- ggplot(data = na.omit(gof_complex), mapping = aes(x = factor(complex), y = bias)) +
-  geom_violin(mapping=aes(ymin = bias, ymax = bias), scale = "width", fill="gray90", trim=F) +
+  geom_violin(mapping=aes(ymin = bias, ymax = bias), scale = "width", fill="gray90", trim=T) +
   stat_summary(fun.y=mean, geom="line", aes(group=1), lty=2, col = "gray50", lwd = 1.5) +
-  stat_summary(fun.data=data_summary) + labs(y="Bias", x="Complexity gradien", title="") +
+  stat_summary(fun.data=data_summary) + labs(y="Bias", x="Complexity gradient", title="") +
   theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), axis.text.x=element_text(size=14),
-                                 axis.text.y=element_text(size=14), text = element_text(size=15))
+                                 axis.text.y=element_text(size=14), text = element_text(size=15))+
 geom_hline(yintercept = 0, lty = 2) 
 
 ### analysis per cover percentage
 ##r2
 p7 <- ggplot(data = na.omit(gof_cover), mapping = aes(x = factor(CoverRange), y = r2)) +
-  geom_violin(mapping=aes(ymin = r2, ymax = r2),  fill="gray90", trim=F) + 
+  geom_violin(mapping=aes(ymin = r2, ymax = r2),  fill="gray90", trim=T) + 
   stat_summary(fun.y=mean, geom="line", aes(group=1), lty=2, col = "gray50", lwd = 1.5) +
   stat_summary(fun.data=data_summary) + labs(y=expression(r^2), x="Cover [%]", title="") +
   scale_y_continuous(limits = c(0,1.1), breaks = seq(0,1,0.2)) + # fixt ylim
@@ -371,22 +363,47 @@ p7 <- ggplot(data = na.omit(gof_cover), mapping = aes(x = factor(CoverRange), y 
                                  axis.text.y=element_text(size=14), text = element_text(size=15))
 ## RMSE
 p8 <- ggplot(data = na.omit(gof_cover), mapping = aes(x = factor(CoverRange), y = RMSE)) +
-  geom_violin(mapping=aes(ymin = RMSE, ymax = RMSE), scale = "width", fill="gray90", trim=F) +
+  geom_violin(mapping=aes(ymin = RMSE, ymax = RMSE), scale = "width", fill="gray90", trim=T) +
   stat_summary(fun.y=mean, geom="line", aes(group=1), lty=2, col = "gray50", lwd = 1.5) +
   stat_summary(fun.data=data_summary) + labs(y="RMSE [%]", x="Cover [%]", title="C: Species cover") +
   theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), axis.text.x=element_text(size=14),
                                  axis.text.y=element_text(size=14), text = element_text(size=15))
 ## Bias
 p9 <- ggplot(data = na.omit(gof_cover), mapping = aes(x = factor(CoverRange), y = bias)) +
-  geom_violin(mapping=aes(ymin = bias, ymax = bias), scale = "width", fill="gray90", trim=F) +
+  geom_violin(mapping=aes(ymin = bias, ymax = bias), scale = "width", fill="gray90", trim=T) +
   stat_summary(fun.y=mean, geom="line", aes(group=1), lty=2, col = "gray50", lwd = 1.5) +
   stat_summary(fun.data=data_summary) +  labs(y="Bias", x="Cover [%]", title="") +
   theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), axis.text.x=element_text(size=14),
                                  axis.text.y=element_text(size=14), text = element_text(size=15)) +
   geom_hline(yintercept = 0, lty = 2) 
 
+### Analysis per Growth forms 
+##r2
+p10 <- ggplot(data = na.omit(PFT), mapping = aes(x = factor(PFT), y = r2)) +
+  geom_violin(mapping=aes(ymin = r2, ymax = r2),  fill="gray90", trim=F) + 
+  stat_summary(fun.y=mean, geom="line", aes(group=1), lty=2, col = "gray50", lwd = 1.5) +
+  stat_summary(fun.data=data_summary) + labs(y=expression(r^2), x="Functional types", title="") +
+  scale_y_continuous(limits = c(0,1.1), breaks = seq(0,1,0.2)) + # fixt ylim
+  theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), axis.text.x=element_text(size=14),
+                                 axis.text.y=element_text(size=14), text = element_text(size=15))
+## RMSE
+p11 <- ggplot(data = na.omit(PFT), mapping = aes(x = factor(PFT), y = RMSE)) +
+  geom_violin(mapping=aes(ymin = RMSE, ymax = RMSE), scale = "width", fill="gray90", trim=F) +
+  stat_summary(fun.y=mean, geom="line", aes(group=1), lty=2, col = "gray50", lwd = 1.5) +
+  stat_summary(fun.data=data_summary) + labs(y="RMSE [%]", x="Functional types", title="D: Functional types") +
+  theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), axis.text.x=element_text(size=14),
+                                 axis.text.y=element_text(size=14), text = element_text(size=15))
+## Bias
+p12 <- ggplot(data = na.omit(PFT), mapping = aes(x = factor(PFT), y = bias)) +
+  geom_violin(mapping=aes(ymin = bias, ymax = bias), scale = "width", fill="gray90", trim=F) +
+  stat_summary(fun.y=mean, geom="line", aes(group=1), lty=2, col = "gray50", lwd = 1.5) +
+  stat_summary(fun.data=data_summary) + labs(y="Bias", x="Functional types", title="") +
+  theme_bw(base_size=10) + theme(panel.grid.major.x = element_blank(), axis.text.x=element_text(size=14),
+                                 axis.text.y=element_text(size=14), text = element_text(size=15)) +
+  geom_hline(yintercept = 0, lty = 2) 
 
-plot_fits <- grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9,
-                          nrow=3, ncol=3, heights = c(5,4,4))
+plot_fits <- grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12,
+                          nrow=4, ncol=3 ,heights = c(5,4.5,5,5))
+
 # Save
-ggsave("Figures/Figure7.pdf", plot_fits, width = 13, height = 8)
+ggsave("Figures/Figure7.pdf", plot_fits, width = 13, height = 10)

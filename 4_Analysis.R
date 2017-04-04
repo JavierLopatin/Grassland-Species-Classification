@@ -16,9 +16,9 @@ rasterDir = "D:/Sp_Images"
 setwd(home)
 
 load("Analysis.RData")
-load("outputGOF.RData")
-load("potVal_cover.RData")
-load("rf_cover.RData")
+#load("outputGOF.RData")
+#load("potVal_cover.RData")
+#load("rf_cover.RData")
 
 #### Source Functions from GitHub
 source_github <- function(u) {
@@ -190,6 +190,61 @@ for(i in 1:61){
 
 save(mat_mrpp, file = "mat_mrpp.RData")
 
+### Growth forms
+graminoids_varImport <- subset(rf_spec_BN, Species == "Grass_sp9" | Species == "Nardus_stricta" 
+                               | Species == "Grass_Sp_23"   | Species == "Setaria_pumila" 
+                               | Species == "Elymus_repens" | Species == "Echinochloa_crus-galli"
+                               | Species == "Panicum_capillare")
+
+forbs_varImport <- subset(rf_spec_BN, Species == "Prunella_vulgaris" | Species == "Sp_2" 
+                          | Species == "Hypochaeris_radicata" | Species == "Trifolium_pratense" 
+                          | Species == "Trifolium_repens" | Species == "Conyza_canadensis" 
+                          | Species == "Potentilla_reptans" | Species == "Taraxacum_officinale" 
+                          | Species == "Galium_sp" | Species == "Bellis perennis" 
+                          | Species == "Glechoma_hederacea" | Species == "Medicago_lupulina" 
+                          | Species == "Minuartia_hybrida" | Species == "Plantago_lancelota" 
+                          | Species == "Geranium_pusillum" | Species == "Plantago_major" 
+                          | Species == "Potentilla_2" | Species == "Achillea_millefolium"
+                          | Species == "Oxalis_stricta" | Species == "Medicago_arabica" 
+                          | Species == "Echium_vulgare" | Species == "Erigoron_annuus" 
+                          | Species == "Senecio_vulgaris" | Species == "Filago_arvensis" 
+                          | Species == "Anagallis_arvensis" | Species == "Daucum_carota" 
+                          | Species == "Medicago_sativa " | Species == "Rumex_obtusifolius" 
+                          | Species == "Convolvulus_sepium" | Species == "Verbena_officinalis" 
+                          | Species == "Urtica_dioica" | Species == "Cichorium_intybus" 
+                          | Species == "Solidago_gigantea" | Species == "Polygonum_persicaria" 
+                          | Species == "Oenothera_biennis" | Species == "Arthemisia_vulgaris" 
+                          | Species == "Anthemis_arvensis")
+
+# graminoids
+gram_mrpp = matrix(NA, ncol=61, nrow=2)
+for(i in 1:61){
+  #SAM <- designdist(spectra, "acos( J / ( (A*0.5) * (B*0.5) ) )")
+  #obj_mrpp = mrpp(dat = SAM, grouping = classes, parallel = 16)
+  obj_mrpp = mrpp(dat = graminoids_varImport[, 3:(length(graminoids_varImport[1,])-1 )][i], 
+                  grouping = graminoids_varImport$Species, parallel = 16, distance = "mahalanobis")
+  gram_mrpp[1,i] = obj_mrpp$A
+  gram_mrpp[2,i] = obj_mrpp$Pvalue
+}
+
+save(gram_mrpp, file = "Gramm_Imp.RData")
+
+# forbs
+forbs_mrpp = matrix(NA, ncol=61, nrow=2)
+for(i in 1:61){
+  #SAM <- designdist(spectra, "acos( J / ( (A*0.5) * (B*0.5) ) )", terms = "quadratic")
+  #obj_mrpp = mrpp(dat = SAM, grouping = classes, parallel = 16)
+  obj_mrpp = mrpp(dat = forbs_varImport[, 3:length(forbs_varImport[1,])][i], 
+                  grouping = forbs_varImport$Species, parallel = 16, distance = "mahalanobis")
+  forbs_mrpp[1,i] = obj_mrpp$A
+  forbs_mrpp[2,i] = obj_mrpp$Pvalue
+}
+
+save(frobs_mrpp, file = "Fobs_Imp.RData")
+
+plot (wl, mat_mrpp[1,], type="l", main="mrpp", ylim=c(0,0.5))
+lines(wl, gram_mrpp[1,], type="l", lty=2, col="blue")
+lines(wl, forbs_mrpp[1,], type="l", lty=3, col="red")
 
 ##############################################
 ### Analysis of architectural complexities ###
@@ -274,6 +329,39 @@ gof_cover <- rbind(gof_cov1, gof_cov2, gof_cov3, gof_cov4, gof_cov5)
 
 save.image("Analysis.RData")
 
+#################################
+### Analysis per growth forms ###
+#################################
+
+graminoids <- subset(complex_all, Species == "Grass_sp9" | Species == "Nardus_stricta" 
+                     | Species == "Grass_Sp_23" | Species == "Setaria_pumila" 
+                     | Species == "Elymus_repens" | Species == "Echinochloa_crus-galli"
+                     | Species == "Panicum_capillare")
+
+forbs <- subset(complex_all, Species == "Prunella_vulgaris" | Species == "Sp_2" 
+               | Species == "Hypochaeris_radicata" | Species == "Trifolium_pratense" 
+               | Species == "Trifolium_repens" | Species == "Conyza_canadensis" 
+               | Species == "Potentilla_reptans" | Species == "Taraxacum_officinale" 
+               | Species == "Galium_sp" | Species == "Bellis perennis" 
+               | Species == "Glechoma_hederacea" | Species == "Medicago_lupulina" 
+               | Species == "Minuartia_hybrida" | Species == "Plantago_lancelota" 
+               | Species == "Geranium_pusillum" | Species == "Plantago_major" 
+               | Species == "Potentilla_2" | Species == "Achillea_millefolium"
+               | Species == "Oxalis_stricta" | Species == "Medicago_arabica" 
+               | Species == "Echium_vulgare" | Species == "Erigoron_annuus" 
+               | Species == "Senecio_vulgaris" | Species == "Filago_arvensis" 
+               | Species == "Anagallis_arvensis" | Species == "Daucum_carota" 
+               | Species == "Medicago_sativa " | Species == "Rumex_obtusifolius" 
+               | Species == "Convolvulus_sepium" | Species == "Verbena_officinalis" 
+               | Species == "Urtica_dioica" | Species == "Cichorium_intybus" 
+               | Species == "Solidago_gigantea" | Species == "Polygonum_persicaria" 
+               | Species == "Oenothera_biennis" | Species == "Arthemisia_vulgaris" 
+               | Species == "Anthemis_arvensis")
+
+graminoids$PFT <- "Graminoids"
+fobs$PFT <- "Forbs"
+
+PFT <- rbind(graminoids, fobs)
 
 ###############################
 ### Analysis of resolutions ###
