@@ -539,6 +539,8 @@ gof_resolution <- rbind(gof_res1, gof_res2, gof_res4, gof_res6,
 ### CV maps ###
 ###############
 
+library(vegan)
+
 # load prediction maps
 cv_p9 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_9_SVM_rf_spect", dir=rasterDir)
 cv_p10 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_10_SVM_rf_spect", dir=rasterDir)
@@ -552,28 +554,41 @@ cv_p17 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_17_SV
 cv_p18 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_18_SVM_rf_spect", dir=rasterDir)
 cv_p19 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_19_SVM_rf_spect", dir=rasterDir)
 
-# calculate cv
+# Count N° classes per pixel
 # create output folder
-dir.create(file.path(rasterDir, "CV"), showWarnings = FALSE)
+dir.create(file.path(rasterDir, "simpson"), showWarnings = FALSE)
 
 # cv function
-cv_class <- function(x, outName){
-  r <- stack( unlist(x) )
-  CV <- cv(r)
-  out = file.path(rasterDir, "CV", paste0(outName, ".tif"))
-  writeRaster(CV, filename = out, format = "GTiff", overwrite = T)
+diff_class <- function(x, outName){
+  classes <- as.vector(  na.omit(unique(x[[1]]) ) )
+  img <-  raster(x[[1]])
+  for(i in 1:length(classes)){ #loop thougth the classes
+    r <- raster(x[[i]])
+    for(j in 1:length(x)){ # loop thought the plots
+      a <- x[[j]]==classes[i]
+      a[a>1]<-1
+      r <- addLayer(r, a)
+      img <- calc(r, fun = function(j){diversity(j, index = "shannon")} )# shannon index
+    }
+    img <- addLayer(img, r)
+  }
+  
+  diff <- calc(img, fun = mean)
+  plot(diff)
+  out = file.path(rasterDir, "simpson", paste0(outName, "_shannon.tif"))
+  writeRaster(diff, filename = out, format = "GTiff", overwrite = T)
 }
 
-cv_class(cv_p9, "plot9")
-cv_class(cv_p10, "plot10")
-cv_class(cv_p11, "plot11")
-cv_class(cv_p12, "plot12")
-cv_class(cv_p13, "plot13")
-cv_class(cv_p14, "plot14")
-cv_class(cv_p15, "plot15")
-cv_class(cv_p16, "plot16")
-cv_class(cv_p17, "plot17")
-cv_class(cv_p18, "plot18")
-cv_class(cv_p19, "plot19")
+diff_class(cv_p9, "plot9")
+diff_class(cv_p10, "plot10")
+diff_class(cv_p11, "plot11")
+diff_class(cv_p12, "plot12")
+diff_class(cv_p13, "plot13")
+diff_class(cv_p14, "plot14")
+diff_class(cv_p15, "plot15")
+diff_class(cv_p16, "plot16")
+diff_class(cv_p17, "plot17")
+diff_class(cv_p18, "plot18")
+diff_class(cv_p19, "plot19")
 
 save.image("Analysis.RData")

@@ -521,7 +521,7 @@ BootsClassification <- function(classes, spectra, en, raster, boots,
       NDVI[NDVI < 0.3]<- NA
       # apply mask
       raster <- mask(raster, NDVI)
-    } else ( nlayers(raster)==10 ){ # for MNF components
+    } else { # for MNF components
       names(raster) <- paste( rep("B", 10), seq(1,10,1),  sep="" )
     }
     
@@ -1209,7 +1209,7 @@ stratifySampling <- function(data, classes){
  for (i in 1:length( levels(data$classes ))){
     x = grep( levels(data$classes)[i], data$classes  )
     x <- data[x, ]
-    # sampling with repleacement 
+    # random sampling
     if ( length(x[, 1])==1 ){
       TRAIN[[i]] <- x
       VAL[[i]] <- x

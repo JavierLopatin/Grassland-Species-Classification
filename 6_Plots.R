@@ -256,22 +256,33 @@ mtext("D", side=3, line=0.5, adj=0, cex=1.3)
 
 dev.off()
 
-###############################
-### scatter plot best model ###
-###############################
+################
+### Figure 3 ###
+################
+
+library(ggplot2)
+library(gridExtra)
 
 well <- subset(complex_all, ClassPresence == "Well")
+well <- well[order(well$complex, decreasing = T), ]
 not_well <- subset(complex_all, ClassPresence == "Over" | ClassPresence == "Miss")
+not_well <- not_well[order(not_well$complex, decreasing = T), ]
 
-p1 <- ggplot(data = well, aes(x = Predicted, y = Observed, shape = factor(complex)
-                              , color = factor(complex))) +
-  geom_point(alpha = 0.5, size = 2) + scale_colour_hue(l=50) +
+# pallete
+mycolors <- (c("blue", "green", "orange", "red"))
+
+
+p1 <- ggplot(data = well, aes(x = Predicted, y = Observed, color = factor(complex))) + 
+  geom_point(alpha=0.5, aes(size = factor(complex))) + 
+  scale_colour_manual(values=mycolors) +
   scale_y_continuous(limits = c(0,120), breaks = seq(0, 100, 020)) +
   scale_x_continuous(limits = c(0,120), breaks = seq(0, 100, 020)) +
   theme_bw(base_size=10) + xlab("Predicted [%]") + ylab("Observed [%]") +
   geom_abline(intercept = 0, lty = 2, lwd = 1.2) +
-  geom_smooth(method = "lm", se=F, fullrange=T, aes(linetype=factor(complex))) +
-  geom_point(data = not_well, alpha = 0.5, size = 2) +
+  geom_smooth(method = "lm", se=F, fullrange=T) +
+  # add false positives and negatives
+  geom_point(data = not_well2, alpha=0.5, aes(size = factor(complex))) +
+  # add text
   geom_segment(aes(x=3, y=0, xend=3, yend=95), color = "black", lwd = 1.3) +
   geom_segment(aes(x=3, y=95, xend=0, yend=95), color = "black", lwd = 1.3) +
   geom_segment(aes(x=3, y=0, xend=0, yend=0), color = "black", lwd = 1.3) +
@@ -282,18 +293,28 @@ p1 <- ggplot(data = well, aes(x = Predicted, y = Observed, shape = factor(comple
                arrow = arrow()) +
   geom_segment(aes(x=20, y=100, xend=0, yend=80), color = "black", lwd = 0.8, 
                arrow = arrow()) +
-  geom_text(label="Misclassified", x=30, y=108, color="black", check_overlap = TRUE) +
-  geom_text(label="Omitted", x=108, y= 25, color="black", check_overlap = TRUE) +
-  theme(legend.title=element_blank(), panel.grid.major.x = element_blank(), legend.key = element_blank())
+  geom_text(label="False negatives", x=30, y=108, color="black", check_overlap = TRUE) +
+  geom_text(label="False positives", x=108, y= 25, color="black", check_overlap = TRUE) +
+  theme(panel.grid.major.x = element_blank(), legend.key = element_blank())+
+  theme(axis.text=element_text(size=13), axis.title=element_text(size=14)) +
+  theme(panel.border = element_blank(), axis.line.x = element_line(),axis.line.y = element_line()) + 
+  labs(colour="Complexity\ngradient", size="Complexity\ngradient") +
+  theme(legend.text=element_text(size=10)) +
+  ggtitle("A") + theme(plot.title = element_text(size=18, hjust = 0))
 
-p2 <- ggplot(data = complex_all, aes(x = complex, fill = factor(ClassPresence))) +
-  geom_bar() + scale_fill_grey(start = 0, end = .9) +
+p2 <- ggplot(data = complex_all2, aes(x = complex, fill = factor(ClassPresence))) +
+  geom_bar() + 
   theme(legend.title=element_blank(), panel.grid.major.x = element_blank(), legend.key = element_blank()) +
-  theme_bw(base_size=10) + xlab("Complexity gradient") + ylab("Frequency") + labs(fill="")
+  theme_bw(base_size=10) + xlab("Complexity gradient") + ylab("Frequency") + labs(fill="") +
+  theme(axis.text=element_text(size=13), axis.title=element_text(size=14)) +
+  theme(panel.border = element_blank(), axis.line.x = element_line(),axis.line.y = element_line()) +  
+  scale_fill_grey(start = 0, end = .9, labels=c("False negatives", "False positives", "Correctly classified")) +
+  theme(legend.text=element_text(size=9)) +
+  ggtitle("B") + theme(plot.title = element_text(size=18, hjust = 0))
 
 p3  <- grid.arrange(p1, p2, nrow=1, ncol=2) 
                                                                 
-ggsave("Figures/ScatterPLot.pdf", p3, width = 12, height = 5)
+ggsave("Figures/Figure4.pdf", p3, width = 12, height = 4.5)
 
  
 
@@ -407,3 +428,4 @@ plot_fits <- grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12,
 
 # Save
 ggsave("Figures/Figure7.pdf", plot_fits, width = 13, height = 10)
+
