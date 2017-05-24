@@ -556,39 +556,63 @@ cv_p19 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_19_SV
 
 # Count N° classes per pixel
 # create output folder
-dir.create(file.path(rasterDir, "simpson"), showWarnings = FALSE)
+dir.create(file.path(rasterDir, "count"), showWarnings = FALSE)
+dir.create(file.path(rasterDir, "shannon"), showWarnings = FALSE)
 
-# cv function
-diff_class <- function(x, outName){
-  classes <- as.vector(  na.omit(unique(x[[1]]) ) )
-  img <-  raster(x[[1]])
-  for(i in 1:length(classes)){ #loop thougth the classes
-    r <- raster(x[[i]])
-    for(j in 1:length(x)){ # loop thought the plots
-      a <- x[[j]]==classes[i]
-      a[a>1]<-1
-      r <- addLayer(r, a)
-      img <- calc(r, fun = function(j){diversity(j, index = "shannon")} )# shannon index
-    }
-    img <- addLayer(img, r)
-  }
-  
-  diff <- calc(img, fun = mean)
-  plot(diff)
-  out = file.path(rasterDir, "simpson", paste0(outName, "_shannon.tif"))
-  writeRaster(diff, filename = out, format = "GTiff", overwrite = T)
+# count N° classes
+count_class <- function(x, outName){
+  y <- stack( unlist(x) )
+  z <- calc( y, fun = function(j){length(unique(j))} )
+  out = file.path(rasterDir, "count", paste0(outName, "_count.tif"))
+  writeRaster(z, filename = out, format = "GTiff", overwrite = T)
+  z
 }
 
-diff_class(cv_p9, "plot9")
-diff_class(cv_p10, "plot10")
-diff_class(cv_p11, "plot11")
-diff_class(cv_p12, "plot12")
-diff_class(cv_p13, "plot13")
-diff_class(cv_p14, "plot14")
-diff_class(cv_p15, "plot15")
-diff_class(cv_p16, "plot16")
-diff_class(cv_p17, "plot17")
-diff_class(cv_p18, "plot18")
-diff_class(cv_p19, "plot19")
+# diversity function
+shannon_class <- function(x, outName){
+  classes <- as.vector(  na.omit(unique(x[[1]]) ) )
+  img <-  raster(x[[1]])
+  img2 <-  raster(x[[1]])
+  for(i in 1:length(classes)){ #loop thougth the classes
+    r <- raster(x[[1]])
+    for(j in 1:length(x)){ # loop thought the plots
+      a <- x[[j]]==classes[i] # mask of each class
+      a[a>1]<-1
+      r <- addLayer(r, a)
+    }
+    img <- calc(r, fun = function(j){ diversity(j, index = "shannon") } )# shannon index
+    img2 <- addLayer(img2, img)
+  }
+  diff <- calc(img2, fun = sum) # sum of values per pixel
+  out = file.path(rasterDir, "shannon", paste0(outName, "_shannon.tif"))
+  writeRaster(diff, filename = out, format = "GTiff", overwrite = T)
+  diff
+}
+
+# count N° of classes per pixel
+count9  <- count_class(cv_p9, "plot9")
+count10 <- count_class(cv_p10, "plot10")
+count11 <- count_class(cv_p11, "plot11")
+count12 <- count_class(cv_p12, "plot12")
+count13 <- count_class(cv_p13, "plot13")
+count14 <- count_class(cv_p14, "plot14")
+count15 <- count_class(cv_p15, "plot15")
+count16 <- count_class(cv_p16, "plot16")
+count17 <- count_class(cv_p17, "plot17")
+count18 <- count_class(cv_p18, "plot18")
+count19 <- count_class(cv_p19, "plot19")
+
+# Shannon index per pixel
+shannon9  <- shannon_class(cv_p9, "plot9")
+shannon10 <- shannon_class(cv_p10, "plot10")
+shannon11 <- shannon_class(cv_p11, "plot11")
+shannon12 <- shannon_class(cv_p12, "plot12")
+shannon13 <- shannon_class(cv_p13, "plot13")
+shannon14 <- shannon_class(cv_p14, "plot14")
+shannon15 <- shannon_class(cv_p15, "plot15")
+shannon16 <- shannon_class(cv_p16, "plot16")
+shannon17 <- shannon_class(cv_p17, "plot17")
+shannon18 <- shannon_class(cv_p18, "plot18")
+shannon19 <- shannon_class(cv_p19, "plot19")
 
 save.image("Analysis.RData")
