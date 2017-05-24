@@ -570,20 +570,15 @@ count_class <- function(x, outName){
 
 # diversity function
 shannon_class <- function(x, outName){
-  classes <- as.vector(  na.omit(unique(x[[1]]) ) )
-  img <-  raster(x[[1]])
-  img2 <-  raster(x[[1]])
-  for(i in 1:length(classes)){ #loop thougth the classes
-    r <- raster(x[[1]])
-    for(j in 1:length(x)){ # loop thought the plots
-      a <- x[[j]]==classes[i] # mask of each class
-      a[a>1]<-1
-      r <- addLayer(r, a)
-    }
-    img <- calc(r, fun = function(j){ diversity(j, index = "shannon") } )# shannon index
-    img2 <- addLayer(img2, img)
+  classes <- as.vector(  na.omit(unique(x[[1]]) ) ) # classes id
+  y <- stack( unlist(x) )
+  img <-  raster(x[[1]]) # empty raster to store the N° classess/bootstrap iterations
+  for(i in 1:length(classes)){ # loop thought the classes
+    r <- calc(y, fun = function(x){ sum(x==classes[i]) })
+    r <- r/length(x)
+    img <- addLayer(img, r)
   }
-  diff <- calc(img2, fun = sum) # sum of values per pixel
+  diff <- calc(img, fun = function(x){ diversity(x, index = "shannon") }) # shannon index
   out = file.path(rasterDir, "shannon", paste0(outName, "_shannon.tif"))
   writeRaster(diff, filename = out, format = "GTiff", overwrite = T)
   diff
