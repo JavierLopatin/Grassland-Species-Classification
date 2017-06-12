@@ -3,8 +3,8 @@
 ## author: Javier Lopatin                                                     ##
 ## mail: javierlopatin@gmail.com                                              ##  
 ##                                                                            ##
-## Manuscript: Hyperspectral classification of grassland species: towards an  ##
-##             UAS application for semi-automatic field surveys               ##
+## Manuscript: Mapping plant species in mixed grassland communities using     ##
+##             close range imaging spectroscopy                               ##
 ##                                                                            ##
 ## description: Classification procidure for canopy-level spectras            ## 
 ##                                                                            ##
@@ -87,7 +87,7 @@ ApplyModels(valData = species,
             raster_List = raster_spec, 
             wl = wl, 
             modelTag = "spect",
-            boots = 10)
+            boots = 100)
 
 #------------------------#
 # Spectra BN             #
@@ -99,7 +99,7 @@ ApplyModels(valData = species,
             raster_List = raster_spec_BN, 
             wl = wl, 
             modelTag = "spect_BN",
-            boots = 10)
+            boots = 100)
 
 #------------------------#
 # MNF                    #
@@ -111,7 +111,7 @@ ApplyModels(valData = species,
             raster_List = raster_MNF, 
             wl = seq(1,10,1), 
             modelTag = "MNF",
-            boots = 10)
+            boots = 100)
 
 #------------------------#
 # MNF BN                 #
@@ -123,4 +123,4 @@ ApplyModels(valData = species,
             raster_List = raster_MNF_BN, 
             wl =  seq(1,10,1), 
             modelTag = "MNF_BN",
-            boots = 10)
+            boots = 100)
