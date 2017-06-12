@@ -3,8 +3,8 @@
 ## author: Javier Lopatin                                                     ##
 ## mail: javierlopatin@gmail.com                                              ##  
 ##                                                                            ##
-## Manuscript: Hyperspectral classification of grassland species: towards an  ##
-##             UAS application for semi-automatic field surveys               ##
+## Manuscript: Mapping plant species in mixed grassland communities using     ##
+##             close range imaging spectroscopy                               ##
 ##                                                                            ##
 ## description: Analysis of the canopy-level classification results           ## 
 ##                                                                            ##
@@ -53,19 +53,15 @@ save(rf_cover,     file="rf_cover.RData")
 gof_pv <- GOF(potVal_cover)
 gof_rf <- GOF(rf_cover)
 
-# erase empty "Species"
-# gof_pv <- gof_pv[- seq(1,24,1),]
-# gof_rf <- gof_rf[- seq(1,24,1),]
-
 save(gof_pv, file="gof_pv.RData")
 save(gof_rf, file="gof_rf.RData")
 
 # get GOF per model/tag
-#x = grep("potVal", outputGOF$Validation)
-#gof_pv <- outputGOF[x, ]
+x = grep("potVal", outputGOF$Validation)
+gof_pv <- outputGOF[x, ]
 
-#x = grep("rf", outputGOF$Validation)
-#gof_rf <- outputGOF[x, ]
+x = grep("rf", outputGOF$Validation)
+gof_rf <- outputGOF[x, ]
 
 ##################################
 ### Best model: rf SVM Spectra ###
@@ -76,10 +72,11 @@ y <- rf_cover[x, ]
 
 x = grep("MNF", y$Normalization)
 bestModel <- y[-x, ]
+
 x = grep("spect_BN", bestModel$Normalization)
 bestModel <- bestModel[-x, ]
-bestModel$Normalization <- factor(bestModel$Normalization)
 
+bestModel$Normalization <- factor(bestModel$Normalization)
 bestModel <- subset(bestModel, Model = "SVM")
 
 ## Models fits
@@ -219,8 +216,6 @@ forbs_varImport <- subset(rf_spec_BN, Species == "Prunella_vulgaris" | Species =
 # graminoids
 gram_mrpp = matrix(NA, ncol=61, nrow=2)
 for(i in 1:61){
-  #SAM <- designdist(spectra, "acos( J / ( (A*0.5) * (B*0.5) ) )")
-  #obj_mrpp = mrpp(dat = SAM, grouping = classes, parallel = 16)
   obj_mrpp = mrpp(dat = graminoids_varImport[, 3:(length(graminoids_varImport[1,])-1 )][i], 
                   grouping = graminoids_varImport$Species, parallel = 16, distance = "mahalanobis")
   gram_mrpp[1,i] = obj_mrpp$A
@@ -232,8 +227,6 @@ save(gram_mrpp, file = "Gramm_Imp.RData")
 # forbs
 forbs_mrpp = matrix(NA, ncol=61, nrow=2)
 for(i in 1:61){
-  #SAM <- designdist(spectra, "acos( J / ( (A*0.5) * (B*0.5) ) )", terms = "quadratic")
-  #obj_mrpp = mrpp(dat = SAM, grouping = classes, parallel = 16)
   obj_mrpp = mrpp(dat = forbs_varImport[, 3:length(forbs_varImport[1,])][i], 
                   grouping = forbs_varImport$Species, parallel = 16, distance = "mahalanobis")
   forbs_mrpp[1,i] = obj_mrpp$A
@@ -245,6 +238,7 @@ save(frobs_mrpp, file = "Fobs_Imp.RData")
 plot (wl, mat_mrpp[1,], type="l", main="mrpp", ylim=c(0,0.5))
 lines(wl, gram_mrpp[1,], type="l", lty=2, col="blue")
 lines(wl, forbs_mrpp[1,], type="l", lty=3, col="red")
+
 
 ##############################################
 ### Analysis of architectural complexities ###
@@ -303,6 +297,7 @@ gof_4$complex <- 4
 
 gof_complex <- rbind(gof_1, gof_2, gof_3, gof_4)
 
+
 #####################################
 ### analysis per cover percentage ###
 #####################################
@@ -328,6 +323,7 @@ gof_cov5$CoverRange <- "80-100"
 gof_cover <- rbind(gof_cov1, gof_cov2, gof_cov3, gof_cov4, gof_cov5)
 
 save.image("Analysis.RData")
+
 
 #################################
 ### Analysis per growth forms ###
@@ -427,7 +423,7 @@ BootsClassificationBest(classes = Species,
                         spectra = res2[, 3:length( res2 )],
                         en = tun2, 
                         raster = raster2, 
-                        boots = 10, 
+                        boots = 100, 
                         outDir = file.path(rasterDir, "Plots/resolution/res2"), 
                         modelTag = res2,
                         plotName = plot_name)
@@ -435,7 +431,7 @@ BootsClassificationBest(classes = Species,
                         spectra = res4[, 3:length( res4 )],
                         en = tun4, 
                         raster = raster4, 
-                        boots = 10, 
+                        boots = 100, 
                         outDir = file.path(rasterDir, "Plots/resolution/res4"), 
                         modelTag = res4,
                         plotName = plot_name)
@@ -443,7 +439,7 @@ BootsClassificationBest(classes = Species,
                         spectra = res6[, 3:length( res6 )],
                         en = tun6, 
                         raster = raster6, 
-                        boots = 10, 
+                        boots = 100, 
                         outDir = file.path(rasterDir, "Plots/resolution/res6"), 
                         modelTag = res6,
                         plotName = plot_name)
@@ -451,7 +447,7 @@ BootsClassificationBest(classes = Species,
                         spectra = res2[, 3:length( res2 )],
                         en = tun8, 
                         raster = raster8, 
-                        boots = 10, 
+                        boots = 100, 
                         outDir = file.path(rasterDir, "Plots/resolution/res8"), 
                         modelTag = res8,
                         plotName = plot_name)
@@ -459,7 +455,7 @@ BootsClassificationBest(classes = Species,
                         spectra = res10[, 3:length( res10 )],
                         en = tun10, 
                         raster = raster10, 
-                        boots = 10, 
+                        boots = 100, 
                         outDir = file.path(rasterDir, "Plots/resolution/res10"), 
                         modelTag = res10,
                         plotName = plot_name)
@@ -467,7 +463,7 @@ BootsClassificationBest(classes = Species,
                         spectra = res12[, 3:length( res12 )],
                         en = tun2, 
                         raster = raster12, 
-                        boots = 10, 
+                        boots = 100, 
                         outDir = file.path(rasterDir, "Plots/resolution/res12"), 
                         modelTag = res12,
                         plotName = plot_name)
@@ -554,12 +550,12 @@ cv_p17 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_17_SV
 cv_p18 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_18_SVM_rf_spect", dir=rasterDir)
 cv_p19 <- rasterList(fileExtantion = ".tif", folder = "BootsClass_out/plot_19_SVM_rf_spect", dir=rasterDir)
 
-# Count N° classes per pixel
+# Count NÂ° classes per pixel
 # create output folder
 dir.create(file.path(rasterDir, "count"), showWarnings = FALSE)
 dir.create(file.path(rasterDir, "shannon"), showWarnings = FALSE)
 
-# count N° classes
+# count NÂ° classes
 count_class <- function(x, outName){
   y <- stack( unlist(x) )
   z <- calc( y, fun = function(j){length(unique(j))} )
@@ -572,7 +568,7 @@ count_class <- function(x, outName){
 shannon_class <- function(x, outName){
   classes <- as.vector(  na.omit(unique(x[[1]]) ) ) # classes id
   y <- stack( unlist(x) )
-  img <-  raster(x[[1]]) # empty raster to store the N° classess/bootstrap iterations
+  img <-  raster(x[[1]]) # empty raster to store the NÂ° classess/bootstrap iterations
   for(i in 1:length(classes)){ # loop thought the classes
     r <- calc(y, fun = function(x){ sum(x==classes[i]) })
     r <- r/length(x)
@@ -584,7 +580,7 @@ shannon_class <- function(x, outName){
   diff
 }
 
-# count N° of classes per pixel
+# count NÂ° of classes per pixel
 count9  <- count_class(cv_p9, "plot9")
 count10 <- count_class(cv_p10, "plot10")
 count11 <- count_class(cv_p11, "plot11")
