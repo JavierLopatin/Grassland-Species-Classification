@@ -535,9 +535,9 @@ gof_resolution <- rbind(gof_res1, gof_res2, gof_res4, gof_res6,
                         gof_res8, gof_res10, gof_res12)
 
 
-###############
-### CV maps ###
-###############
+##########################
+### Shannon Index maps ###
+##########################
 
 library(vegan)
 
