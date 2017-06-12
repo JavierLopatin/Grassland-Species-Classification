@@ -3,16 +3,14 @@
 ## author: Javier Lopatin                                                     ##
 ## mail: javierlopatin@gmail.com                                              ##  
 ##                                                                            ##
-## Manuscript: Hyperspectral classification of grassland species: towards an  ##
-##             UAS application for semi-automatic field surveys               ##
+## Manuscript: Mapping plant species in mixed grassland communities using     ##
+##             close range imaging spectroscopy                               ##
 ##                                                                            ##
 ## description: This R-code provide most of the functions applied in the paper## 
 ##                                                                            ##
 ################################################################################
 
 ##----------------------------------------------------------------------------##
-##                                                                            ##
-## ApplyModels function                                                       ##
 ##                                                                            ##
 ## Apply the functions tuningModels, BootsClassification and obstainCovers    ##
 ## in a row to obtain the classification results per dataset                  ## 
@@ -363,8 +361,6 @@ tuningModels <- function(classes, spectra, wl=NA){
 
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
-## ApplyBestClassification:                                                   ##
-##                                                                            ##
 ## Apply the best model from classificationEnsemble to the plots using        ##
 ## a bootstrapping procidure.                                                 ## 
 ##                                                                            ##
@@ -594,138 +590,6 @@ BootsClassification <- function(classes, spectra, en, raster, boots,
   
 }
 
-##----------------------------------------------------------------------------##
-##                                                                            ##
-## Same as BootsClassification, but using only the best model choose          ##
-##                                                                            ##
-##----------------------------------------------------------------------------##
-
-BootsClassificationBest <- function(classes, spectra, en, raster, boots, 
-                                outDir, modelTag, plotName){  
-  
-  library(raster)
-  library(rgdal)
-  library(caret)
-  library(e1071)
-  library(randomForest)
-  library(pls)
-  library(doParallel)
-  
-  # extract the data from the classification Ensamble function
-  data2 <- data.frame(classes = classes, spectra)
-  data2 <- na.omit(data2)
-  data2$classes <- factor(data2$classes)
-  
-  bestNtree = en$RF$finalModel$ntree
-  bestMtry  = en$RF$finalModel$mtry
-  
-  ## apply funtion to predict species cover with SVM
-  # list of accuracies
-  PA.RF    <- list()
-  UA.RF    <- list()
-  OA.RF    <- list()
-  kappa.RF <- list()
-  predict.RF <- list()
-  
-  OBS <- list()
-  
-  # initialize parallel processing
-  cl <- makeCluster(detectCores())
-  registerDoParallel(cl)
-  
-  # progress bar
-  print(paste0(plotName, " ", modelTag))
-  pb <- txtProgressBar(min = 0, max = boots, style = 3)
-  
-  for (i in 1:boots){
-    
-    # progress bar
-    Sys.sleep(0.1)
-    setTxtProgressBar(pb, i)
-    
-    # stratify samplig. All species get selected at least once
-    samp <- stratifySampling(data2, classes)
-    
-    train <- samp$train
-    val <- samp$validation
-    
-    # store and select the observations
-    obs <- val$classes
-    OBS[[i]]<-obs
-    
-    #################
-    ### Apply RF  ###
-    #################
-    
-    RF  <- randomForest( y = train$classes, x = train[, 2:length(train)],
-                         ntree= bestNtree, mtry = bestMtry)
-    
-    # predict
-    pred_rf    <- predict(RF, val[, 2:length(val)])
-    predict.RF[[i]] <- pred_rf
-    
-    # confusion matix
-    conf   <- confusionMatrix(pred_rf, val$classes)
-    
-    # get accuracies
-    PA.RF[[i]]       <- conf$byClass[,3] 
-    UA.RF[[i]]       <- conf$byClass[,4]
-    OA.RF[[i]]       <- conf$overall["Accuracy"]
-    kappa.RF[[i]]    <- conf$overall["Kappa"]
-    
-    ##############################
-    ### Apply models to raster ### 
-    ##############################
-    
-    names(raster) <- paste( rep("B", 10), seq(1,10,1),  sep="" )
-
-    ### Predict RF
-    r_RF <- predict(raster, RF, type="class")
-
-    ### export rasters
-    # create a folder per plot to store results
-    plotName_RF = paste(plotName, "_RF_", modelTag, sep=""  )
-    dir.create(file.path(outDir, plotName_RF), showWarnings = FALSE)
-    outdir_RF = file.path(outDir, plotName_RF)
-     
-    out_RF  = paste( plotName, "_RF_", i, ".tif", sep="" )
-    out_RF  = file.path(outdir_RF, out_RF)
-  
-    # Export rasters
-    writeRaster(r_RF,  filename=out_RF,  format="GTiff", overwrite = T)
-   
-  }
-  
-  # close progress bar
-  close(pb)
-  
-  # stop parallel process
-  stopCluster(cl) 
-  
-  ######################
-  ### prepare output ###
-  ######################
-  
-  
-  fits <- data.frame(  unlist(OA.RF), unlist(kappa.RF))
-  names(fits) <- c("OA_RF", "Kappa_RF")
-  
-  fits_2 <- data.frame( RF$obsLevels, unlist(PA.RF), unlist(OA.RF))
-  names(fits_2) <- c("Species","PA_RF", "OA_RF")
-  
-  predict_all <- data.frame( unlist(OBS), unlist(predict.PLS), unlist(predict.RF), unlist(predict.SVM) )
-  names(predict_all) <- c("Observed", "RF")
-  
-  ### Export 
-  
-  write.table(fits, file = file.path(outDir, paste("Fits_", plotName, "_", modelTag, ".txt", sep="")),
-              row.names = F, col.names = T)
-  write.table(fits_2, file = file.path(outDir, paste("FitsPA_OA_", plotName, "_", modelTag, ".txt", sep="")), 
-              row.names = F, col.names = T)
-  write.table(predict_all, file = file.path(outDir, paste("Predicts_", plotName, "_", modelTag, ".txt", sep="")), 
-              row.names = F, col.names = T)
-  
-}
 
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
@@ -761,7 +625,7 @@ obstainCovers <- function(ObservedSpecies, rasterDir, subplotDir, maskName,
     z =  grep(sp, obs_plot$Species)
     z <- obs_plot[z,]
     sumCov = sum(z$Cover)
-    cov = (sumCov*100)/1600
+    cov = (sumCov*100)/1600 # 1600: ~ N° of pixels per subplot
     store_plot[[i,2]] <- cov
   }
   
@@ -998,156 +862,10 @@ plot.importance <- function(varImport, wl, xaxis=TRUE, ...){
   
 }
 
-##----------------------------------------------------------------------------##
-##                                                                            ##
-## significanceTest_LeafLevel: Apply one-side bootstrap significance test to  ##
-##                             leaf-level data                                ##
-##                                                                            ##
-## Arguments:                                                                 ##
-## -  data:    input dataset                                                  ##
-## - fitASD:   classificationEnsemble ASD object                              ##
-## - fitAISA:   classificationEnsemble AISA object                            ##
-##                                                                            ##
-## Function based on:                                                         ##
-## Lopatin, J., Dolos, K., Hernández, H. J., Galleguillos, M., & Fassnacht,  ##
-## F. E. (2016). Comparing Generalized Linear Models and random forest to     ##
-## model vascular plant species richness using LiDAR data in a natural forest ##
-## in central Chile. Remote Sensing of Environment, 173, 200-210.             ##
-## http://doi.org/10.1016/j.rse.2015.11.029                                   ##
-##                                                                            ##
-##----------------------------------------------------------------------------##
-
-significanceTest_LeafLevel <- function(data, fitASD, fitAISA, B=500){
-  
-  library(hyperSpec)
-  library(boot)
-  library(e1071)
-  library(doParallel)
-  library(caret)
-      
-  ####################
-  ### prepare data ###
-  ####################
-  classes <- data$Species 
-  # spectral bands
-  spectra <- data[, 2:(length(data)-1)]
-
-  new("hyperSpec")
-  hyperASD <- new("hyperSpec", spc=spectra, data=data, wavelength = seq(350, 2500, 1),
-                 label=list(spc="Reflectance", .wavelength =  expression(lambda(nm))))
-  
-  hyperASD <- hyperASD[,, c(390~max)]
-  hyperASD <- spc.bin (hyperASD, 10)
-  
-  hyperAISA <- hyperASD[,, c(390~990)]
-  
-  #########################
-  ### prepare bootstrap ###
-  #########################
-  set.seed(123)
-  # set the bootstrap parameters
-  N = length(data[,1]) # N° of observations
-  
-  # list to store
-  diff_OA <- list()
-  diff_kappa <- list()
-  
-  OA.ASD <- list()
-  kappa.ASD <- list()
-  PA.ASD <- list()
-  UA.ASD <- list()
-  
-  OA.AISA <- list()
-  kappa.AISA <- list()
-  PA.AISA <- list()
-  UA.AISA <- list()
-  
-  # initialize parallel processing
-  cl <- makeCluster(detectCores())
-  registerDoParallel(cl)
-  
-  # start loop
-  for(i in 1:B){
-   # create random numbers with replacement to select samples from each group
-   idx = sample(1:N, N, replace=TRUE)
-    
-   ###########
-   ### ASD ###
-   ###########
-   
-   m1 <-  svm(hyperASD$spc[idx,], hyperASD@data$Species[idx], gamma = fitASD$SVM$finalModel$gamma, 
-              cost = fitASD$SVM$finalModel$cost, probability = TRUE)
-   
-   m1.pred <- predict(m1, hyperASD$spc[-idx,])
-   
-   # confusion matix
-   preMatrix <- function(pred, test){ # functionn to prevent caret error for different length
-     u = union(pred, test)
-     t = table(factor(pred, u), factor(test, u))
-     return(t)
-   }  
-   m1.conf <- confusionMatrix(preMatrix(m1.pred, hyperASD@data$Species[-idx]))
-   
-   # get accuracies
-   m1.OA    <- m1.conf$overall["Accuracy"]
-   m1.kappa <- m1.conf$overall["Kappa"]
-   m1.PA    <- m1.conf$byClass[,3] 
-   m1.UA    <- m1.conf$byClass[,4]
-   
-   OA.ASD[[i]] <- m1.OA
-   kappa.ASD[[i]] <- m1.kappa
-   PA.ASD[[i]] <- m1.PA
-   UA.ASD[[i]] <- m1.UA
-   
-   ############
-   ### AISA ###
-   ############
-   
-   m2 <-  svm(hyperAISA$spc[idx,], hyperAISA@data$Species[idx], gamma = fitAISA$SVM$finalModel$gamma, 
-              cost = fitAISA$SVM$finalModel$cost, probability = TRUE)
-   
-   m2.pred <- predict(m2, hyperAISA$spc[-idx,])
-   
-   # confusion matix
-   m2.conf <- confusionMatrix(preMatrix(m2.pred, hyperASD@data$Species[-idx]))
-   # get accuracies
-   m2.OA    <- m2.conf$overall["Accuracy"]
-   m2.kappa <- m2.conf$overall["Kappa"]
-   m2.PA    <- m2.conf$byClass[,3] 
-   m2.UA    <- m2.conf$byClass[,4]
-   
-   OA.AISA[[i]] <- m2.OA
-   kappa.AISA[[i]] <- m2.kappa
-   PA.AISA[[i]] <- m2.PA
-   UA.AISA[[i]] <- m2.UA
-   
-   ### compute the differences between ASD and AISA band settings
-   ### OA of ASD should be larger. So, if OA(m1) - OA(m2) is positive, ASD is significantly better.
-   diff_OA[[i]] <- m1.OA - m2.OA
-   
-   ### Kappa of ASD should be larger. So, if kappa(m1) - kappa(m2) is positive, ASD is significantly better.
-   diff_kappa[[i]] <- m1.kappa - m2.kappa
-    
-  }
-  
-  # stop parallel process
-  stopCluster(cl)
-  
-  # prepare output
-  fit <- list(OA.ASD, OA.AISA, kappa.ASD, kappa.AISA, PA.ASD, PA.AISA, UA.ASD, UA.AISA)
-  names(fit) <- c("OA.ASD", "OA.AISA", "kappa.ASD", "kappa.AISA", "PA.ASD", "PA.AISA", "UA.ASD", "UA.AISA")
-  boot_test <- list(diff_OA, diff_kappa)
-  names(boot_test) <- c("OA", "Kappa")
-  output <- list(boot_test, fit)
-  names(output) <- c("boot_test", "fit")
-  class(output) <- "boot_test"
-  output
- 
-  }
 
 ##----------------------------------------------------------------------------##
 ##                                                                            ##
-## significanceTest_LeafLevel: Apply one-side bootstrap significance test to  ##
+## significanceTest_CanopyLevel: Apply one-side bootstrap significance test to##
 ##                             canopy-level data                              ##
 ##                                                                            ##
 ## Arguments:                                                                 ##
