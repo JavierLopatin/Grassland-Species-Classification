@@ -6,7 +6,10 @@
 ## Manuscript: Mapping plant species in mixed grassland communities using     ##
 ##             close range imaging spectroscopy                               ##
 ##                                                                            ##
-## description: Analysis of the canopy-level classification results           ## 
+## description: Analysis of the canopy-level classification results           ##
+##                                                                            ##
+## potVal = pot validation method                                             ##
+## rf = isolation method (presented in main manuscript)                       ##
 ##                                                                            ##
 ################################################################################
 
