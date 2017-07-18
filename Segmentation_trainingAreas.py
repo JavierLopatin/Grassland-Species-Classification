@@ -5,6 +5,8 @@
 ## automatic delineation of homogeneous training areas                                                ##
 ## for classification.                                                                                ##
 ##                                                                                                    ##
+## WARNING: this script only works in UNIX like systems (due to RSGISLib)                             ##
+##                                                                                                    ##
 ## Author: Javier Lopatin                                                                             ##
 ## Email: javierlopatin@gmail.com                                                                     ##
 ## Date: 09/08/2016                                                                                   ##
