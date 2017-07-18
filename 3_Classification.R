@@ -89,9 +89,9 @@ ApplyModels(valData = species,
             modelTag = "spect",
             boots = 100)
 
-#------------------------#
-# Spectra BN             #
-#------------------------#
+#-------------------------------------#
+# Spectra w/ brightness normalization #
+#-------------------------------------#
 
 ApplyModels(valData = species, 
             potVal = potVal_spec_BN, 
@@ -113,9 +113,9 @@ ApplyModels(valData = species,
             modelTag = "MNF",
             boots = 100)
 
-#------------------------#
-# MNF BN                 #
-#------------------------#
+#---------------------------------#
+# MNF w/ brightness normalization #
+#---------------------------------#
 
 ApplyModels(valData = species, 
             potVal = potVal_MNF_BN, 
