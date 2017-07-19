@@ -15,46 +15,41 @@
 ### Figure 3 ###
 ################
 
-dat_potVal <- read.table("D:/Sp_Images/BootsClass_out/Fits_all_pot.txt", header = T)
 dat_rfVal  <- read.table("D:/Sp_Images/BootsClass_out/Fits_all_rf.txt", header = T)
 
 library(beanplot)
 
-pdf(file = "Figures/Figure2.pdf", width=7, height=6)
+pdf(file = "Figures/Figure3.pdf", width=7, height=6)
 mat <- layout(rbind(c(1,1,1),c(2,3,4)), heights=c(1,1), TRUE) 
 par(mai=c(0.6,0.7,0.3,0.3))
 # Classification
-beanplot(dat_potVal$OA_SVM, dat_rfVal$OA_SVM, dat_potVal$Kappa_SVM, dat_rfVal$Kappa_SVM, col = list("black", "gray"), 
-         border = NA, innerboerder=NA, beanlines="median", ll = 0, side = "b", log="",  main = "", 
+beanplot(dat_rfVal$OA_SVM, dat_rfVal$Kappa_SVM, col = "gray", 
+         border = NA, innerboerder=NA, beanlines="median", ll = 0, log="",  main = "", 
          names=c("Overall Accuracy", "Kappa"), ylab = "Accuracy [0-1]",
          ylim = c(0.4,1), yaxs = "i",cex.lab=1.3, cex.axis=1.3, las=1) 
-legend("bottomright", legend=c("Pot method", "Isolation method"), fill=c("black", "gray"), bty="n", cex=1.3)
 text(x = c(0.95,0.95), labels = "*", cex = 3)
 mtext("A", side=3, line=0.5, adj=0, cex=1.3)
 
 # Cover prediction
 # r2
 par(mai=c(0.6,0.7,0,0.3))
-beanplot( subset(gof_pv, Models=="SVM" & Normalization=="spectra")$r2 , 
-          subset(gof_rf, Models=="SVM" & Normalization=="spectra")$r2,
-          col = list("black", "gray"), border = NA, innerboerder=NA, beanlines="median", 
-          ll = 0, side = "b", log="",  main = "", names="", 
+beanplot( subset(gof_rf, Models=="SVM" & Normalization=="spectra")$r2,
+          col = "gray", border = NA, innerboerder=NA, beanlines="median", 
+          ll = 0, log="",  main = "", names="", 
           ylab = expression(r^2), yaxs = "i", cex.lab=1.3, cex.axis=1.3, las=1)
 mtext("B", side=3, line=0.5, adj=0, cex=1.3)
 # RMSE
 par(mai=c(0.6,0.7,0,0.3))
-beanplot( subset(gof_pv, Models=="SVM" & Normalization=="spectra")$RMSE , 
-          subset(gof_rf, Models=="SVM" & Normalization=="spectra")$RMSE,
-          col = list("black", "gray"), border = NA, innerboerder=NA, beanlines="median", 
-          ll = 0, side = "b", log="",  main = "", names="", 
+beanplot( subset(gof_rf, Models=="SVM" & Normalization=="spectra")$RMSE,
+          col = "gray", border = NA, innerboerder=NA, beanlines="median", 
+          ll = 0, log="",  main = "", names="", 
           ylab = "RMSE [%]", yaxs = "i", cex.lab=1.3, cex.axis=1.3, las=1)
 mtext("C", side=3, line=0.5, adj=0, cex=1.3)
 # bias
 par(mai=c(0.6,0.7,0,0.3))
-beanplot( subset(gof_pv, Models=="SVM" & Normalization=="spectra")$bias, 
-          subset(gof_rf, Models=="SVM" & Normalization=="spectra")$bias,
-          col = list("black", "gray"), border = NA, innerboerder=NA, beanlines="median", 
-          ll = 0, side = "b", log="",  main = "", names="", 
+beanplot( subset(gof_rf, Models=="SVM" & Normalization=="spectra")$bias,
+          col = "gray", border = NA, innerboerder=NA, beanlines="median", 
+          ll = 0, log="",  main = "", names="", 
           ylab = "Bias", yaxs = "i", cex.lab=1.3, cex.axis=1.3, las=1)
 mtext("D", side=3, line=0.5, adj=0, cex=1.3)
 
@@ -238,6 +233,55 @@ ggsave("Figures/Figure7.pdf", plot_fits, width = 13, height = 10)
 ### Figure S1 ###
 #################
 
+dat_potVal <- read.table("D:/Sp_Images/BootsClass_out/Fits_all_pot.txt", header = T)
+dat_rfVal  <- read.table("D:/Sp_Images/BootsClass_out/Fits_all_rf.txt", header = T)
+
+library(beanplot)
+
+pdf(file = "Figures/Figure2.pdf", width=7, height=6)
+mat <- layout(rbind(c(1,1,1),c(2,3,4)), heights=c(1,1), TRUE) 
+par(mai=c(0.6,0.7,0.3,0.3))
+# Classification
+beanplot(dat_potVal$OA_SVM, dat_rfVal$OA_SVM, dat_potVal$Kappa_SVM, dat_rfVal$Kappa_SVM, col = list("black", "gray"), 
+         border = NA, innerboerder=NA, beanlines="median", ll = 0, side = "b", log="",  main = "", 
+         names=c("Overall Accuracy", "Kappa"), ylab = "Accuracy [0-1]",
+         ylim = c(0.4,1), yaxs = "i",cex.lab=1.3, cex.axis=1.3, las=1) 
+legend("bottomright", legend=c("Pot method", "Isolation method"), fill=c("black", "gray"), bty="n", cex=1.3)
+text(x = c(0.95,0.95), labels = "*", cex = 3)
+mtext("A", side=3, line=0.5, adj=0, cex=1.3)
+
+# Cover prediction
+# r2
+par(mai=c(0.6,0.7,0,0.3))
+beanplot( subset(gof_pv, Models=="SVM" & Normalization=="spectra")$r2 , 
+          subset(gof_rf, Models=="SVM" & Normalization=="spectra")$r2,
+          col = list("black", "gray"), border = NA, innerboerder=NA, beanlines="median", 
+          ll = 0, side = "b", log="",  main = "", names="", 
+          ylab = expression(r^2), yaxs = "i", cex.lab=1.3, cex.axis=1.3, las=1)
+mtext("B", side=3, line=0.5, adj=0, cex=1.3)
+# RMSE
+par(mai=c(0.6,0.7,0,0.3))
+beanplot( subset(gof_pv, Models=="SVM" & Normalization=="spectra")$RMSE , 
+          subset(gof_rf, Models=="SVM" & Normalization=="spectra")$RMSE,
+          col = list("black", "gray"), border = NA, innerboerder=NA, beanlines="median", 
+          ll = 0, side = "b", log="",  main = "", names="", 
+          ylab = "RMSE [%]", yaxs = "i", cex.lab=1.3, cex.axis=1.3, las=1)
+mtext("C", side=3, line=0.5, adj=0, cex=1.3)
+# bias
+par(mai=c(0.6,0.7,0,0.3))
+beanplot( subset(gof_pv, Models=="SVM" & Normalization=="spectra")$bias, 
+          subset(gof_rf, Models=="SVM" & Normalization=="spectra")$bias,
+          col = list("black", "gray"), border = NA, innerboerder=NA, beanlines="median", 
+          ll = 0, side = "b", log="",  main = "", names="", 
+          ylab = "Bias", yaxs = "i", cex.lab=1.3, cex.axis=1.3, las=1)
+mtext("D", side=3, line=0.5, adj=0, cex=1.3)
+
+dev.off()
+
+#################
+### Figure S2 ###
+#################
+
 load("mat_mrpp.RData")
 load("Gramm_Imp.RData")
 load("Fobs_Imp.RData")
@@ -283,7 +327,7 @@ colorbar.plot( 1, 0, 1:255, col = colfunc, strip.length = 2, strip.width = 0.3)
 
 
 #################
-### Figure S2 ###
+### Figure S3 ###
 #################
 
 library(ggplot2)
